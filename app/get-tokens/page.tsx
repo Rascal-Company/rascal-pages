@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createSupabaseBrowserClient } from '@/src/lib/supabase/client';
+import { createClient } from '@/src/utils/supabase/client';
 
 export default function GetTokensPage() {
   const [tokens, setTokens] = useState<{
@@ -12,7 +12,7 @@ export default function GetTokensPage() {
 
   useEffect(() => {
     async function getTokens() {
-      const supabase = createSupabaseBrowserClient();
+      const supabase = createClient();
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -30,7 +30,7 @@ export default function GetTokensPage() {
   }, []);
 
   const handleLogin = async () => {
-    const supabase = createSupabaseBrowserClient();
+    const supabase = createClient();
     // Test login - replace with your actual credentials
     const { data, error } = await supabase.auth.signInWithPassword({
       email: 'test@example.com', // Replace with test email

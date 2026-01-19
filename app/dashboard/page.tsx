@@ -1,99 +1,57 @@
-import { db } from '@/src/lib/db';
+import { createClient } from '@/src/utils/supabase/server';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import DashboardClient from '../components/DashboardClient';
 
-// Hardcoded test UUID - will be replaced with auth later
-const TEST_USER_ID = '173b0949-2f0e-4073-be3d-05bd93e4c7ce';
+// Estetään pre-rendering build-aikana, koska sivu vaatii käyttäjäsession
+export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage() {
-  // Fetch all sites for the test user
-  const sites = await db
-    .selectFrom('sites')
-    .selectAll()
-    .where('user_id', '=', TEST_USER_ID)
-    .execute();
+export default async function Dashboard() {
+  // 1. Luo client palvelimella
+  const supabase = await createClient();
 
-  return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-black dark:text-zinc-50">
-              My Sites
-            </h1>
-            <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-              Manage your websites and pages
-            </p>
-          </div>
-          <button
-            type="button"
-            className="rounded-lg bg-black px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-          >
-            Create New Site
-          </button>
-        </div>
+  // 2. Tarkista käyttäjä
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    redirect('/'); // Tai login-sivulle
+  }
 
-        {/* Sites Grid */}
-        {sites.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-12 text-center dark:border-zinc-700 dark:bg-zinc-900">
-            <p className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
-              No sites yet
-            </p>
-            <p className="mt-2 text-zinc-600 dark:text-zinc-400">
-              Get started by creating your first site
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {sites.map((site) => (
-              <div
-                key={site.id}
-                className="group relative overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
-              >
-                <div className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-black dark:text-zinc-50">
-                        {site.subdomain}
-                      </h3>
-                      {site.custom_domain && (
-                        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                          {site.custom_domain}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+  // 3. Hae käyttäjän organisaatio org_members taulusta
+  const { data: orgMember, error: orgMemberError } = await supabase
+    .from('org_members')
+    .select('org_id, role')
+    .eq('auth_user_id', user.id)
+    .maybeSingle();
 
-                  <div className="mt-4 flex items-center gap-4 text-sm text-zinc-600 dark:text-zinc-400">
-                    <span>
-                      Created{' '}
-                      {new Date(site.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </span>
-                  </div>
+  if (!orgMember || orgMemberError) {
+    return <div>Virhe: Organisaatiota ei löydy.</div>;
+  }
 
-                  <div className="mt-4 flex gap-2">
-                    <button
-                      type="button"
-                      className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                    >
-                      View
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  // 4. Hae sivustot käyttäen org_id:ta (public.users.id)
+  const { data: sites, error } = await supabase
+    .from('sites')
+    .select('*')
+    .eq('user_id', orgMember.org_id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    return <div>Virhe ladatessa sivustoja: {error.message}</div>;
+  }
+
+  // Muunnetaan sites DashboardClient-komponentille
+  const sitesForClient = (sites || []).map((site) => ({
+    id: site.id,
+    user_id: site.user_id,
+    subdomain: site.subdomain,
+    custom_domain: site.custom_domain,
+    settings: site.settings as Record<string, unknown>,
+    created_at: site.created_at instanceof Date 
+      ? site.created_at.toISOString() 
+      : String(site.created_at),
+    updated_at: site.updated_at instanceof Date 
+      ? site.updated_at.toISOString() 
+      : String(site.updated_at),
+  }));
+
+  return <DashboardClient initialSites={sitesForClient} userId={user.id} />;
 }
