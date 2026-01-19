@@ -50,28 +50,15 @@ export default async function SiteEditorPage({ params }: PageProps) {
     .eq('slug', 'home')
     .maybeSingle();
 
-  // Oletussisältö jos sivua ei ole
-  const defaultContent = {
-    hero: {
-      title: 'Tervetuloa',
-      subtitle: 'Tämä on oletusotsikko',
-      cta: 'Aloita',
-      ctaLink: '#',
-    },
-    features: [
-      {
-        icon: '⭐',
-        title: 'Ominaisuus 1',
-        description: 'Kuvaus ominaisuudesta',
-      },
-    ],
-    theme: {
-      primaryColor: '#000000',
-    },
-  };
+  // Oletussisältö jos sivua ei ole - käytä oletustemplatea
+  const { getDefaultTemplate } = await import('@/src/lib/templates');
+  const defaultTemplate = getDefaultTemplate();
+  const defaultContent = defaultTemplate.defaultContent;
 
+  // Jos sivulla on sisältö, käytä sitä. Muuten käytä oletustemplatea.
   const pageContent = page?.content || defaultContent;
   const pageId = page?.id || null;
+  const initialPublished = page?.published ?? false;
 
   return (
     <Editor
@@ -79,6 +66,7 @@ export default async function SiteEditorPage({ params }: PageProps) {
       pageId={pageId}
       siteSubdomain={site.subdomain}
       initialContent={pageContent}
+      initialPublished={initialPublished}
     />
   );
 }

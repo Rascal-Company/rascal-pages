@@ -37,12 +37,16 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       }
 
       if (data.session) {
-        // Refresh the page to update server-side auth state
-        router.refresh();
+        // Sulje modal
         onClose();
+        setLoading(false);
+        // Päivitä server-side auth state ja ohjaa dashboardiin
+        // Käytetään replace() ettei käyttäjä pääse takaisin etusivulle back-napilla
+        router.refresh();
+        router.replace('/dashboard');
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      setError('Odottamaton virhe tapahtui. Yritä uudelleen.');
       setLoading(false);
     }
   };
@@ -53,7 +57,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         <div className="p-6">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-brand-dark">
-              Sign In
+              Kirjaudu sisään
             </h2>
             <button
               onClick={onClose}
@@ -88,7 +92,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 htmlFor="email"
                 className="block text-sm font-medium text-brand-dark"
               >
-                Email
+                Sähköposti
               </label>
               <input
                 id="email"
@@ -107,7 +111,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 htmlFor="password"
                 className="block text-sm font-medium text-brand-dark"
               >
-                Password
+                Salasana
               </label>
               <input
                 id="password"
@@ -126,7 +130,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               disabled={loading}
               className="w-full rounded-lg bg-brand-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? 'Kirjaudutaan...' : 'Kirjaudu sisään'}
             </button>
           </form>
         </div>

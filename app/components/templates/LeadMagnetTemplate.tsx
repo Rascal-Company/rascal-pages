@@ -1,0 +1,120 @@
+'use client';
+
+import { TemplateConfig } from '@/src/lib/templates';
+
+interface LeadMagnetTemplateProps {
+  content: TemplateConfig;
+}
+
+export default function LeadMagnetTemplate({ content }: LeadMagnetTemplateProps) {
+  const primaryColor = content.theme?.primaryColor || '#3B82F6';
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Hero Section with Split Layout */}
+      <section
+        className="relative overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, ${primaryColor}15 0%, ${primaryColor}05 100%)`,
+        }}
+      >
+        <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+          <div className="mx-auto grid max-w-2xl grid-cols-1 gap-12 lg:max-w-none lg:grid-cols-2 lg:items-center">
+            {/* Left Side - Content */}
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+                {content.hero.title}
+              </h1>
+              <p className="mt-6 text-lg leading-8 text-gray-600">
+                {content.hero.subtitle}
+              </p>
+
+              {/* Benefits List */}
+              {content.features && content.features.length > 0 && (
+                <ul className="mt-8 space-y-4">
+                  {content.features.map((feature, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                      <span className="text-2xl">{feature.icon}</span>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{feature.title}</h3>
+                        <p className="mt-1 text-sm text-gray-600">{feature.description}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* CTA Button */}
+              <div className="mt-10">
+                <a
+                  href={content.hero.ctaLink}
+                  className="inline-block rounded-lg px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  {content.hero.ctaText}
+                </a>
+              </div>
+            </div>
+
+            {/* Right Side - Form/Image */}
+            <div className="lg:pl-8">
+              <div className="rounded-2xl bg-white p-8 shadow-xl ring-1 ring-gray-900/10">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  Lataa ilmaiseksi
+                </h2>
+                <form className="space-y-4">
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                      Sähköpostiosoite
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      required
+                      className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="nimi@esimerkki.fi"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                      Nimi
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Etunimesi"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full rounded-md px-6 py-3 text-base font-semibold text-white shadow-md transition-colors hover:opacity-90"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    {content.hero.ctaText}
+                  </button>
+                  <p className="text-xs text-center text-gray-500 mt-2">
+                    Emme koskaan jaa tietojasi kolmansien osapuolten kanssa.
+                  </p>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-50 border-t border-gray-200">
+        <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+          <div className="text-center">
+            <p className="text-sm leading-5 text-gray-500">
+              &copy; {new Date().getFullYear()} Rascal Pages. Kaikki oikeudet pidätetään.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

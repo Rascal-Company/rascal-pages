@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { createClient } from '@/src/utils/supabase/client';
 import LoginModal from './LoginModal';
 import { useRouter } from 'next/navigation';
+import { togglePagePublish } from '@/app/actions/toggle-publish';
+import { useToast } from '@/app/components/ui/ToastContainer';
 
 interface Site {
   id: string;
@@ -12,6 +14,7 @@ interface Site {
   subdomain: string;
   custom_domain: string | null;
   settings: Record<string, unknown>;
+  published: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -25,9 +28,11 @@ export default function DashboardClient({
   initialSites,
   userId,
 }: DashboardClientProps) {
+  const { showToast } = useToast();
   const [sites, setSites] = useState(initialSites);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(!!userId);
+  const [updatingPublished, setUpdatingPublished] = useState<Record<string, boolean>>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -65,6 +70,36 @@ export default function DashboardClient({
     const supabase = createClient();
     await supabase.auth.signOut();
     router.refresh();
+  };
+
+  const handleTogglePublish = async (siteId: string, currentPublished: boolean) => {
+    setUpdatingPublished((prev) => ({ ...prev, [siteId]: true }));
+    
+    try {
+      const result = await togglePagePublish(siteId, !currentPublished);
+      if (result?.error) {
+        showToast(result.error, 'error');
+      } else {
+        // Päivitä paikallinen tila
+        setSites((prevSites) =>
+          prevSites.map((site) =>
+            site.id === siteId
+              ? { ...site, published: !currentPublished }
+              : site
+          )
+        );
+        showToast(
+          !currentPublished
+            ? 'Sivu julkaistu onnistuneesti!'
+            : 'Sivu piilotettu onnistuneesti!',
+          'success'
+        );
+      }
+    } catch (err) {
+      showToast('Julkaisutilan päivitys epäonnistui.', 'error');
+    } finally {
+      setUpdatingPublished((prev) => ({ ...prev, [siteId]: false }));
+    }
   };
 
   if (!isAuthenticated) {
@@ -190,6 +225,80 @@ export default function DashboardClient({
                       </div>
                     </div>
 
+                    {/* Julkaisutoggle */}
+                    <div className="mt-4 flex items-center justify-between rounded-lg border border-brand-dark/10 bg-white p-3">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-brand-dark">
+                          Julkaistu
+                        </p>
+                        <p className="mt-0.5 text-xs text-brand-dark/60">
+                          {site.published
+                            ? 'Sivu on julkinen ja näkyy kävijöille'
+                            : 'Sivu on piilossa'}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePublish(site.id, site.published)}
+                        disabled={updatingPublished[site.id]}
+                        className={`
+                          relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
+                          transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 
+                          focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
+                          ${site.published ? 'bg-blue-600' : 'bg-gray-200'}
+                        `}
+                        role="switch"
+                        aria-checked={site.published}
+                        aria-label={site.published ? 'Piilota sivu' : 'Julkaise sivu'}
+                      >
+                        <span
+                          className={`
+                            pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
+                            transition duration-200 ease-in-out
+                            ${site.published ? 'translate-x-5' : 'translate-x-0'}
+                          `}
+                        />
+                      </button>
+                    </div>
+
+                    {/* URL-kenttä kopiointia varten */}
+                    <div className="mt-4">
+                      <label className="block text-xs font-medium text-brand-dark/70 mb-1">
+                        Sivuston URL
+                      </label>
+                      <div className="flex items-center gap-2 rounded-md border border-brand-dark/20 bg-white p-2">
+                        <input
+                          type="text"
+                          value={`https://${site.subdomain}.rascalpages.com`}
+                          readOnly
+                          className="flex-1 bg-transparent text-sm text-brand-dark outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const url = `https://${site.subdomain}.rascalpages.com`;
+                            navigator.clipboard.writeText(url);
+                            showToast('URL kopioitu leikepöydälle!', 'success');
+                          }}
+                          className="flex-shrink-0 rounded p-1.5 text-brand-dark/60 transition-colors hover:bg-brand-light hover:text-brand-dark"
+                          aria-label="Kopioi URL"
+                        >
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
 
                     <div className="mt-4 flex gap-2">
                       <Link

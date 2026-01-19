@@ -38,20 +38,32 @@ export default async function Dashboard() {
     return <div>Virhe ladatessa sivustoja: {error.message}</div>;
   }
 
-  // Muunnetaan sites DashboardClient-komponentille
-  const sitesForClient = (sites || []).map((site) => ({
-    id: site.id,
-    user_id: site.user_id,
-    subdomain: site.subdomain,
-    custom_domain: site.custom_domain,
-    settings: site.settings as Record<string, unknown>,
-    created_at: site.created_at instanceof Date 
-      ? site.created_at.toISOString() 
-      : String(site.created_at),
-    updated_at: site.updated_at instanceof Date 
-      ? site.updated_at.toISOString() 
-      : String(site.updated_at),
-  }));
+  // 5. Hae jokaisen sivuston 'home' sivun julkaisutila
+  const sitesWithPublishedStatus = await Promise.all(
+    (sites || []).map(async (site) => {
+      const { data: page } = await supabase
+        .from('pages')
+        .select('published')
+        .eq('site_id', site.id)
+        .eq('slug', 'home')
+        .maybeSingle();
 
-  return <DashboardClient initialSites={sitesForClient} userId={user.id} />;
+      return {
+        id: site.id,
+        user_id: site.user_id,
+        subdomain: site.subdomain,
+        custom_domain: site.custom_domain,
+        settings: site.settings as Record<string, unknown>,
+        published: page?.published ?? false,
+        created_at: site.created_at instanceof Date 
+          ? site.created_at.toISOString() 
+          : String(site.created_at),
+        updated_at: site.updated_at instanceof Date 
+          ? site.updated_at.toISOString() 
+          : String(site.updated_at),
+      };
+    })
+  );
+
+  return <DashboardClient initialSites={sitesWithPublishedStatus} userId={user.id} />;
 }

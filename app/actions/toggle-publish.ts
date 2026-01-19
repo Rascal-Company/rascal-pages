@@ -3,10 +3,9 @@
 import { createClient } from '@/src/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 
-export async function updatePageContent(
+export async function togglePagePublish(
   siteId: string,
-  content: any,
-  published: boolean = false
+  published: boolean
 ): Promise<{ error?: string } | void> {
   const supabase = await createClient();
 
@@ -45,58 +44,46 @@ export async function updatePageContent(
     };
   }
 
-  // 4. Hae tai luo 'home' sivu
-  const { data: existingPage, error: pageCheckError } = await supabase
+  // 4. Hae sivuston 'home' sivu
+  const { data: page, error: pageError } = await supabase
     .from('pages')
     .select('id')
     .eq('site_id', siteId)
     .eq('slug', 'home')
     .maybeSingle();
 
-  if (pageCheckError) {
-    console.error('Virhe sivun tarkistuksessa:', pageCheckError);
+  if (pageError) {
+    console.error('Virhe sivun haussa:', pageError);
     return {
-      error: 'Sivun tarkistus epäonnistui.',
+      error: 'Sivun haku epäonnistui.',
     };
   }
 
-  if (existingPage) {
+  // 5. Päivitä tai luo sivu julkaisutilalla
+  if (page) {
     // Päivitä olemassa oleva sivu
     const { error: updateError } = await supabase
       .from('pages')
       .update({
-        content: content,
         published: published,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', existingPage.id);
+      .eq('id', page.id);
 
     if (updateError) {
-      console.error('Virhe sivun päivityksessä:', updateError);
+      console.error('Virhe julkaisutilan päivityksessä:', updateError);
       return {
-        error: 'Sivun päivitys epäonnistui.',
+        error: 'Julkaisutilan päivitys epäonnistui.',
       };
     }
   } else {
-    // Luo uusi sivu
-    const { error: insertError } = await supabase
-      .from('pages')
-      .insert({
-        site_id: siteId,
-        slug: 'home',
-        title: 'Etusivu',
-        content: content,
-        published: published,
-      });
-
-    if (insertError) {
-      console.error('Virhe sivun luonnissa:', insertError);
-      return {
-        error: 'Sivun luominen epäonnistui.',
-      };
-    }
+    // Jos sivua ei ole ollenkaan, ei voida julkaista
+    return {
+      error: 'Sivua ei ole vielä luotu. Muokkaa sivua ensin.',
+    };
   }
 
-  // 5. Revalidate path
+  // 6. Revalidate path
+  revalidatePath(`/dashboard`);
   revalidatePath(`/dashboard/${siteId}`);
 }
