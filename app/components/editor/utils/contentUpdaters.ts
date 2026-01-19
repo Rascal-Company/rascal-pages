@@ -23,7 +23,10 @@ export function updateField(
     if (section === 'theme') {
       return {
         ...prev,
-        theme: { ...(prev.theme || {}), [key]: value },
+        theme: { 
+          ...(prev.theme || { primaryColor: '#3B82F6' }), 
+          [key]: value 
+        },
       };
     }
     return prev;

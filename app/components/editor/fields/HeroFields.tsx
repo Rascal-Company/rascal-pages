@@ -40,11 +40,8 @@ export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
           </label>
           <input
             type="text"
-            value={hero?.ctaText || hero?.cta || ''}
-            onChange={(e) => {
-              onUpdate('ctaText', e.target.value);
-              onUpdate('cta', e.target.value);
-            }}
+            value={hero?.ctaText || ''}
+            onChange={(e) => onUpdate('ctaText', e.target.value)}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
           />
         </div>

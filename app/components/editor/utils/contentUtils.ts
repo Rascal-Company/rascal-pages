@@ -38,8 +38,7 @@ export function mergeTemplateContent(
       // Säilytä vanhat hero-kentät jos ne ovat yhteensopivia
       title: currentContent.hero?.title || newTemplate.defaultContent.hero.title,
       subtitle: currentContent.hero?.subtitle || newTemplate.defaultContent.hero.subtitle,
-      ctaText: currentContent.hero?.ctaText || currentContent.hero?.cta || newTemplate.defaultContent.hero.ctaText,
-      cta: currentContent.hero?.ctaText || currentContent.hero?.cta || newTemplate.defaultContent.hero.ctaText,
+      ctaText: currentContent.hero?.ctaText || newTemplate.defaultContent.hero.ctaText,
       ctaLink: currentContent.hero?.ctaLink || newTemplate.defaultContent.hero.ctaLink,
     },
     theme: currentContent.theme || newTemplate.defaultContent.theme,
