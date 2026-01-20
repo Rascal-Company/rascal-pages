@@ -62,20 +62,9 @@ export async function middleware(request: NextRequest) {
       subdomain = parts[0];
     }
   } else if (hostname.includes('.vercel.app')) {
-    // Vercel: test-projektinimi.vercel.app -> subdomain on "test"
-    // Vercel käyttää yhdysviivaa subdomainien kanssa
-    const parts = hostname.split('.');
-    if (parts.length >= 3) {
-      // Esim. "test-rascal-pages.vercel.app" -> ["test-rascal-pages", "vercel", "app"]
-      const firstPart = parts[0];
-      // Jos ensimmäinen osa sisältää yhdysviivan, ensimmäinen osa ennen yhdysviivaa on subdomain
-      if (firstPart.includes('-')) {
-        const subdomainParts = firstPart.split('-');
-        // Otetaan ensimmäinen osa subdomainina (jos se ei ole projektin nimi)
-        // Yksinkertaistettu: jos on yhdysviiva, ensimmäinen osa on subdomain
-        subdomain = subdomainParts[0];
-      }
-    }
+    // Vercel preview URLit eivät tue subdomain-reitityistä
+    // Subdomain-testaus vaatii joko localhost tai tuotantodomainin
+    subdomain = null;
   } else {
     // Tuotanto: site.rascalpages.com -> subdomain on "site"
     const parts = hostname.split('.');
