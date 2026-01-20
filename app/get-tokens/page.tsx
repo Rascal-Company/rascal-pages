@@ -130,7 +130,7 @@ export default function GetTokensPage() {
 
               <div className="mt-6">
                 <a
-                  href={`/auth/handoff#access_token=${encodeURIComponent(
+                  href={`https://app.rascalpages.fi/auth/handoff#access_token=${encodeURIComponent(
                     tokens.accessToken || ''
                   )}&refresh_token=${encodeURIComponent(
                     tokens.refreshToken || ''

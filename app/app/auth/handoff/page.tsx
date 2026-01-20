@@ -22,7 +22,15 @@ export default function AuthHandoff() {
         // Jos tokeneita ei ole hashissa, tarkistetaan onko käyttäjä jo kirjautunut
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          router.replace('/app/dashboard');
+          // Tarkista ympäristö ja ohjaa oikeaan paikkaan
+          if (typeof window !== 'undefined') {
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.localhost');
+            if (isLocalhost) {
+              router.replace('/app/dashboard');
+            } else {
+              window.location.href = 'https://app.rascalpages.fi/dashboard';
+            }
+          }
           return;
         }
         setStatus('Virhe: Ei kirjautumistietoja.');
@@ -41,7 +49,16 @@ export default function AuthHandoff() {
       } else {
         // 3. Päivitä router ja ohjaa dashboardiin
         router.refresh(); // Varmistaa että server componentit tajuavat uuden keksin
-        router.replace('/app/dashboard');
+        
+        // Tarkista ympäristö ja ohjaa oikeaan paikkaan
+        if (typeof window !== 'undefined') {
+          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.localhost');
+          if (isLocalhost) {
+            router.replace('/app/dashboard');
+          } else {
+            window.location.href = 'https://app.rascalpages.fi/dashboard';
+          }
+        }
       }
     };
 

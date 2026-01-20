@@ -19,11 +19,20 @@ export default function TestAuthPage() {
     }
 
     // Redirect to handoff page with tokens in hash
-    router.push(
-      `/auth/handoff#access_token=${encodeURIComponent(
-        accessToken
-      )}&refresh_token=${encodeURIComponent(refreshToken)}`
-    );
+    if (typeof window !== 'undefined') {
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.localhost');
+      if (isLocalhost) {
+        router.push(
+          `/app/auth/handoff#access_token=${encodeURIComponent(
+            accessToken
+          )}&refresh_token=${encodeURIComponent(refreshToken)}`
+        );
+      } else {
+        window.location.href = `https://app.rascalpages.fi/auth/handoff#access_token=${encodeURIComponent(
+          accessToken
+        )}&refresh_token=${encodeURIComponent(refreshToken)}`;
+      }
+    }
   };
 
   return (
