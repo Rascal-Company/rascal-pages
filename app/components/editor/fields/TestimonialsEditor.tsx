@@ -77,6 +77,25 @@ export default function TestimonialsEditor({
                   className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                 />
               </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600">
+                  Profiilikuvan URL (valinnainen)
+                </label>
+                <input
+                  type="url"
+                  value={testimonial.avatar || ''}
+                  onChange={(e) => onUpdate(index, 'avatar', e.target.value)}
+                  placeholder="https://example.com/avatar.jpg"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                />
+                {testimonial.avatar && (
+                  <img
+                    src={testimonial.avatar}
+                    alt={testimonial.name}
+                    className="mt-2 h-10 w-10 rounded-full object-cover"
+                  />
+                )}
+              </div>
             </div>
           </div>
         ))}

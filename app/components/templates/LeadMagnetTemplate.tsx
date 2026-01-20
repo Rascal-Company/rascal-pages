@@ -34,7 +34,15 @@ export default function LeadMagnetTemplate({ content }: LeadMagnetTemplateProps)
                 <ul className="mt-8 space-y-4">
                   {content.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-3">
-                      <span className="text-2xl">{feature.icon}</span>
+                      {feature.image ? (
+                        <img
+                          src={feature.image}
+                          alt={feature.title}
+                          className="h-8 w-8 rounded-lg object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <span className="text-2xl">{feature.icon}</span>
+                      )}
                       <div>
                         <h3 className="font-semibold text-gray-900">{feature.title}</h3>
                         <p className="mt-1 text-sm text-gray-600">{feature.description}</p>
@@ -58,6 +66,15 @@ export default function LeadMagnetTemplate({ content }: LeadMagnetTemplateProps)
 
             {/* Right Side - Form/Image */}
             <div className="lg:pl-8">
+              {content.hero.image && (
+                <div className="mb-8">
+                  <img
+                    src={content.hero.image}
+                    alt={content.hero.title}
+                    className="rounded-2xl shadow-xl w-full h-auto object-cover"
+                  />
+                </div>
+              )}
               <div className="rounded-2xl bg-white p-8 shadow-xl ring-1 ring-gray-900/10">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">
                   Lataa ilmaiseksi

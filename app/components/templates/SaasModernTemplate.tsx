@@ -19,21 +19,32 @@ export default function SaasModernTemplate({ content }: SaasModernTemplateProps)
         }}
       >
         <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-              {content.hero.title}
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-white/90">
-              {content.hero.subtitle}
-            </p>
-            {content.hero.ctaText && (
-              <div className="mt-10 flex items-center justify-center gap-x-6">
-                <a
-                  href={content.hero.ctaLink}
-                  className="rounded-md bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors"
-                >
-                  {content.hero.ctaText}
-                </a>
+          <div className={`mx-auto ${content.hero.image ? 'grid lg:grid-cols-2 gap-12 items-center' : 'max-w-2xl text-center'}`}>
+            <div className={content.hero.image ? '' : ''}>
+              <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
+                {content.hero.title}
+              </h1>
+              <p className="mt-6 text-lg leading-8 text-white/90">
+                {content.hero.subtitle}
+              </p>
+              {content.hero.ctaText && (
+                <div className={`mt-10 flex items-center gap-x-6 ${content.hero.image ? '' : 'justify-center'}`}>
+                  <a
+                    href={content.hero.ctaLink}
+                    className="rounded-md bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors"
+                  >
+                    {content.hero.ctaText}
+                  </a>
+                </div>
+              )}
+            </div>
+            {content.hero.image && (
+              <div className="relative">
+                <img
+                  src={content.hero.image}
+                  alt={content.hero.title}
+                  className="rounded-2xl shadow-2xl w-full h-auto object-cover"
+                />
               </div>
             )}
           </div>
@@ -78,9 +89,15 @@ export default function SaasModernTemplate({ content }: SaasModernTemplateProps)
                   key={index}
                   className="flex flex-col items-start rounded-2xl bg-gray-50 p-8 shadow-sm hover:shadow-md transition-shadow"
                 >
-                  {feature.icon && (
+                  {feature.image ? (
+                    <img
+                      src={feature.image}
+                      alt={feature.title}
+                      className="h-16 w-16 rounded-xl object-cover mb-4"
+                    />
+                  ) : feature.icon ? (
                     <div className="text-5xl mb-4">{feature.icon}</div>
-                  )}
+                  ) : null}
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
                     {feature.title}
                   </h3>

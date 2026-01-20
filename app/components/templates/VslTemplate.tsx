@@ -30,7 +30,13 @@ export default function VslTemplate({ content }: VslTemplateProps) {
       {/* Video Section */}
       <section className="mx-auto max-w-5xl px-6 pb-16 lg:px-8">
         <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-gray-800 shadow-2xl">
-          {content.videoUrl ? (
+          {content.hero.image && !content.videoUrl ? (
+            <img
+              src={content.hero.image}
+              alt={content.hero.title}
+              className="h-full w-full object-cover"
+            />
+          ) : content.videoUrl ? (
             <video
               src={content.videoUrl}
               controls

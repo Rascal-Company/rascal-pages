@@ -17,6 +17,7 @@ export interface TemplateConfig {
     title: string;
     description: string;
     icon: string;
+    image?: string;
   }>;
   about?: {
     name: string;
@@ -27,6 +28,7 @@ export interface TemplateConfig {
     name: string;
     text: string;
     company?: string;
+    avatar?: string;
   }>;
   faq?: Array<{
     question: string;

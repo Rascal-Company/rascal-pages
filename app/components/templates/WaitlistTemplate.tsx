@@ -23,6 +23,15 @@ export default function WaitlistTemplate({ content }: WaitlistTemplateProps) {
       {/* Hero Section - Centered */}
       <section className="relative min-h-screen flex items-center justify-center px-6 py-24 sm:py-32">
         <div className="mx-auto max-w-2xl text-center">
+          {content.hero.image && (
+            <div className="mb-8">
+              <img
+                src={content.hero.image}
+                alt={content.hero.title}
+                className="mx-auto h-32 w-32 rounded-2xl object-cover shadow-xl"
+              />
+            </div>
+          )}
           <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-6xl">
             {content.hero.title}
           </h1>

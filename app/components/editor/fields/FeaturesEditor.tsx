@@ -80,6 +80,25 @@ export default function FeaturesEditor({
                   className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                 />
               </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600">
+                  Kuvan URL (valinnainen, korvaa emojin)
+                </label>
+                <input
+                  type="url"
+                  value={feature.image || ''}
+                  onChange={(e) => onUpdate(index, 'image', e.target.value)}
+                  placeholder="https://example.com/kuva.jpg"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                />
+                {feature.image && (
+                  <img
+                    src={feature.image}
+                    alt={feature.title}
+                    className="mt-2 h-12 w-12 rounded-md object-cover"
+                  />
+                )}
+              </div>
             </div>
           </div>
         ))}

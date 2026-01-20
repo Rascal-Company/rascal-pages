@@ -15,7 +15,11 @@ export default function PersonalTemplate({ content }: PersonalTemplateProps) {
       <section
         className="relative overflow-hidden bg-gradient-to-br from-green-50 to-white"
         style={{
-          background: `linear-gradient(135deg, ${primaryColor}15 0%, transparent 100%)`,
+          background: content.hero.image
+            ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${content.hero.image})`
+            : `linear-gradient(135deg, ${primaryColor}15 0%, transparent 100%)`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
         }}
       >
         <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
@@ -33,10 +37,10 @@ export default function PersonalTemplate({ content }: PersonalTemplateProps) {
               </div>
             )}
 
-            <h1 className="mt-8 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+            <h1 className={`mt-8 text-4xl font-bold tracking-tight sm:text-5xl ${content.hero.image ? 'text-white' : 'text-gray-900'}`}>
               {content.hero.title}
             </h1>
-            <p className="mt-6 text-lg leading-8 text-gray-600">
+            <p className={`mt-6 text-lg leading-8 ${content.hero.image ? 'text-white/90' : 'text-gray-600'}`}>
               {content.hero.subtitle}
             </p>
             {content.hero.ctaText && (
@@ -104,11 +108,27 @@ export default function PersonalTemplate({ content }: PersonalTemplateProps) {
                   <p className="text-gray-600 leading-relaxed mb-6">
                     "{testimonial.text}"
                   </p>
-                  <div className="mt-auto">
-                    <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                    {testimonial.company && (
-                      <p className="text-sm text-gray-500">{testimonial.company}</p>
+                  <div className="mt-auto flex items-center gap-3">
+                    {testimonial.avatar ? (
+                      <img
+                        src={testimonial.avatar}
+                        alt={testimonial.name}
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        {testimonial.name?.charAt(0).toUpperCase() || 'A'}
+                      </div>
                     )}
+                    <div>
+                      <p className="font-semibold text-gray-900">{testimonial.name}</p>
+                      {testimonial.company && (
+                        <p className="text-sm text-gray-500">{testimonial.company}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
