@@ -15,37 +15,48 @@ export const config = {
 
 export default async function middleware(req: NextRequest) {
   const url = req.nextUrl
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'rascalpages.fi'
 
-  // Hae hostname (esim. "kalle.rascalpages.com" tai "localhost:3000")
-  let hostname = req.headers.get('host')!.replace('.localhost:3000', `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`)
+  // Hae hostname (esim. "kalle.rascalpages.fi" tai "localhost:3000")
+  let hostname = req.headers.get('host')!
+
+  // Localhost-kehityksessä: test.localhost:3000 -> test.rascalpages.fi
+  if (hostname.includes('.localhost:')) {
+    hostname = hostname.replace('.localhost:3000', `.${rootDomain}`)
+  }
 
   // Erityiskäsittely Vercel preview -urlieille
   if (hostname.includes('---') && hostname.endsWith(`.${process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`)) {
-    hostname = `${hostname.split('---')[0]}.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`
+    hostname = `${hostname.split('---')[0]}.${rootDomain}`
   }
 
   const searchParams = req.nextUrl.searchParams.toString()
-  // Get the pathname of the request (e.g. /, /about, /blog/first-post)
   const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ''}`
 
   // 1. App Subdomain (Editori/Dashboard)
-  // Jos osoite on app.rascalpages.com, ohjaa dashboardiin
-  if (hostname === `app.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
+  // Jos osoite on app.rascalpages.fi, ohjaa dashboardiin
+  if (hostname === `app.${rootDomain}`) {
     return NextResponse.rewrite(
       new URL(`/app${path === '/' ? '' : path}`, req.url)
     )
   }
 
-  // 2. Root Domain (Landing page itse palvelulle)
-  // Jos osoite on rascalpages.com
-  if (hostname === process.env.NEXT_PUBLIC_ROOT_DOMAIN) {
+  // 2. Root Domain tai www (Landing page itse palvelulle)
+  // Jos osoite on rascalpages.fi tai www.rascalpages.fi
+  if (hostname === rootDomain || hostname === `www.${rootDomain}`) {
     return NextResponse.rewrite(
       new URL(`/home${path === '/' ? '' : path}`, req.url)
     )
   }
 
-  // 3. Tenant Subdomain / Custom Domain (Asiakkaan sivu)
-  // Jos osoite on kalle.rascalpages.com TAI oma-domain.fi
-  // Ohjaa: /sites/[hostname]
+  // 3. Tenant Subdomain (Asiakkaan sivu)
+  // Jos osoite on kalle.rascalpages.fi, erota subdomain
+  if (hostname.endsWith(`.${rootDomain}`)) {
+    const subdomain = hostname.replace(`.${rootDomain}`, '')
+    return NextResponse.rewrite(new URL(`/sites/${subdomain}${path}`, req.url))
+  }
+
+  // 4. Custom Domain (Asiakkaan oma domain)
+  // Jos osoite on esim. oma-firma.fi
   return NextResponse.rewrite(new URL(`/sites/${hostname}${path}`, req.url))
 }
