@@ -34,7 +34,7 @@ export default function NewSitePage() {
         {/* Otsikko */}
         <div className="mb-8">
           <Link
-            href="/dashboard"
+            href="/app/dashboard"
             className="text-sm text-gray-500 hover:text-gray-700"
           >
             ← Takaisin dashboardiin
@@ -92,7 +92,7 @@ export default function NewSitePage() {
                 {isSubmitting ? 'Luodaan...' : 'Luo sivusto'}
               </button>
               <Link
-                href="/dashboard"
+                href="/app/dashboard"
                 className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-center text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 Peruuta

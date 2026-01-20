@@ -84,6 +84,6 @@ export async function togglePagePublish(
   }
 
   // 6. Revalidate path
-  revalidatePath(`/dashboard`);
-  revalidatePath(`/dashboard/${siteId}`);
+  revalidatePath(`/app/dashboard`);
+  revalidatePath(`/app/dashboard/${siteId}`);
 }

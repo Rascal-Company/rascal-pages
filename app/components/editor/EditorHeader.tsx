@@ -12,7 +12,7 @@ export default function EditorHeader({ siteSubdomain }: EditorHeaderProps) {
   return (
     <div className="mb-6">
       <button
-        onClick={() => router.push('/dashboard')}
+        onClick={() => router.push('/app/dashboard')}
         className="text-sm text-gray-500 hover:text-gray-700"
       >
         ← Takaisin dashboardiin

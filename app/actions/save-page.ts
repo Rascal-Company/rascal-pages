@@ -98,5 +98,5 @@ export async function updatePageContent(
   }
 
   // 5. Revalidate path
-  revalidatePath(`/dashboard/${siteId}`);
+  revalidatePath(`/app/dashboard/${siteId}`);
 }

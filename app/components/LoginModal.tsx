@@ -42,8 +42,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setLoading(false);
         // Päivitä server-side auth state ja ohjaa dashboardiin
         // Käytetään replace() ettei käyttäjä pääse takaisin etusivulle back-napilla
+        // Ohjataan /app/dashboard reitille middleware-ohjauksen mukaisesti
         router.refresh();
-        router.replace('/dashboard');
+        router.replace('/app/dashboard');
       }
     } catch (err) {
       setError('Odottamaton virhe tapahtui. Yritä uudelleen.');

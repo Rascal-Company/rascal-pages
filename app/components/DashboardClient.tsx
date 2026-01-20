@@ -33,6 +33,9 @@ export default function DashboardClient({
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(!!userId);
   const [updatingPublished, setUpdatingPublished] = useState<Record<string, boolean>>({});
+  const [deletingSiteId, setDeletingSiteId] = useState<string | null>(null);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -102,6 +105,49 @@ export default function DashboardClient({
     }
   };
 
+  // Poistotoiminto
+  const handleDeleteSite = async (siteId: string) => {
+    setDeletingSiteId(siteId);
+    setIsConfirmingDelete(true);
+  };
+
+  const confirmDeleteSite = async () => {
+    if (!deletingSiteId) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch('/api/delete-site', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ siteId: deletingSiteId }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Päivitä sivustolista
+        setSites(sites.filter(site => site.id !== deletingSiteId));
+        showToast('Sivusto poistettu onnistuneesti!', 'success');
+      } else {
+        showToast(result.error || 'Sivuston poisto epäonnistui.', 'error');
+      }
+    } catch (error) {
+      console.error('Virhe sivuston poistossa:', error);
+      showToast('Odottamaton virhe tapahtui. Yritä uudelleen.', 'error');
+    } finally {
+      setDeletingSiteId(null);
+      setIsConfirmingDelete(false);
+      setIsDeleting(false);
+    }
+  };
+
+  const cancelDeleteSite = () => {
+    setDeletingSiteId(null);
+    setIsConfirmingDelete(false);
+  };
+
   if (!isAuthenticated) {
     return (
       <>
@@ -139,7 +185,7 @@ export default function DashboardClient({
             </div>
             <div className="flex gap-3">
               <Link
-                href="/dashboard/new"
+                href="/app/dashboard/new"
                 className="rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-accent/90"
               >
                 + Uusi sivusto
@@ -180,7 +226,7 @@ export default function DashboardClient({
                 </p>
                 <div className="mt-6">
                   <Link
-                    href="/dashboard/new"
+                    href="/app/dashboard/new"
                     className="inline-flex items-center rounded-md bg-brand-accent px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-accent/90"
                   >
                     + Uusi sivusto
@@ -302,11 +348,30 @@ export default function DashboardClient({
 
                     <div className="mt-4 flex gap-2">
                       <Link
-                        href={`/dashboard/${site.id}`}
+                        href={`/app/dashboard/${site.id}`}
                         className="flex-1 rounded-md border border-brand-dark/20 bg-white px-3 py-1.5 text-center text-sm font-medium text-brand-dark transition-colors hover:bg-brand-light"
                       >
                         Muokkaa
                       </Link>
+                      <button
+                        onClick={() => handleDeleteSite(site.id)}
+                        className="flex-shrink-0 rounded-md border border-red-300 bg-white px-3 py-1.5 text-center text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                        disabled={updatingPublished[site.id] || isDeleting}
+                      >
+                        <svg
+                          className="mx-auto h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -315,6 +380,34 @@ export default function DashboardClient({
           )}
         </div>
       </div>
+      {/* Poistovahvistusdialogi */}
+      {isConfirmingDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-medium text-brand-dark">Poista sivusto</h3>
+            <p className="mt-2 text-sm text-brand-dark/70">
+              Oletko varma että haluat poistaa tämän sivuston? Tätä toimintoa ei voi perua.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={cancelDeleteSite}
+                className="rounded-md border border-brand-dark/20 bg-white px-4 py-2 text-sm font-medium text-brand-dark transition-colors hover:bg-brand-light"
+                disabled={deletingSiteId !== null}
+              >
+                Peruuta
+              </button>
+              <button
+                onClick={confirmDeleteSite}
+                className="rounded-md border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Poistetaan...' : 'Poista'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}

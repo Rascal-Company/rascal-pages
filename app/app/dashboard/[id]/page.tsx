@@ -39,7 +39,7 @@ export default async function SiteEditorPage({ params }: PageProps) {
     .single();
 
   if (siteError || !site) {
-    redirect('/dashboard');
+    redirect('/app/dashboard');
   }
 
   // 4. Hae sivuston 'home' sivu tai luo oletusrakenne
