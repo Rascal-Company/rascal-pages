@@ -16,7 +16,9 @@ export default async function SiteEditorPage({ params }: PageProps) {
   // 1. Tarkista käyttäjä
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    redirect('/');
+    // TÄRKEÄ: Ohjaa päädomainiin (landing page), älä polkuun '/' 
+    // koska app-subdomainissa '/' tarkoittaa taas dashboardia.
+    redirect(`https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'rascalpages.fi'}`)
   }
 
   // 2. Hae käyttäjän organisaatio

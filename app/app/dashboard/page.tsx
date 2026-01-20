@@ -12,7 +12,10 @@ export default async function Dashboard() {
   // 2. Tarkista käyttäjä
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    redirect('/'); // Tai login-sivulle
+    // TÄRKEÄ: Ohjaa päädomainiin (landing page), älä polkuun '/' 
+    // koska app-subdomainissa '/' tarkoittaa taas dashboardia.
+    // Käytä kokonaista URLia:
+    redirect(`https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'rascalpages.fi'}`)
   }
 
   // 3. Hae käyttäjän organisaatio org_members taulusta

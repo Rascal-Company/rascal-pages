@@ -51,6 +51,10 @@ export default async function middleware(req: NextRequest) {
   // 2. Root Domain tai www (Landing page itse palvelulle)
   // Jos osoite on rascalpages.fi tai www.rascalpages.fi
   if (hostname === rootDomain || hostname === `www.${rootDomain}`) {
+    // Salli /app reitti root domainilla (kehitysympäristöä varten)
+    if (path.startsWith('/app')) {
+      return updateSupabaseSession(req)
+    }
     return updateSupabaseSession(
       req,
       new URL(`/home${path === '/' ? '' : path}`, req.url)

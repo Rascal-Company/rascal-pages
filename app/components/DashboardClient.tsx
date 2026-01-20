@@ -148,6 +148,30 @@ export default function DashboardClient({
     setIsConfirmingDelete(false);
   };
 
+  // Apufunktio navigointia varten
+  const navigateToDashboard = (path: string = '') => {
+    const url = getDashboardUrl(path);
+    if (typeof window !== 'undefined') {
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.localhost');
+      if (isLocalhost) {
+        router.push(url);
+      } else {
+        window.location.href = url;
+      }
+    }
+  };
+
+  // Apufunktio URL:n generointia varten
+  const getDashboardUrl = (path: string = ''): string => {
+    if (typeof window !== 'undefined') {
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.localhost');
+      if (isLocalhost) {
+        return `/app/dashboard${path}`;
+      }
+    }
+    return `https://app.rascalpages.fi/dashboard${path}`;
+  };
+
   if (!isAuthenticated) {
     return (
       <>
@@ -187,6 +211,10 @@ export default function DashboardClient({
               <Link
                 href="/app/dashboard/new"
                 className="rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-accent/90"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigateToDashboard('/new');
+                }}
               >
                 + Uusi sivusto
               </Link>
@@ -228,6 +256,10 @@ export default function DashboardClient({
                   <Link
                     href="/app/dashboard/new"
                     className="inline-flex items-center rounded-md bg-brand-accent px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-accent/90"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateToDashboard('/new');
+                    }}
                   >
                     + Uusi sivusto
                   </Link>
@@ -350,6 +382,10 @@ export default function DashboardClient({
                       <Link
                         href={`/app/dashboard/${site.id}`}
                         className="flex-1 rounded-md border border-brand-dark/20 bg-white px-3 py-1.5 text-center text-sm font-medium text-brand-dark transition-colors hover:bg-brand-light"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigateToDashboard(`/${site.id}`);
+                        }}
                       >
                         Muokkaa
                       </Link>
