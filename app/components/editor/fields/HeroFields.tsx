@@ -20,7 +20,7 @@ export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
             type="text"
             value={hero?.title || ''}
             onChange={(e) => onUpdate('title', e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
           />
         </div>
         <div>
@@ -31,7 +31,7 @@ export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
             value={hero?.subtitle || ''}
             onChange={(e) => onUpdate('subtitle', e.target.value)}
             rows={3}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
           />
         </div>
         <div>
@@ -42,7 +42,7 @@ export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
             type="text"
             value={hero?.ctaText || ''}
             onChange={(e) => onUpdate('ctaText', e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
           />
         </div>
         <div>
@@ -53,7 +53,7 @@ export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
             type="text"
             value={hero?.ctaLink || ''}
             onChange={(e) => onUpdate('ctaLink', e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
           />
         </div>
         <div>
@@ -65,7 +65,7 @@ export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
             value={hero?.image || ''}
             onChange={(e) => onUpdate('image', e.target.value)}
             placeholder="https://example.com/kuva.jpg"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
           />
           {hero?.image && (
             <img

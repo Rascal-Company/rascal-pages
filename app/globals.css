@@ -2,17 +2,35 @@
 
 @theme {
   /* Rascal AI Brand Palette */
-  --color-brand-green: #4ade80;
-  --color-brand-beige: #f5eee6;
-  --color-brand-light: #f7fafc;
-  --color-brand-dark: #1a1d23;
+  --color-brand-primary: #E87B4E;
+  --color-brand-primary-hover: #D66A3D;
+  --color-brand-highlight: #F5E6DC;
+  --color-brand-beige: #F5E6DC;
+  --color-brand-light: #FDF9F6;
+  --color-brand-dark: #1A1A1A;
+  --color-brand-dark-alt: #2C2C2C;
   --color-brand-black: #000;
-  --color-brand-accent: #7c3aed;
-  
+  --color-brand-accent: #E87B4E;
+  --color-brand-accent-hover: #D66A3D;
+
   /* Additional App Colors */
-  --color-app-bg-primary: #e0c3fc;
-  --color-app-bg-secondary: #b2f7ef;
-  --color-sidebar-bg: #1a4a3a;
+  --color-app-bg-primary: #F5E6DC;
+  --color-app-bg-secondary: #FDF9F6;
+  --color-sidebar-bg: #1A1A1A;
+
+  /* Accent Colors */
+  --color-accent-orange: #E87B4E;
+  --color-accent-green: #22c55e;
+  --color-accent-blue: #2563eb;
+  --color-accent-yellow: #fbbf24;
+  
+  /* Text Colors */
+  --color-text-body: #1f2937;
+  --color-text-heading: #2d3748;
+  --color-text-muted: #6b7280;
+  --color-text-muted-light: #718096;
+  --color-text-muted-dark: #4a5568;
+  --color-text-sidebar: #cbd5e1;
   
   /* Fonts */
   --font-sans: var(--font-geist-sans);
@@ -21,6 +39,64 @@
 
 body {
   background: var(--color-brand-light);
-  color: var(--color-brand-dark);
+  color: var(--color-text-body);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Smooth scrolling for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Accent color classes for easy use */
+.accent-orange {
+  color: var(--color-accent-orange);
+}
+
+/* Brand Primary Button Styles */
+.btn-primary {
+  background-color: var(--color-brand-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-brand-primary-hover);
+}
+
+/* Brand Highlight Background */
+.bg-brand-highlight {
+  background-color: var(--color-brand-highlight);
+}
+
+.accent-green {
+  color: var(--color-accent-green);
+}
+
+.accent-blue {
+  color: var(--color-accent-blue);
+}
+
+.accent-yellow {
+  color: var(--color-accent-yellow);
+}
+
+/* Text color classes */
+.text-heading {
+  color: var(--color-text-heading);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-muted-light {
+  color: var(--color-text-muted-light);
+}
+
+.text-muted-dark {
+  color: var(--color-text-muted-dark);
+}
+
+.text-sidebar {
+  color: var(--color-text-sidebar);
 }

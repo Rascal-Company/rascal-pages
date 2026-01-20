@@ -21,7 +21,7 @@ export default function TestimonialsEditor({
         <h2 className="text-lg font-semibold text-gray-900">Suosittelut</h2>
         <button
           onClick={onAdd}
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+          className="rounded-md bg-brand-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-accent-hover"
         >
           + Lisää
         </button>
@@ -52,7 +52,7 @@ export default function TestimonialsEditor({
                   type="text"
                   value={testimonial.name || ''}
                   onChange={(e) => onUpdate(index, 'name', e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />
               </div>
               <div>
@@ -63,7 +63,7 @@ export default function TestimonialsEditor({
                   value={testimonial.text || ''}
                   onChange={(e) => onUpdate(index, 'text', e.target.value)}
                   rows={3}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />
               </div>
               <div>
@@ -74,7 +74,7 @@ export default function TestimonialsEditor({
                   type="text"
                   value={testimonial.company || ''}
                   onChange={(e) => onUpdate(index, 'company', e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />
               </div>
               <div>
@@ -86,7 +86,7 @@ export default function TestimonialsEditor({
                   value={testimonial.avatar || ''}
                   onChange={(e) => onUpdate(index, 'avatar', e.target.value)}
                   placeholder="https://example.com/avatar.jpg"
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />
                 {testimonial.avatar && (
                   <img

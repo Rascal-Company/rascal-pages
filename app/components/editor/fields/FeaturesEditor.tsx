@@ -21,7 +21,7 @@ export default function FeaturesEditor({
         <h2 className="text-lg font-semibold text-gray-900">Ominaisuudet</h2>
         <button
           onClick={onAdd}
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+          className="rounded-md bg-brand-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-accent-hover"
         >
           + Lisää
         </button>
@@ -52,7 +52,7 @@ export default function FeaturesEditor({
                   type="text"
                   value={feature.icon || ''}
                   onChange={(e) => onUpdate(index, 'icon', e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                   placeholder="⭐"
                 />
               </div>
@@ -64,7 +64,7 @@ export default function FeaturesEditor({
                   type="text"
                   value={feature.title || ''}
                   onChange={(e) => onUpdate(index, 'title', e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />
               </div>
               <div>
@@ -77,7 +77,7 @@ export default function FeaturesEditor({
                     onUpdate(index, 'description', e.target.value)
                   }
                   rows={2}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />
               </div>
               <div>
@@ -89,7 +89,7 @@ export default function FeaturesEditor({
                   value={feature.image || ''}
                   onChange={(e) => onUpdate(index, 'image', e.target.value)}
                   placeholder="https://example.com/kuva.jpg"
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />
                 {feature.image && (
                   <img

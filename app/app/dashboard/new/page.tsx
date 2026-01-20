@@ -71,7 +71,7 @@ export default function NewSitePage() {
                   required
                   pattern="[a-zA-Z0-9]+"
                   disabled={isSubmitting}
-                  className="block w-full rounded-l-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed sm:text-sm"
+                  className="block w-full rounded-l-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-brand-accent focus:outline-none focus:ring-brand-accent disabled:bg-gray-100 disabled:cursor-not-allowed sm:text-sm"
                   placeholder="esimerkki"
                 />
                 <span className="inline-flex items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
@@ -87,13 +87,13 @@ export default function NewSitePage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
+                className="flex-1 rounded-md bg-brand-accent px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-accent-hover focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 disabled:bg-brand-accent/60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Luodaan...' : 'Luo sivusto'}
               </button>
               <Link
                 href="/app/dashboard"
-                className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-center text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-center text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2"
               >
                 Peruuta
               </Link>

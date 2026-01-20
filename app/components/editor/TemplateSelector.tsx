@@ -19,7 +19,7 @@ export default function TemplateSelector({
       <select
         value={currentTemplateId || 'saas-modern'}
         onChange={(e) => onTemplateChange(e.target.value)}
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
       >
         {TEMPLATES.map((template) => (
           <option key={template.id} value={template.id}>

@@ -182,7 +182,7 @@ export default function DashboardClient({
             </h1>
             <button
               onClick={() => setIsLoginModalOpen(true)}
-              className="mt-4 rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-accent/90"
+              className="mt-4 rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-accent-hover"
             >
               Kirjaudu sisään
             </button>
@@ -210,7 +210,7 @@ export default function DashboardClient({
             <div className="flex gap-3">
               <Link
                 href="/app/dashboard/new"
-                className="rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-accent/90"
+                className="rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-accent-hover"
                 onClick={(e) => {
                   e.preventDefault();
                   navigateToDashboard('/new');
@@ -255,7 +255,7 @@ export default function DashboardClient({
                 <div className="mt-6">
                   <Link
                     href="/app/dashboard/new"
-                    className="inline-flex items-center rounded-md bg-brand-accent px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-accent/90"
+                    className="inline-flex items-center rounded-md bg-brand-accent px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-accent-hover"
                     onClick={(e) => {
                       e.preventDefault();
                       navigateToDashboard('/new');
@@ -320,10 +320,10 @@ export default function DashboardClient({
                         onClick={() => handleTogglePublish(site.id, site.published)}
                         disabled={updatingPublished[site.id]}
                         className={`
-                          relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
-                          transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 
+                          relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
+                          transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-accent
                           focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-                          ${site.published ? 'bg-blue-600' : 'bg-gray-200'}
+                          ${site.published ? 'bg-brand-accent' : 'bg-gray-200'}
                         `}
                         role="switch"
                         aria-checked={site.published}

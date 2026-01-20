@@ -18,7 +18,7 @@ export default function VideoFields({ videoUrl, onUpdate }: VideoFieldsProps) {
           value={videoUrl || ''}
           onChange={(e) => onUpdate(e.target.value)}
           placeholder="https://example.com/video.mp4"
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
         />
       </div>
     </div>
