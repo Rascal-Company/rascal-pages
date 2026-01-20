@@ -293,7 +293,7 @@ export default function DashboardClient({
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold text-brand-dark">
-                          {site.subdomain}.rascalpages.com
+                          {site.subdomain}.rascalpages.fi
                         </h3>
                         {site.custom_domain && (
                           <p className="mt-1 text-sm text-brand-dark/70">
@@ -347,14 +347,14 @@ export default function DashboardClient({
                       <div className="flex items-center gap-2 rounded-md border border-brand-dark/20 bg-white p-2">
                         <input
                           type="text"
-                          value={`https://${site.subdomain}.rascalpages.com`}
+                          value={`https://${site.subdomain}.rascalpages.fi`}
                           readOnly
                           className="flex-1 bg-transparent text-sm text-brand-dark outline-none"
                         />
                         <button
                           type="button"
                           onClick={() => {
-                            const url = `https://${site.subdomain}.rascalpages.com`;
+                            const url = `https://${site.subdomain}.rascalpages.fi`;
                             navigator.clipboard.writeText(url);
                             showToast('URL kopioitu leikepöydälle!', 'success');
                           }}
