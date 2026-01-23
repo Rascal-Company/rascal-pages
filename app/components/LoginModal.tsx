@@ -43,7 +43,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         // Päivitä server-side auth state ja ohjaa dashboardiin
         // Käytetään replace() ettei käyttäjä pääse takaisin etusivulle back-napilla
         router.refresh();
-        router.replace('/app/dashboard');
+        // Ohjaa app-subdomainiin, koska root domain ei tue /app reittejä
+        const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'rascalpages.fi';
+        window.location.href = `https://app.${rootDomain}/dashboard`;
       }
     } catch (err) {
       setError('Odottamaton virhe tapahtui. Yritä uudelleen.');
