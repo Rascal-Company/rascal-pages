@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { createClient } from "@/src/utils/supabase/client";
-import { useRouter } from "next/navigation";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -14,7 +13,6 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   if (!isOpen) return null;
 
@@ -42,8 +40,6 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         // Sulje modal
         onClose();
         setLoading(false);
-        // Päivitä server-side auth state ja ohjaa dashboardiin
-        router.refresh();
 
         // Tarkista ympäristö ja ohjaa oikeaan paikkaan
         const isLocalhost =
@@ -51,8 +47,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           window.location.hostname.endsWith(".localhost");
 
         if (isLocalhost) {
-          // Localhost: käytä Next.js router client-side navigointia
-          router.push("/app/dashboard");
+          // Localhost: käytä window.location.href eikä router.push
+          // Tämä varmistaa että evästeet menevät varmasti perille
+          window.location.href = "/app/dashboard";
         } else {
           // Tuotanto: ohjaa app-subdomainiin
           const rootDomain =
