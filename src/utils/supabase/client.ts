@@ -11,7 +11,7 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: {
+      cookieOptions: {
         // Aseta evästeet juuritason domainiin, jotta ne toimivat kaikkien subdomainien välillä
         // Localhost: ei aseteta domainia
         // Tuotanto: .rascalpages.fi (huomaa piste alussa)
