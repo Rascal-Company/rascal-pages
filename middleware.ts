@@ -47,7 +47,7 @@ export default async function middleware(req: NextRequest) {
   if (hostname === `app.${rootDomain}`) {
     return updateSupabaseSession(
       req,
-      new URL(`/app${path === "/" ? "" : path}`, req.url),
+      new URL(`/app${path === "/" ? "/dashboard" : path}`, req.url),
     );
   }
 

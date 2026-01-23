@@ -51,10 +51,11 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
           // Tämä varmistaa että evästeet menevät varmasti perille
           window.location.href = "/app/dashboard";
         } else {
-          // Tuotanto: ohjaa app-subdomainiin
+          // Tuotanto: ohjaa app-subdomainiin juuripolkuun
+          // Middleware lisää automaattisesti /app prefixin
           const rootDomain =
             process.env.NEXT_PUBLIC_ROOT_DOMAIN || "rascalpages.fi";
-          window.location.href = `https://app.${rootDomain}/dashboard`;
+          window.location.href = `https://app.${rootDomain}/`;
         }
       }
     } catch (err) {
