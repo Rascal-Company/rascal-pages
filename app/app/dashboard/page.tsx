@@ -1,28 +1,29 @@
-import { createClient } from '@/src/utils/supabase/server';
-import { redirect } from 'next/navigation';
-import DashboardClient from '@/app/components/DashboardClient';
+import { createClient } from "@/src/utils/supabase/server";
+import { redirect } from "next/navigation";
+import DashboardClient from "@/app/components/DashboardClient";
 
 // Estetään pre-rendering build-aikana, koska sivu vaatii käyttäjäsession
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
   // 1. Luo client palvelimella
   const supabase = await createClient();
 
   // 2. Tarkista käyttäjä
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    // TÄRKEÄ: Ohjaa päädomainiin (landing page), älä polkuun '/' 
-    // koska app-subdomainissa '/' tarkoittaa taas dashboardia.
-    // Käytä kokonaista URLia:
-    redirect(`https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'rascalpages.fi'}`)
+    // Älä ohjaa kovakoodattuun HTTPS-osoitteeseen, vaan suhteelliseen polkuun
+    // Middleware hoitaa ohjauksen oikeaan paikkaan
+    redirect("/");
   }
 
   // 3. Hae käyttäjän organisaatio org_members taulusta
   const { data: orgMember, error: orgMemberError } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('auth_user_id', user.id)
+    .from("org_members")
+    .select("org_id, role")
+    .eq("auth_user_id", user.id)
     .maybeSingle();
 
   if (!orgMember || orgMemberError) {
@@ -31,10 +32,10 @@ export default async function Dashboard() {
 
   // 4. Hae sivustot käyttäen org_id:ta (public.users.id)
   const { data: sites, error } = await supabase
-    .from('sites')
-    .select('*')
-    .eq('user_id', orgMember.org_id)
-    .order('created_at', { ascending: false });
+    .from("sites")
+    .select("*")
+    .eq("user_id", orgMember.org_id)
+    .order("created_at", { ascending: false });
 
   if (error) {
     return <div>Virhe ladatessa sivustoja: {error.message}</div>;
@@ -44,10 +45,10 @@ export default async function Dashboard() {
   const sitesWithPublishedStatus = await Promise.all(
     (sites || []).map(async (site) => {
       const { data: page } = await supabase
-        .from('pages')
-        .select('published')
-        .eq('site_id', site.id)
-        .eq('slug', 'home')
+        .from("pages")
+        .select("published")
+        .eq("site_id", site.id)
+        .eq("slug", "home")
         .maybeSingle();
 
       return {
@@ -57,15 +58,19 @@ export default async function Dashboard() {
         custom_domain: site.custom_domain,
         settings: site.settings as Record<string, unknown>,
         published: page?.published ?? false,
-        created_at: site.created_at instanceof Date
-          ? site.created_at.toISOString()
-          : String(site.created_at),
-        updated_at: site.updated_at instanceof Date
-          ? site.updated_at.toISOString()
-          : String(site.updated_at),
+        created_at:
+          site.created_at instanceof Date
+            ? site.created_at.toISOString()
+            : String(site.created_at),
+        updated_at:
+          site.updated_at instanceof Date
+            ? site.updated_at.toISOString()
+            : String(site.updated_at),
       };
-    })
+    }),
   );
 
-  return <DashboardClient initialSites={sitesWithPublishedStatus} userId={user.id} />;
+  return (
+    <DashboardClient initialSites={sitesWithPublishedStatus} userId={user.id} />
+  );
 }
