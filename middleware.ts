@@ -87,10 +87,6 @@ async function updateSupabaseSession(req: NextRequest, rewriteUrl?: URL) {
     ? NextResponse.rewrite(rewriteUrl, { request: req })
     : NextResponse.next({ request: req });
 
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "rascalpages.fi";
-  const hostname = req.headers.get("host")!;
-  const isLocalhost = hostname.includes("localhost");
-
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -106,14 +102,9 @@ async function updateSupabaseSession(req: NextRequest, rewriteUrl?: URL) {
           response = rewriteUrl
             ? NextResponse.rewrite(rewriteUrl, { request: req })
             : NextResponse.next({ request: req });
-          cookiesToSet.forEach(({ name, value, options }) => {
-            // Aseta evästeet juuritason domainiin subdomainien jakamista varten
-            const cookieOptions = {
-              ...options,
-              domain: isLocalhost ? undefined : `.${rootDomain}`,
-            };
-            response.cookies.set(name, value, cookieOptions);
-          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options),
+          );
         },
       },
     },
