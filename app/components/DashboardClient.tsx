@@ -1,12 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { createClient } from '@/src/utils/supabase/client';
-import LoginModal from './LoginModal';
-import { useRouter } from 'next/navigation';
-import { togglePagePublish } from '@/app/actions/toggle-publish';
-import { useToast } from '@/app/components/ui/ToastContainer';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { createClient } from "@/src/utils/supabase/client";
+import LoginModal from "./LoginModal";
+import { useRouter } from "next/navigation";
+import { togglePagePublish } from "@/app/actions/toggle-publish";
+import { useToast } from "@/app/components/ui/ToastContainer";
+import { getDashboardUrl, isLocalhost } from "@/app/lib/navigation";
 
 interface Site {
   id: string;
@@ -32,7 +33,9 @@ export default function DashboardClient({
   const [sites, setSites] = useState(initialSites);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(!!userId);
-  const [updatingPublished, setUpdatingPublished] = useState<Record<string, boolean>>({});
+  const [updatingPublished, setUpdatingPublished] = useState<
+    Record<string, boolean>
+  >({});
   const [deletingSiteId, setDeletingSiteId] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -75,31 +78,34 @@ export default function DashboardClient({
     router.refresh();
   };
 
-  const handleTogglePublish = async (siteId: string, currentPublished: boolean) => {
+  const handleTogglePublish = async (
+    siteId: string,
+    currentPublished: boolean,
+  ) => {
     setUpdatingPublished((prev) => ({ ...prev, [siteId]: true }));
-    
+
     try {
       const result = await togglePagePublish(siteId, !currentPublished);
       if (result?.error) {
-        showToast(result.error, 'error');
+        showToast(result.error, "error");
       } else {
         // Päivitä paikallinen tila
         setSites((prevSites) =>
           prevSites.map((site) =>
             site.id === siteId
               ? { ...site, published: !currentPublished }
-              : site
-          )
+              : site,
+          ),
         );
         showToast(
           !currentPublished
-            ? 'Sivu julkaistu onnistuneesti!'
-            : 'Sivu piilotettu onnistuneesti!',
-          'success'
+            ? "Sivu julkaistu onnistuneesti!"
+            : "Sivu piilotettu onnistuneesti!",
+          "success",
         );
       }
     } catch (err) {
-      showToast('Julkaisutilan päivitys epäonnistui.', 'error');
+      showToast("Julkaisutilan päivitys epäonnistui.", "error");
     } finally {
       setUpdatingPublished((prev) => ({ ...prev, [siteId]: false }));
     }
@@ -116,10 +122,10 @@ export default function DashboardClient({
 
     setIsDeleting(true);
     try {
-      const response = await fetch('/api/delete-site', {
-        method: 'POST',
+      const response = await fetch("/api/delete-site", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ siteId: deletingSiteId }),
       });
@@ -128,14 +134,14 @@ export default function DashboardClient({
 
       if (result.success) {
         // Päivitä sivustolista
-        setSites(sites.filter(site => site.id !== deletingSiteId));
-        showToast('Sivusto poistettu onnistuneesti!', 'success');
+        setSites(sites.filter((site) => site.id !== deletingSiteId));
+        showToast("Sivusto poistettu onnistuneesti!", "success");
       } else {
-        showToast(result.error || 'Sivuston poisto epäonnistui.', 'error');
+        showToast(result.error || "Sivuston poisto epäonnistui.", "error");
       }
     } catch (error) {
-      console.error('Virhe sivuston poistossa:', error);
-      showToast('Odottamaton virhe tapahtui. Yritä uudelleen.', 'error');
+      console.error("Virhe sivuston poistossa:", error);
+      showToast("Odottamaton virhe tapahtui. Yritä uudelleen.", "error");
     } finally {
       setDeletingSiteId(null);
       setIsConfirmingDelete(false);
@@ -149,27 +155,13 @@ export default function DashboardClient({
   };
 
   // Apufunktio navigointia varten
-  const navigateToDashboard = (path: string = '') => {
+  const navigateToDashboard = (path: string = "") => {
     const url = getDashboardUrl(path);
-    if (typeof window !== 'undefined') {
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.localhost');
-      if (isLocalhost) {
-        router.push(url);
-      } else {
-        window.location.href = url;
-      }
+    if (isLocalhost()) {
+      router.push(url);
+    } else {
+      window.location.href = url;
     }
-  };
-
-  // Apufunktio URL:n generointia varten
-  const getDashboardUrl = (path: string = ''): string => {
-    if (typeof window !== 'undefined') {
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.localhost');
-      if (isLocalhost) {
-        return `/app/dashboard${path}`;
-      }
-    }
-    return `https://app.rascalpages.fi/dashboard${path}`;
   };
 
   if (!isAuthenticated) {
@@ -213,7 +205,7 @@ export default function DashboardClient({
                 className="rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-accent-hover"
                 onClick={(e) => {
                   e.preventDefault();
-                  navigateToDashboard('/new');
+                  navigateToDashboard("/new");
                 }}
               >
                 + Uusi sivusto
@@ -258,7 +250,7 @@ export default function DashboardClient({
                     className="inline-flex items-center rounded-md bg-brand-accent px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-accent-hover"
                     onClick={(e) => {
                       e.preventDefault();
-                      navigateToDashboard('/new');
+                      navigateToDashboard("/new");
                     }}
                   >
                     + Uusi sivusto
@@ -311,29 +303,33 @@ export default function DashboardClient({
                         </p>
                         <p className="mt-0.5 text-xs text-brand-dark/60">
                           {site.published
-                            ? 'Sivu on julkinen ja näkyy kävijöille'
-                            : 'Sivu on piilossa'}
+                            ? "Sivu on julkinen ja näkyy kävijöille"
+                            : "Sivu on piilossa"}
                         </p>
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleTogglePublish(site.id, site.published)}
+                        onClick={() =>
+                          handleTogglePublish(site.id, site.published)
+                        }
                         disabled={updatingPublished[site.id]}
                         className={`
                           relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
                           transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-accent
                           focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-                          ${site.published ? 'bg-brand-accent' : 'bg-gray-200'}
+                          ${site.published ? "bg-brand-accent" : "bg-gray-200"}
                         `}
                         role="switch"
                         aria-checked={site.published}
-                        aria-label={site.published ? 'Piilota sivu' : 'Julkaise sivu'}
+                        aria-label={
+                          site.published ? "Piilota sivu" : "Julkaise sivu"
+                        }
                       >
                         <span
                           className={`
                             pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
                             transition duration-200 ease-in-out
-                            ${site.published ? 'translate-x-5' : 'translate-x-0'}
+                            ${site.published ? "translate-x-5" : "translate-x-0"}
                           `}
                         />
                       </button>
@@ -356,7 +352,7 @@ export default function DashboardClient({
                           onClick={() => {
                             const url = `https://${site.subdomain}.rascalpages.fi`;
                             navigator.clipboard.writeText(url);
-                            showToast('URL kopioitu leikepöydälle!', 'success');
+                            showToast("URL kopioitu leikepöydälle!", "success");
                           }}
                           className="flex-shrink-0 rounded p-1.5 text-brand-dark/60 transition-colors hover:bg-brand-light hover:text-brand-dark"
                           aria-label="Kopioi URL"
@@ -420,9 +416,12 @@ export default function DashboardClient({
       {isConfirmingDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-medium text-brand-dark">Poista sivusto</h3>
+            <h3 className="text-lg font-medium text-brand-dark">
+              Poista sivusto
+            </h3>
             <p className="mt-2 text-sm text-brand-dark/70">
-              Oletko varma että haluat poistaa tämän sivuston? Tätä toimintoa ei voi perua.
+              Oletko varma että haluat poistaa tämän sivuston? Tätä toimintoa ei
+              voi perua.
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button
@@ -437,7 +436,7 @@ export default function DashboardClient({
                 className="rounded-md border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
                 disabled={isDeleting}
               >
-                {isDeleting ? 'Poistetaan...' : 'Poista'}
+                {isDeleting ? "Poistetaan..." : "Poista"}
               </button>
             </div>
           </div>

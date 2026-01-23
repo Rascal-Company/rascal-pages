@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { createClient } from '@/src/utils/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { createClient } from "@/src/utils/supabase/client";
+import { useRouter } from "next/navigation";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -10,8 +10,8 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -25,10 +25,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
     try {
       const supabase = createClient();
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error: authError } = await supabase.auth.signInWithPassword(
+        {
+          email,
+          password,
+        },
+      );
 
       if (authError) {
         setError(authError.message);
@@ -41,14 +43,25 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         onClose();
         setLoading(false);
         // Päivitä server-side auth state ja ohjaa dashboardiin
-        // Käytetään replace() ettei käyttäjä pääse takaisin etusivulle back-napilla
         router.refresh();
-        // Ohjaa app-subdomainiin, koska root domain ei tue /app reittejä
-        const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'rascalpages.fi';
-        window.location.href = `https://app.${rootDomain}/dashboard`;
+
+        // Tarkista ympäristö ja ohjaa oikeaan paikkaan
+        const isLocalhost =
+          window.location.hostname === "localhost" ||
+          window.location.hostname.endsWith(".localhost");
+
+        if (isLocalhost) {
+          // Localhost: käytä Next.js router client-side navigointia
+          router.push("/app/dashboard");
+        } else {
+          // Tuotanto: ohjaa app-subdomainiin
+          const rootDomain =
+            process.env.NEXT_PUBLIC_ROOT_DOMAIN || "rascalpages.fi";
+          window.location.href = `https://app.${rootDomain}/dashboard`;
+        }
       }
     } catch (err) {
-      setError('Odottamaton virhe tapahtui. Yritä uudelleen.');
+      setError("Odottamaton virhe tapahtui. Yritä uudelleen.");
       setLoading(false);
     }
   };
@@ -132,7 +145,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               disabled={loading}
               className="w-full rounded-lg bg-brand-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? 'Kirjaudutaan...' : 'Kirjaudu sisään'}
+              {loading ? "Kirjaudutaan..." : "Kirjaudu sisään"}
             </button>
           </form>
         </div>
