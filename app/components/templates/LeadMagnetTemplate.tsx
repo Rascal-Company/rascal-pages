@@ -1,13 +1,39 @@
 'use client';
 
 import { TemplateConfig } from '@/src/lib/templates';
+import { submitLead } from '@/app/actions/submit-lead';
+import { AnalyticsLink } from '@/app/components/AnalyticsLink';
+import { useState, useTransition } from 'react';
 
 interface LeadMagnetTemplateProps {
   content: TemplateConfig;
+  siteId: string;
 }
 
-export default function LeadMagnetTemplate({ content }: LeadMagnetTemplateProps) {
+export default function LeadMagnetTemplate({ content, siteId }: LeadMagnetTemplateProps) {
   const primaryColor = content.theme?.primaryColor || '#3B82F6';
+  const [isPending, startTransition] = useTransition();
+  const [formStatus, setFormStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const name = formData.get('name') as string;
+
+    startTransition(async () => {
+      const result = await submitLead(siteId, email, name);
+      if (result.success) {
+        setFormStatus('success');
+        setErrorMessage('');
+        (e.target as HTMLFormElement).reset();
+      } else {
+        setFormStatus('error');
+        setErrorMessage(result.error || 'Jokin meni pieleen. Yritä uudelleen.');
+      }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -54,13 +80,15 @@ export default function LeadMagnetTemplate({ content }: LeadMagnetTemplateProps)
 
               {/* CTA Button */}
               <div className="mt-10">
-                <a
+                <AnalyticsLink
+                  siteId={siteId}
                   href={content.hero.ctaLink}
                   className="inline-block rounded-lg px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105"
                   style={{ backgroundColor: primaryColor }}
+                  eventMetadata={{ location: 'hero_left' }}
                 >
                   {content.hero.ctaText}
-                </a>
+                </AnalyticsLink>
               </div>
             </div>
 
@@ -79,7 +107,22 @@ export default function LeadMagnetTemplate({ content }: LeadMagnetTemplateProps)
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">
                   Lataa ilmaiseksi
                 </h2>
-                <form className="space-y-4">
+
+                {formStatus === 'success' && (
+                  <div className="mb-6 rounded-lg bg-green-50 p-4 text-green-800 border border-green-200">
+                    <p className="font-semibold">Kiitos! Tietosi on tallennettu.</p>
+                    <p className="text-sm mt-1">Saat pian lisätietoja sähköpostiisi.</p>
+                  </div>
+                )}
+
+                {formStatus === 'error' && (
+                  <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-800 border border-red-200">
+                    <p className="font-semibold">Virhe</p>
+                    <p className="text-sm mt-1">{errorMessage}</p>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                       Sähköpostiosoite
@@ -89,7 +132,8 @@ export default function LeadMagnetTemplate({ content }: LeadMagnetTemplateProps)
                       id="email"
                       name="email"
                       required
-                      className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={isPending}
+                      className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="nimi@esimerkki.fi"
                     />
                   </div>
@@ -101,16 +145,18 @@ export default function LeadMagnetTemplate({ content }: LeadMagnetTemplateProps)
                       type="text"
                       id="name"
                       name="name"
-                      className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      disabled={isPending}
+                      className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="Etunimesi"
                     />
                   </div>
                   <button
                     type="submit"
-                    className="w-full rounded-md px-6 py-3 text-base font-semibold text-white shadow-md transition-colors hover:opacity-90"
+                    disabled={isPending}
+                    className="w-full rounded-md px-6 py-3 text-base font-semibold text-white shadow-md transition-colors hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ backgroundColor: primaryColor }}
                   >
-                    {content.hero.ctaText}
+                    {isPending ? 'Lähetetään...' : content.hero.ctaText}
                   </button>
                   <p className="text-xs text-center text-gray-500 mt-2">
                     Emme koskaan jaa tietojasi kolmansien osapuolten kanssa.

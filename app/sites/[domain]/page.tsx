@@ -13,6 +13,8 @@ export default async function PublicSitePage({ params }: PageProps) {
   const { domain } = await params;
   const supabase = await createClient();
 
+  console.log("[PublicSitePage] Haetaan sivustoa domainilla:", domain);
+
   // Hae sivuston tiedot subdomainin tai custom domainin perusteella
   const { data: site, error: siteError } = await supabase
     .from("sites")
@@ -21,14 +23,30 @@ export default async function PublicSitePage({ params }: PageProps) {
     .maybeSingle();
 
   if (siteError) {
-    console.error("Virhe sivuston haussa:", siteError);
+    console.error("[PublicSitePage] Virhe sivuston haussa:", siteError);
     notFound();
   }
 
   if (!site) {
-    console.log(`Sivustoa ei löydy subdomainilla: ${domain}`);
+    console.log(
+      `[PublicSitePage] Sivustoa ei löydy domainilla: ${domain}. Tarkista että custom_domain tai subdomain on tallennettu tietokantaan.`,
+    );
+
+    // Debug: Hae kaikki sivustot nähdäksemme mitä tietokannassa on
+    const { data: allSites } = await supabase
+      .from("sites")
+      .select("id, subdomain, custom_domain")
+      .limit(10);
+    console.log("[PublicSitePage] Tietokannassa olevat sivustot:", allSites);
+
     notFound();
   }
+
+  console.log("[PublicSitePage] Sivusto löytyi:", {
+    id: site.id,
+    subdomain: site.subdomain,
+    custom_domain: site.custom_domain,
+  });
 
   // Hae julkaistu sivu (slug='home' oletuksena)
   // Huom: Jos sivua ei ole julkaistu, käytetään oletussisältöä

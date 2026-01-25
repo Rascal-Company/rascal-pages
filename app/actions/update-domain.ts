@@ -75,6 +75,9 @@ export async function updateSiteDomain(
 
   // 3. Cleanaa ja validoi domain
   const cleanedDomain = cleanDomain(customDomain);
+  console.log(
+    `[updateSiteDomain] Input: "${customDomain}" -> Cleaned: "${cleanedDomain}"`,
+  );
 
   // Jos tyhjä, poistetaan domain (asetetaan NULL)
   if (!cleanedDomain) {
@@ -152,6 +155,10 @@ export async function updateSiteDomain(
   }
 
   // 7. Päivitä custom domain
+  console.log(
+    `[updateSiteDomain] Päivitetään sivuston ${siteId} custom_domain arvoon: "${cleanedDomain}"`,
+  );
+
   const { error: updateError } = await supabase
     .from("sites")
     .update({
@@ -161,11 +168,18 @@ export async function updateSiteDomain(
     .eq("id", siteId);
 
   if (updateError) {
-    console.error("Virhe domainin päivityksessä:", updateError);
+    console.error(
+      "[updateSiteDomain] Virhe domainin päivityksessä:",
+      updateError,
+    );
     return {
       error: "Domainin päivitys epäonnistui.",
     };
   }
+
+  console.log(
+    `[updateSiteDomain] Custom domain päivitetty onnistuneesti: "${cleanedDomain}"`,
+  );
 
   // 8. Revalidate paths
   revalidatePath("/app/dashboard");
