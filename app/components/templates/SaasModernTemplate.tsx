@@ -1,12 +1,14 @@
 'use client';
 
 import { TemplateConfig } from '@/src/lib/templates';
+import { AnalyticsLink } from '@/app/components/AnalyticsLink';
 
 interface SaasModernTemplateProps {
   content: TemplateConfig;
+  siteId: string;
 }
 
-export default function SaasModernTemplate({ content }: SaasModernTemplateProps) {
+export default function SaasModernTemplate({ content, siteId }: SaasModernTemplateProps) {
   const primaryColor = content.theme?.primaryColor || '#3B82F6';
 
   return (
@@ -29,12 +31,14 @@ export default function SaasModernTemplate({ content }: SaasModernTemplateProps)
               </p>
               {content.hero.ctaText && (
                 <div className={`mt-10 flex items-center gap-x-6 ${content.hero.image ? '' : 'justify-center'}`}>
-                  <a
+                  <AnalyticsLink
+                    siteId={siteId}
                     href={content.hero.ctaLink}
                     className="rounded-md bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors"
+                    eventMetadata={{ location: 'hero_cta' }}
                   >
                     {content.hero.ctaText}
-                  </a>
+                  </AnalyticsLink>
                 </div>
               )}
             </div>

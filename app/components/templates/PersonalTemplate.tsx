@@ -1,12 +1,14 @@
 'use client';
 
 import { TemplateConfig } from '@/src/lib/templates';
+import { AnalyticsLink } from '@/app/components/AnalyticsLink';
 
 interface PersonalTemplateProps {
   content: TemplateConfig;
+  siteId: string;
 }
 
-export default function PersonalTemplate({ content }: PersonalTemplateProps) {
+export default function PersonalTemplate({ content, siteId }: PersonalTemplateProps) {
   const primaryColor = content.theme?.primaryColor || '#10B981';
 
   return (
@@ -45,13 +47,15 @@ export default function PersonalTemplate({ content }: PersonalTemplateProps) {
             </p>
             {content.hero.ctaText && (
               <div className="mt-10 flex items-center justify-center gap-x-6">
-                <a
+                <AnalyticsLink
+                  siteId={siteId}
                   href={content.hero.ctaLink}
                   className="rounded-md px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105"
                   style={{ backgroundColor: primaryColor }}
+                  eventMetadata={{ location: 'hero_cta' }}
                 >
                   {content.hero.ctaText}
-                </a>
+                </AnalyticsLink>
               </div>
             )}
           </div>

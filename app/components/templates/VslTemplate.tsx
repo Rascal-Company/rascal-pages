@@ -1,12 +1,14 @@
 'use client';
 
 import { TemplateConfig } from '@/src/lib/templates';
+import { AnalyticsLink } from '@/app/components/AnalyticsLink';
 
 interface VslTemplateProps {
   content: TemplateConfig;
+  siteId: string;
 }
 
-export default function VslTemplate({ content }: VslTemplateProps) {
+export default function VslTemplate({ content, siteId }: VslTemplateProps) {
   const primaryColor = content.theme?.primaryColor || '#EF4444';
 
   return (
@@ -81,13 +83,15 @@ export default function VslTemplate({ content }: VslTemplateProps) {
       {/* CTA Button Section */}
       <section className="mx-auto max-w-5xl px-6 pb-24 lg:px-8">
         <div className="text-center">
-          <a
+          <AnalyticsLink
+            siteId={siteId}
             href={content.hero.ctaLink}
             className="inline-block rounded-lg px-12 py-6 text-2xl font-bold text-white shadow-2xl transition-all hover:scale-105 hover:shadow-3xl"
             style={{ backgroundColor: primaryColor }}
+            eventMetadata={{ location: 'cta_button' }}
           >
             {content.hero.ctaText}
-          </a>
+          </AnalyticsLink>
           <p className="mt-6 text-sm text-gray-400">
             Klikkaa nappia jatkaaksesi
           </p>

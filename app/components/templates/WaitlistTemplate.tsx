@@ -1,13 +1,37 @@
 'use client';
 
 import { TemplateConfig } from '@/src/lib/templates';
+import { submitLead } from '@/app/actions/submit-lead';
+import { useState, useTransition } from 'react';
 
 interface WaitlistTemplateProps {
   content: TemplateConfig;
+  siteId: string;
 }
 
-export default function WaitlistTemplate({ content }: WaitlistTemplateProps) {
+export default function WaitlistTemplate({ content, siteId }: WaitlistTemplateProps) {
   const primaryColor = content.theme?.primaryColor || '#8B5CF6';
+  const [isPending, startTransition] = useTransition();
+  const [formStatus, setFormStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+
+    startTransition(async () => {
+      const result = await submitLead(siteId, email);
+      if (result.success) {
+        setFormStatus('success');
+        setErrorMessage('');
+        (e.target as HTMLFormElement).reset();
+      } else {
+        setFormStatus('error');
+        setErrorMessage(result.error || 'Jokin meni pieleen. Yritä uudelleen.');
+      }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50">
@@ -41,19 +65,36 @@ export default function WaitlistTemplate({ content }: WaitlistTemplateProps) {
 
           {/* Waitlist Form */}
           <div className="mt-10">
-            <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+            {formStatus === 'success' && (
+              <div className="mb-6 rounded-lg bg-green-50 p-4 text-green-800 border border-green-200 max-w-md mx-auto">
+                <p className="font-semibold">Kiitos! Olet nyt odotuslistalla.</p>
+                <p className="text-sm mt-1">Saat pian lisätietoja sähköpostiisi.</p>
+              </div>
+            )}
+
+            {formStatus === 'error' && (
+              <div className="mb-6 rounded-lg bg-red-50 p-4 text-red-800 border border-red-200 max-w-md mx-auto">
+                <p className="font-semibold">Virhe</p>
+                <p className="text-sm mt-1">{errorMessage}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
               <input
                 type="email"
+                name="email"
                 required
+                disabled={isPending}
                 placeholder="Sähköpostiosoitteesi"
-                className="flex-1 rounded-lg border border-gray-300 px-6 py-4 text-lg text-gray-900 placeholder-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="flex-1 rounded-lg border border-gray-300 px-6 py-4 text-lg text-gray-900 placeholder-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <button
                 type="submit"
-                className="rounded-lg px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105"
+                disabled={isPending}
+                className="rounded-lg px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 style={{ backgroundColor: primaryColor }}
               >
-                {content.hero.ctaText}
+                {isPending ? 'Lähetetään...' : content.hero.ctaText}
               </button>
             </form>
             <p className="mt-4 text-sm text-gray-500">

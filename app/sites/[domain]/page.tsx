@@ -68,5 +68,5 @@ export default async function PublicSitePage({ params }: PageProps) {
 
   const content = page?.content || defaultContent;
 
-  return <SiteRenderer content={content} />;
+  return <SiteRenderer content={content} siteId={site.id} />;
 }

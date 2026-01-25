@@ -20,6 +20,7 @@ export default async function middleware(req: NextRequest) {
 
   // Hae hostname (esim. "kalle.rascalpages.fi" tai "localhost:3000")
   let hostname = req.headers.get("host")!;
+  const originalHostname = hostname;
 
   // Localhost-kehityksessä ilman subdomainia: päästä läpi suoraan
   if (hostname === "localhost:3000") {
@@ -29,6 +30,9 @@ export default async function middleware(req: NextRequest) {
   // Localhost-kehityksessä: test.localhost:3000 -> test.rascalpages.fi
   if (hostname.includes(".localhost:")) {
     hostname = hostname.replace(".localhost:3000", `.${rootDomain}`);
+    console.log(
+      `[Middleware] Localhost detected: ${originalHostname} -> ${hostname}`,
+    );
   }
 
   // Erityiskäsittely Vercel preview -urlieille
@@ -68,6 +72,9 @@ export default async function middleware(req: NextRequest) {
   // Jos osoite on kalle.rascalpages.fi, erota subdomain
   if (hostname.endsWith(`.${rootDomain}`)) {
     const subdomain = hostname.replace(`.${rootDomain}`, "");
+    console.log(
+      `[Middleware] Subdomain detected: ${hostname} -> subdomain: ${subdomain}, routing to /sites/${subdomain}`,
+    );
     return updateSupabaseSession(
       req,
       new URL(`/sites/${subdomain}${path}`, req.url),
@@ -76,6 +83,9 @@ export default async function middleware(req: NextRequest) {
 
   // 4. Custom Domain (Asiakkaan oma domain)
   // Jos osoite on esim. oma-firma.fi
+  console.log(
+    `[Middleware] Custom domain detected: ${hostname}, routing to /sites/${hostname}`,
+  );
   return updateSupabaseSession(
     req,
     new URL(`/sites/${hostname}${path}`, req.url),

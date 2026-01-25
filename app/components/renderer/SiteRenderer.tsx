@@ -6,12 +6,14 @@ import WaitlistTemplate from '@/app/components/templates/WaitlistTemplate';
 import SaasModernTemplate from '@/app/components/templates/SaasModernTemplate';
 import VslTemplate from '@/app/components/templates/VslTemplate';
 import PersonalTemplate from '@/app/components/templates/PersonalTemplate';
+import { PageViewTracker } from '@/app/components/PageViewTracker';
 
 interface SiteRendererProps {
   content: TemplateConfig | any; // Tuki vanhalle muodolle myös
+  siteId: string;
 }
 
-export default function SiteRenderer({ content }: SiteRendererProps) {
+export default function SiteRenderer({ content, siteId }: SiteRendererProps) {
   // Normalisoi content - varmista että templateId on olemassa
   let normalizedContent: TemplateConfig;
 
@@ -36,17 +38,24 @@ export default function SiteRenderer({ content }: SiteRendererProps) {
   // Renderöi oikea template komponentti templateId:n perusteella
   const templateId = normalizedContent.templateId || 'saas-modern';
 
-  switch (templateId) {
-    case 'lead-magnet':
-      return <LeadMagnetTemplate content={normalizedContent} />;
-    case 'waitlist':
-      return <WaitlistTemplate content={normalizedContent} />;
-    case 'vsl':
-      return <VslTemplate content={normalizedContent} />;
-    case 'personal':
-      return <PersonalTemplate content={normalizedContent} />;
-    case 'saas-modern':
-    default:
-      return <SaasModernTemplate content={normalizedContent} />;
-  }
+  return (
+    <>
+      <PageViewTracker siteId={siteId} />
+      {(() => {
+        switch (templateId) {
+          case 'lead-magnet':
+            return <LeadMagnetTemplate content={normalizedContent} siteId={siteId} />;
+          case 'waitlist':
+            return <WaitlistTemplate content={normalizedContent} siteId={siteId} />;
+          case 'vsl':
+            return <VslTemplate content={normalizedContent} siteId={siteId} />;
+          case 'personal':
+            return <PersonalTemplate content={normalizedContent} siteId={siteId} />;
+          case 'saas-modern':
+          default:
+            return <SaasModernTemplate content={normalizedContent} siteId={siteId} />;
+        }
+      })()}
+    </>
+  );
 }
