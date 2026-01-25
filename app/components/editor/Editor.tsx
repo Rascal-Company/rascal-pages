@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { updatePageContent } from '@/app/actions/save-page';
-import { TemplateConfig, getTemplateById } from '@/src/lib/templates';
-import { normalizeContent, mergeTemplateContent } from './utils/contentUtils';
+import { useState } from "react";
+import { updatePageContent } from "@/app/actions/save-page";
+import { TemplateConfig, getTemplateById } from "@/src/lib/templates";
+import { normalizeContent, mergeTemplateContent } from "./utils/contentUtils";
 import {
   updateHeroField,
   updateThemeField,
@@ -18,21 +18,21 @@ import {
   updateFaq,
   updateAboutField,
   updateVideoUrl,
-} from './utils/contentUpdaters';
-import { useToast } from '@/app/components/ui/ToastContainer';
-import EditorHeader from './EditorHeader';
-import StatusMessages from './StatusMessages';
-import TemplateSelector from './TemplateSelector';
-import HeroFields from './fields/HeroFields';
-import VideoFields from './fields/VideoFields';
-import ThemeFields from './fields/ThemeFields';
-import AboutFields from './fields/AboutFields';
-import FeaturesEditor from './fields/FeaturesEditor';
-import TestimonialsEditor from './fields/TestimonialsEditor';
-import FaqEditor from './fields/FaqEditor';
-import SaveButton from './SaveButton';
-import EditorPreview from './EditorPreview';
-import PublishedToggle from './PublishedToggle';
+} from "./utils/contentUpdaters";
+import { useToast } from "@/app/components/ui/ToastContainer";
+import EditorHeader from "./EditorHeader";
+import StatusMessages from "./StatusMessages";
+import TemplateSelector from "./TemplateSelector";
+import HeroFields from "./fields/HeroFields";
+import VideoFields from "./fields/VideoFields";
+import ThemeFields from "./fields/ThemeFields";
+import AboutFields from "./fields/AboutFields";
+import FeaturesEditor from "./fields/FeaturesEditor";
+import TestimonialsEditor from "./fields/TestimonialsEditor";
+import FaqEditor from "./fields/FaqEditor";
+import SaveButton from "./SaveButton";
+import EditorPreview from "./EditorPreview";
+import PublishedToggle from "./PublishedToggle";
 
 interface EditorProps {
   siteId: string;
@@ -50,7 +50,9 @@ export default function Editor({
   initialPublished = false,
 }: EditorProps) {
   const { showToast, showConfirm } = useToast();
-  const [content, setContent] = useState<TemplateConfig>(normalizeContent(initialContent));
+  const [content, setContent] = useState<TemplateConfig>(
+    normalizeContent(initialContent),
+  );
   const [published, setPublished] = useState<boolean>(initialPublished);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,16 +67,16 @@ export default function Editor({
       const result = await updatePageContent(siteId, content, published);
       if (result?.error) {
         setError(result.error);
-        showToast(result.error, 'error');
+        showToast(result.error, "error");
       } else {
         setSuccess(true);
-        showToast('Muutokset tallennettu onnistuneesti!', 'success');
+        showToast("Muutokset tallennettu onnistuneesti!", "success");
         setTimeout(() => setSuccess(false), 3000);
       }
     } catch (err) {
-      const errorMessage = 'Tallennus epäonnistui. Yritä uudelleen.';
+      const errorMessage = "Tallennus epäonnistui. Yritä uudelleen.";
       setError(errorMessage);
-      showToast(errorMessage, 'error');
+      showToast(errorMessage, "error");
     } finally {
       setIsSaving(false);
     }
@@ -84,38 +86,39 @@ export default function Editor({
     if (newTemplateId === content.templateId) return;
 
     const confirmed = await showConfirm(
-      'Olet vaihtamassa templatea. Tämä voi muuttaa sivun rakennetta ja poistaa osan datasta. Haluatko jatkaa?',
+      "Olet vaihtamassa templatea. Tämä voi muuttaa sivun rakennetta ja poistaa osan datasta. Haluatko jatkaa?",
       () => {
         // Tyhjä callback - tehdään toiminnot confirmed-tarkistuksen jälkeen
-      }
+      },
     );
 
     if (confirmed) {
       const mergedContent = mergeTemplateContent(content, newTemplateId);
       if (mergedContent) {
         setContent(mergedContent);
-        showToast('Template vaihdettu onnistuneesti!', 'success');
+        showToast("Template vaihdettu onnistuneesti!", "success");
       }
     }
   };
 
-  const currentTemplate = getTemplateById(content.templateId || 'saas-modern');
-  const supportsFeatures = currentTemplate?.defaultContent.features !== undefined;
-  const supportsVideo = currentTemplate?.id === 'vsl';
-  const supportsAbout = currentTemplate?.id === 'personal';
-  const supportsTestimonials = currentTemplate?.id === 'personal';
+  const currentTemplate = getTemplateById(content.templateId || "saas-modern");
+  const supportsFeatures =
+    currentTemplate?.defaultContent.features !== undefined;
+  const supportsVideo = currentTemplate?.id === "vsl";
+  const supportsAbout = currentTemplate?.id === "personal";
+  const supportsTestimonials = currentTemplate?.id === "personal";
   const supportsFaq = currentTemplate?.defaultContent.faq !== undefined;
 
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Left Sidebar - Form (40%) */}
       <div className="w-2/5 overflow-y-auto border-r border-gray-200 bg-white p-6">
-        <EditorHeader siteSubdomain={siteSubdomain} />
+        <EditorHeader siteId={siteId} siteSubdomain={siteSubdomain} />
         <StatusMessages error={error} success={success} />
 
         <div className="space-y-6">
           <TemplateSelector
-            currentTemplateId={content.templateId || 'saas-modern'}
+            currentTemplateId={content.templateId || "saas-modern"}
             onTemplateChange={handleTemplateChange}
           />
 
@@ -127,7 +130,9 @@ export default function Editor({
 
           <HeroFields
             hero={content.hero}
-            onUpdate={(field, value) => setContent(updateHeroField(field, value))}
+            onUpdate={(field, value) =>
+              setContent(updateHeroField(field, value))
+            }
           />
 
           {supportsVideo && (
@@ -181,7 +186,9 @@ export default function Editor({
 
           <ThemeFields
             primaryColor={content.theme?.primaryColor}
-            onUpdate={(value) => setContent(updateThemeField('primaryColor', value))}
+            onUpdate={(value) =>
+              setContent(updateThemeField("primaryColor", value))
+            }
           />
 
           <SaveButton isSaving={isSaving} onSave={handleSave} />
