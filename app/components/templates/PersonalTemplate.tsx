@@ -1,15 +1,18 @@
-'use client';
+"use client";
 
-import { TemplateConfig } from '@/src/lib/templates';
-import { AnalyticsLink } from '@/app/components/AnalyticsLink';
+import { TemplateConfig } from "@/src/lib/templates";
+import { AnalyticsLink } from "@/app/components/AnalyticsLink";
 
 interface PersonalTemplateProps {
   content: TemplateConfig;
   siteId: string;
 }
 
-export default function PersonalTemplate({ content, siteId }: PersonalTemplateProps) {
-  const primaryColor = content.theme?.primaryColor || '#10B981';
+export default function PersonalTemplate({
+  content,
+  siteId,
+}: PersonalTemplateProps) {
+  const primaryColor = content.theme?.primaryColor || "#10B981";
 
   return (
     <div className="min-h-screen bg-white">
@@ -20,8 +23,8 @@ export default function PersonalTemplate({ content, siteId }: PersonalTemplatePr
           background: content.hero.image
             ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${content.hero.image})`
             : `linear-gradient(135deg, ${primaryColor}15 0%, transparent 100%)`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       >
         <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
@@ -35,14 +38,18 @@ export default function PersonalTemplate({ content, siteId }: PersonalTemplatePr
               />
             ) : (
               <div className="mx-auto h-32 w-32 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-4xl font-bold ring-4 ring-white shadow-xl">
-                {content.about?.name?.charAt(0).toUpperCase() || 'A'}
+                {content.about?.name?.charAt(0).toUpperCase() || "A"}
               </div>
             )}
 
-            <h1 className={`mt-8 text-4xl font-bold tracking-tight sm:text-5xl ${content.hero.image ? 'text-white' : 'text-gray-900'}`}>
+            <h1
+              className={`mt-8 text-4xl font-bold tracking-tight sm:text-5xl ${content.hero.image ? "text-white" : "text-gray-900"}`}
+            >
               {content.hero.title}
             </h1>
-            <p className={`mt-6 text-lg leading-8 ${content.hero.image ? 'text-white/90' : 'text-gray-600'}`}>
+            <p
+              className={`mt-6 text-lg leading-8 ${content.hero.image ? "text-white/90" : "text-gray-600"}`}
+            >
               {content.hero.subtitle}
             </p>
             {content.hero.ctaText && (
@@ -52,7 +59,7 @@ export default function PersonalTemplate({ content, siteId }: PersonalTemplatePr
                   href={content.hero.ctaLink}
                   className="rounded-md px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105"
                   style={{ backgroundColor: primaryColor }}
-                  eventMetadata={{ location: 'hero_cta' }}
+                  eventMetadata={{ location: "hero_cta" }}
                 >
                   {content.hero.ctaText}
                 </AnalyticsLink>
@@ -124,13 +131,17 @@ export default function PersonalTemplate({ content, siteId }: PersonalTemplatePr
                         className="h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
                         style={{ backgroundColor: primaryColor }}
                       >
-                        {testimonial.name?.charAt(0).toUpperCase() || 'A'}
+                        {testimonial.name?.charAt(0).toUpperCase() || "A"}
                       </div>
                     )}
                     <div>
-                      <p className="font-semibold text-gray-900">{testimonial.name}</p>
+                      <p className="font-semibold text-gray-900">
+                        {testimonial.name}
+                      </p>
                       {testimonial.company && (
-                        <p className="text-sm text-gray-500">{testimonial.company}</p>
+                        <p className="text-sm text-gray-500">
+                          {testimonial.company}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -146,7 +157,8 @@ export default function PersonalTemplate({ content, siteId }: PersonalTemplatePr
         <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
           <div className="text-center">
             <p className="text-sm leading-5 text-gray-400">
-              &copy; {new Date().getFullYear()} Rascal Pages. Kaikki oikeudet pidätetään.
+              &copy; {new Date().getFullYear()} Rascal Pages. Kaikki oikeudet
+              pidätetään.
             </p>
           </div>
         </div>

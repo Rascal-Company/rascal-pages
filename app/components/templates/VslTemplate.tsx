@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { TemplateConfig } from '@/src/lib/templates';
-import { AnalyticsLink } from '@/app/components/AnalyticsLink';
+import { TemplateConfig } from "@/src/lib/templates";
+import { AnalyticsLink } from "@/app/components/AnalyticsLink";
 
 interface VslTemplateProps {
   content: TemplateConfig;
@@ -9,7 +9,7 @@ interface VslTemplateProps {
 }
 
 export default function VslTemplate({ content, siteId }: VslTemplateProps) {
-  const primaryColor = content.theme?.primaryColor || '#EF4444';
+  const primaryColor = content.theme?.primaryColor || "#EF4444";
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -88,7 +88,7 @@ export default function VslTemplate({ content, siteId }: VslTemplateProps) {
             href={content.hero.ctaLink}
             className="inline-block rounded-lg px-12 py-6 text-2xl font-bold text-white shadow-2xl transition-all hover:scale-105 hover:shadow-3xl"
             style={{ backgroundColor: primaryColor }}
-            eventMetadata={{ location: 'cta_button' }}
+            eventMetadata={{ location: "cta_button" }}
           >
             {content.hero.ctaText}
           </AnalyticsLink>
@@ -103,7 +103,8 @@ export default function VslTemplate({ content, siteId }: VslTemplateProps) {
         <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
           <div className="text-center">
             <p className="text-sm leading-5 text-gray-400">
-              &copy; {new Date().getFullYear()} Rascal Pages. Kaikki oikeudet pidätetään.
+              &copy; {new Date().getFullYear()} Rascal Pages. Kaikki oikeudet
+              pidätetään.
             </p>
           </div>
         </div>

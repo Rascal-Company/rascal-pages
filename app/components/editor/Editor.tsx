@@ -196,7 +196,7 @@ export default function Editor({
       </div>
 
       {/* Right Side - Preview (60%) */}
-      <EditorPreview content={content} />
+      <EditorPreview content={content} siteId={siteId} />
     </div>
   );
 }

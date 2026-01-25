@@ -1,15 +1,18 @@
-'use client';
+"use client";
 
-import { TemplateConfig } from '@/src/lib/templates';
-import { AnalyticsLink } from '@/app/components/AnalyticsLink';
+import { TemplateConfig } from "@/src/lib/templates";
+import { AnalyticsLink } from "@/app/components/AnalyticsLink";
 
 interface SaasModernTemplateProps {
   content: TemplateConfig;
   siteId: string;
 }
 
-export default function SaasModernTemplate({ content, siteId }: SaasModernTemplateProps) {
-  const primaryColor = content.theme?.primaryColor || '#3B82F6';
+export default function SaasModernTemplate({
+  content,
+  siteId,
+}: SaasModernTemplateProps) {
+  const primaryColor = content.theme?.primaryColor || "#3B82F6";
 
   return (
     <div className="min-h-screen bg-white">
@@ -21,8 +24,10 @@ export default function SaasModernTemplate({ content, siteId }: SaasModernTempla
         }}
       >
         <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
-          <div className={`mx-auto ${content.hero.image ? 'grid lg:grid-cols-2 gap-12 items-center' : 'max-w-2xl text-center'}`}>
-            <div className={content.hero.image ? '' : ''}>
+          <div
+            className={`mx-auto ${content.hero.image ? "grid lg:grid-cols-2 gap-12 items-center" : "max-w-2xl text-center"}`}
+          >
+            <div className={content.hero.image ? "" : ""}>
               <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
                 {content.hero.title}
               </h1>
@@ -30,12 +35,14 @@ export default function SaasModernTemplate({ content, siteId }: SaasModernTempla
                 {content.hero.subtitle}
               </p>
               {content.hero.ctaText && (
-                <div className={`mt-10 flex items-center gap-x-6 ${content.hero.image ? '' : 'justify-center'}`}>
+                <div
+                  className={`mt-10 flex items-center gap-x-6 ${content.hero.image ? "" : "justify-center"}`}
+                >
                   <AnalyticsLink
                     siteId={siteId}
                     href={content.hero.ctaLink}
                     className="rounded-md bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors"
-                    eventMetadata={{ location: 'hero_cta' }}
+                    eventMetadata={{ location: "hero_cta" }}
                   >
                     {content.hero.ctaText}
                   </AnalyticsLink>
@@ -129,16 +136,11 @@ export default function SaasModernTemplate({ content, siteId }: SaasModernTempla
             </div>
             <div className="mx-auto mt-16 max-w-2xl space-y-8">
               {content.faq.map((item, index) => (
-                <div
-                  key={index}
-                  className="rounded-2xl bg-white p-8 shadow-sm"
-                >
+                <div key={index} className="rounded-2xl bg-white p-8 shadow-sm">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">
                     {item.question}
                   </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {item.answer}
-                  </p>
+                  <p className="text-gray-600 leading-relaxed">{item.answer}</p>
                 </div>
               ))}
             </div>
@@ -151,7 +153,8 @@ export default function SaasModernTemplate({ content, siteId }: SaasModernTempla
         <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
           <div className="text-center">
             <p className="text-sm leading-5 text-gray-400">
-              &copy; {new Date().getFullYear()} Rascal Pages. Kaikki oikeudet pidätetään.
+              &copy; {new Date().getFullYear()} Rascal Pages. Kaikki oikeudet
+              pidätetään.
             </p>
           </div>
         </div>
