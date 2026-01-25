@@ -23,12 +23,14 @@ export default function EditorHeader({
         >
           ← Takaisin dashboardiin
         </button>
+        {/* TODO: Custom domain settings - aktivoi kun Cloudflare Workers on toteutettu
         <Link
           href={`/app/dashboard/${siteId}/settings`}
           className="rounded-md border border-brand-dark/20 bg-brand-beige px-4 py-2 text-sm font-medium text-brand-dark transition-colors hover:bg-brand-light"
         >
           ⚙️ Asetukset
         </Link>
+        */}
       </div>
       <h1 className="mt-4 text-2xl font-bold text-gray-900">
         Muokkaa sivustoa
