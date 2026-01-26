@@ -38,13 +38,14 @@ async function verifySitePublished(
 
 /**
  * Core lead submission logic (testable)
- * Separated from server action wrapper for unit testing
+ * Sends lead data to n8n webhook for processing
  */
 export async function submitLeadCore(
   supabase: Awaited<ReturnType<typeof createClient>>,
   siteId: SiteId,
   email: string,
   name?: string,
+  marketingConsent?: boolean,
   webhookUrl?: string,
 ): Promise<SubmitLeadResult> {
   // 1. Normalize inputs
@@ -56,29 +57,21 @@ export async function submitLeadCore(
     return { error: "Virheellinen sähköpostiosoite." };
   }
 
-  // 3. Verify site is published (RLS will also check, but fail fast)
+  // 3. Verify site is published
   const publishCheck = await verifySitePublished(supabase, siteId);
   if (!publishCheck.published) {
     return { error: publishCheck.error };
   }
 
-  // 4. Insert lead (RLS policy enforces published check)
-  const { error: insertError } = await supabase.from("leads").insert({
-    site_id: siteId,
-    email: normalizedEmail,
-    name: normalizedName,
-    data: { source: "website_form" },
-  });
-
-  if (insertError) {
-    console.error("Lead insert error:", insertError);
-    return { error: "Tallennus epäonnistui. Yritä uudelleen." };
+  // 4. Send to n8n webhook (n8n handles Supabase insert)
+  const webhook = webhookUrl ?? process.env.N8N_RASCALPAGES_LEADS;
+  if (!webhook) {
+    console.error("N8N_RASCALPAGES_LEADS webhook URL not configured");
+    return { error: "Palveluvirhe. Yritä myöhemmin uudelleen." };
   }
 
-  // 5. Send to n8n webhook (optional, fire-and-forget)
-  const webhook = webhookUrl ?? process.env.N8N_RASCALPAGES_LEADS;
-  if (webhook) {
-    fetch(webhook, {
+  try {
+    const response = await fetch(webhook, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -86,11 +79,18 @@ export async function submitLeadCore(
         siteId,
         email: normalizedEmail,
         name: normalizedName,
+        marketingConsent: marketingConsent ?? false,
         timestamp: new Date().toISOString(),
       }),
-    }).catch((err) => {
-      console.error("n8n webhook error:", err);
     });
+
+    if (!response.ok) {
+      console.error("n8n webhook error:", response.status, response.statusText);
+      return { error: "Tallennus epäonnistui. Yritä uudelleen." };
+    }
+  } catch (err) {
+    console.error("n8n webhook error:", err);
+    return { error: "Tallennus epäonnistui. Yritä uudelleen." };
   }
 
   return { success: true };
@@ -104,7 +104,8 @@ export async function submitLead(
   siteId: SiteId,
   email: string,
   name?: string,
+  marketingConsent?: boolean,
 ): Promise<SubmitLeadResult> {
   const supabase = await createClient();
-  return submitLeadCore(supabase, siteId, email, name);
+  return submitLeadCore(supabase, siteId, email, name, marketingConsent);
 }

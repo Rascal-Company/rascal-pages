@@ -2,7 +2,6 @@
 
 import { TemplateConfig } from "@/src/lib/templates";
 import { submitLead } from "@/app/actions/submit-lead";
-import { AnalyticsLink } from "@/app/components/AnalyticsLink";
 import { useState, useTransition } from "react";
 import type { SiteId } from "@/src/lib/types";
 
@@ -37,9 +36,10 @@ export default function LeadMagnetTemplate({
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const name = formData.get("name") as string;
+    const marketingConsent = formData.get("marketingConsent") === "on";
 
     startTransition(async () => {
-      const result = await submitLead(siteId, email, name);
+      const result = await submitLead(siteId, email, name, marketingConsent);
       if (result.success) {
         setFormStatus("success");
         setErrorMessage("");
@@ -97,19 +97,6 @@ export default function LeadMagnetTemplate({
                   ))}
                 </ul>
               )}
-
-              {/* CTA Button */}
-              <div className="mt-10">
-                <AnalyticsLink
-                  siteId={siteId}
-                  href={content.hero.ctaLink}
-                  className="inline-block rounded-lg px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105"
-                  style={{ backgroundColor: primaryColor }}
-                  eventMetadata={{ location: "hero_left" }}
-                >
-                  {content.hero.ctaText}
-                </AnalyticsLink>
-              </div>
             </div>
 
             {/* Right Side - Form/Image */}
@@ -181,6 +168,22 @@ export default function LeadMagnetTemplate({
                       className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="Etunimesi"
                     />
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      id="marketingConsent"
+                      name="marketingConsent"
+                      disabled={isPending}
+                      className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                    />
+                    <label
+                      htmlFor="marketingConsent"
+                      className="text-sm text-gray-600"
+                    >
+                      Haluan vastaanottaa markkinointiviestejä ja uutisia
+                      sähköpostiini.
+                    </label>
                   </div>
                   <button
                     type="submit"

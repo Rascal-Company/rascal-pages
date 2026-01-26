@@ -138,6 +138,9 @@ export default async function AnalyticsPage({ params }: PageProps) {
                       Nimi
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-brand-dark/70">
+                      Markkinointilupa
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-brand-dark/70">
                       Päivämäärä
                     </th>
                   </tr>
@@ -151,8 +154,21 @@ export default async function AnalyticsPage({ params }: PageProps) {
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-brand-dark">
                         {lead.name || "-"}
                       </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm">
+                        {lead.marketing_consent ? (
+                          <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
+                            Kyllä
+                          </span>
+                        ) : (
+                          <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600">
+                            Ei
+                          </span>
+                        )}
+                      </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-brand-dark/70">
-                        {new Date(lead.created_at).toLocaleString("fi-FI")}
+                        {new Date(lead.created_at).toLocaleString("fi-FI", {
+                          timeZone: "Europe/Helsinki",
+                        })}
                       </td>
                     </tr>
                   ))}
@@ -235,7 +251,9 @@ export default async function AnalyticsPage({ params }: PageProps) {
                           event.event_type !== "page_view" && <span>-</span>}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-brand-dark/70">
-                        {new Date(event.created_at).toLocaleString("fi-FI")}
+                        {new Date(event.created_at).toLocaleString("fi-FI", {
+                          timeZone: "Europe/Helsinki",
+                        })}
                       </td>
                     </tr>
                   ))}
