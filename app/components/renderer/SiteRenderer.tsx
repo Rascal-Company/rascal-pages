@@ -22,7 +22,7 @@ import {
 } from "@/app/components/blocks";
 
 type SiteRendererProps = {
-  content: TemplateConfig | Record<string, unknown>;
+  content: TemplateConfig | Record<string, unknown> | null | undefined;
   siteId: SiteId;
   isPreview?: boolean;
 };

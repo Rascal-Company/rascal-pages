@@ -46,8 +46,14 @@ function hasSections(
  * Migrate old fixed-field content to section-based format
  */
 export function migrateToSections(
-  content: LegacyContent | TemplateConfig,
+  content: LegacyContent | TemplateConfig | null | undefined,
 ): TemplateConfig {
+  // Handle null/undefined content
+  if (!content || typeof content !== "object") {
+    const defaultTemplate = getDefaultTemplate();
+    return defaultTemplate.defaultContent;
+  }
+
   if (hasSections(content)) {
     return content;
   }
@@ -153,8 +159,14 @@ export function getDefaultSectionContent<T extends SectionType>(
  * Normalize content - ensure templateId exists and migrate to sections
  */
 export function normalizeContent(
-  content: LegacyContent | TemplateConfig,
+  content: LegacyContent | TemplateConfig | null | undefined,
 ): TemplateConfig {
+  // Handle null/undefined content
+  if (!content || typeof content !== "object") {
+    const defaultTemplate = getDefaultTemplate();
+    return defaultTemplate.defaultContent;
+  }
+
   if (!content.templateId) {
     const legacy = content as LegacyContent;
     const defaultTemplate = getDefaultTemplate();
