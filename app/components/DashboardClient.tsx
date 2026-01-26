@@ -42,20 +42,13 @@ export default function DashboardClient({
   const router = useRouter();
 
   useEffect(() => {
-    // Check auth status on mount - use getUser() for server-side validation
-    async function checkAuth() {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setIsAuthenticated(!!user);
-      if (!user) {
-        setIsLoginModalOpen(true);
-      }
+    // Jos serveri on jo validoinut käyttäjän (userId on olemassa),
+    // luotetaan siihen eikä tarkisteta uudelleen
+    if (!userId) {
+      setIsLoginModalOpen(true);
     }
-    checkAuth();
 
-    // Listen for auth changes
+    // Listen for auth changes (login/logout)
     const supabase = createClient();
     const {
       data: { subscription },
@@ -64,13 +57,15 @@ export default function DashboardClient({
       if (session) {
         setIsLoginModalOpen(false);
         router.refresh();
+      } else {
+        setIsLoginModalOpen(true);
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [router]);
+  }, [router, userId]);
 
   const handleLogout = async () => {
     const supabase = createClient();
