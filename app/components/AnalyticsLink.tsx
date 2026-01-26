@@ -9,10 +9,17 @@ interface Props extends ComponentProps<"a"> {
   eventMetadata?: Record<string, unknown>;
 }
 
+function isExternalUrl(href: string | undefined): boolean {
+  if (!href) return false;
+  return href.startsWith("http://") || href.startsWith("https://");
+}
+
 export function AnalyticsLink({
   siteId,
   eventMetadata,
   onClick,
+  target,
+  rel,
   ...props
 }: Props) {
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -27,5 +34,11 @@ export function AnalyticsLink({
     onClick?.(e);
   };
 
-  return <a {...props} onClick={handleClick} />;
+  const isExternal = isExternalUrl(props.href);
+  const linkTarget = target ?? (isExternal ? "_blank" : undefined);
+  const linkRel = rel ?? (isExternal ? "noopener noreferrer" : undefined);
+
+  return (
+    <a {...props} target={linkTarget} rel={linkRel} onClick={handleClick} />
+  );
 }
