@@ -4,12 +4,24 @@
  */
 
 // Brand utility type
-type Brand<T, TBrand> = T & { readonly __brand: TBrand };
+export type Brand<T, TBrand> = T & { readonly __brand: TBrand };
 
 /**
  * Branded type for Site ID to prevent mixing with other string IDs
  */
 export type SiteId = Brand<string, "SiteId">;
+
+/**
+ * Branded type for Section ID to prevent mixing with other string IDs
+ */
+export type SectionId = Brand<string, "SectionId">;
+
+/**
+ * Create a branded SectionId from a string
+ */
+export function createSectionId(id: string): SectionId {
+  return id as SectionId;
+}
 
 /**
  * Create a branded SiteId from a string

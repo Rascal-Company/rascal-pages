@@ -1,90 +1,125 @@
 "use client";
 
-import { TemplateConfig, getDefaultTemplate } from "@/src/lib/templates";
-import LeadMagnetTemplate from "@/app/components/templates/LeadMagnetTemplate";
-import WaitlistTemplate from "@/app/components/templates/WaitlistTemplate";
-import SaasModernTemplate from "@/app/components/templates/SaasModernTemplate";
-import VslTemplate from "@/app/components/templates/VslTemplate";
-import PersonalTemplate from "@/app/components/templates/PersonalTemplate";
+import type {
+  TemplateConfig,
+  HeroContent,
+  SectionContentMap,
+  SectionType,
+} from "@/src/lib/templates";
 import { PageViewTracker } from "@/app/components/PageViewTracker";
 import type { SiteId } from "@/src/lib/types";
+import { migrateToSections } from "@/app/components/editor/utils/contentUtils";
+import {
+  HeroBlock,
+  FeaturesBlock,
+  FaqBlock,
+  TestimonialsBlock,
+  AboutBlock,
+  VideoBlock,
+  FormBlock,
+  LogosBlock,
+  FooterBlock,
+} from "@/app/components/blocks";
 
-interface SiteRendererProps {
-  content: TemplateConfig | any; // Tuki vanhalle muodolle myös
+type SiteRendererProps = {
+  content: TemplateConfig | Record<string, unknown>;
   siteId: SiteId;
-  isPreview?: boolean; // Flag to disable analytics in editor preview
-}
+  isPreview?: boolean;
+};
 
 export default function SiteRenderer({
   content,
   siteId,
   isPreview = false,
 }: SiteRendererProps) {
-  // Normalisoi content - varmista että templateId on olemassa
-  let normalizedContent: TemplateConfig;
+  const normalizedContent = migrateToSections(content);
+  const { sections, theme } = normalizedContent;
 
-  // Jos sisällössä ei ole templateId, käytetään vanhaa muotoa ja oletustemplatea
-  if (!content.templateId) {
-    const defaultTemplate = getDefaultTemplate();
-    normalizedContent = {
-      ...defaultTemplate.defaultContent,
-      hero: {
-        ...defaultTemplate.defaultContent.hero,
-        ...content.hero,
-        ctaText:
-          content.hero?.cta ||
-          content.hero?.ctaText ||
-          defaultTemplate.defaultContent.hero.ctaText,
-        cta:
-          content.hero?.cta ||
-          content.hero?.ctaText ||
-          defaultTemplate.defaultContent.hero.ctaText,
-      },
-      features:
-        content.features || defaultTemplate.defaultContent.features || [],
-      theme: content.theme || defaultTemplate.defaultContent.theme,
-    };
-  } else {
-    normalizedContent = content as TemplateConfig;
-  }
-
-  // Renderöi oikea template komponentti templateId:n perusteella
-  const templateId = normalizedContent.templateId || "saas-modern";
+  const heroSection = sections.find((s) => s.type === "hero");
+  const heroContent = heroSection?.content as HeroContent | undefined;
 
   return (
-    <>
+    <div className="min-h-screen bg-white">
       {!isPreview && <PageViewTracker siteId={siteId} />}
-      {(() => {
-        switch (templateId) {
-          case "lead-magnet":
-            return (
-              <LeadMagnetTemplate
-                content={normalizedContent}
-                siteId={siteId}
-                isPreview={isPreview}
-              />
-            );
-          case "waitlist":
-            return (
-              <WaitlistTemplate
-                content={normalizedContent}
-                siteId={siteId}
-                isPreview={isPreview}
-              />
-            );
-          case "vsl":
-            return <VslTemplate content={normalizedContent} siteId={siteId} />;
-          case "personal":
-            return (
-              <PersonalTemplate content={normalizedContent} siteId={siteId} />
-            );
-          case "saas-modern":
-          default:
-            return (
-              <SaasModernTemplate content={normalizedContent} siteId={siteId} />
-            );
-        }
-      })()}
-    </>
+      {sections
+        .filter((section) => section.isVisible)
+        .map((section) => {
+          const baseProps = {
+            key: section.id,
+            theme,
+            siteId,
+            isPreview,
+          };
+
+          switch (section.type) {
+            case "hero":
+              return (
+                <HeroBlock
+                  {...baseProps}
+                  content={section.content as SectionContentMap["hero"]}
+                />
+              );
+            case "features":
+              return (
+                <FeaturesBlock
+                  {...baseProps}
+                  content={section.content as SectionContentMap["features"]}
+                />
+              );
+            case "faq":
+              return (
+                <FaqBlock
+                  {...baseProps}
+                  content={section.content as SectionContentMap["faq"]}
+                />
+              );
+            case "testimonials":
+              return (
+                <TestimonialsBlock
+                  {...baseProps}
+                  content={section.content as SectionContentMap["testimonials"]}
+                />
+              );
+            case "about":
+              return (
+                <AboutBlock
+                  {...baseProps}
+                  content={section.content as SectionContentMap["about"]}
+                />
+              );
+            case "video":
+              return (
+                <VideoBlock
+                  {...baseProps}
+                  content={section.content as SectionContentMap["video"]}
+                />
+              );
+            case "form":
+              return (
+                <FormBlock
+                  {...baseProps}
+                  content={section.content as SectionContentMap["form"]}
+                  hero={heroContent}
+                />
+              );
+            case "logos":
+              return (
+                <LogosBlock
+                  {...baseProps}
+                  content={section.content as SectionContentMap["logos"]}
+                />
+              );
+            case "footer":
+              return (
+                <FooterBlock
+                  {...baseProps}
+                  content={section.content as SectionContentMap["footer"]}
+                />
+              );
+            default:
+              return null;
+          }
+        })}
+    </div>
   );
 }

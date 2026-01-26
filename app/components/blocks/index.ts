@@ -1,0 +1,9 @@
+export { default as HeroBlock } from "./HeroBlock";
+export { default as FeaturesBlock } from "./FeaturesBlock";
+export { default as FaqBlock } from "./FaqBlock";
+export { default as TestimonialsBlock } from "./TestimonialsBlock";
+export { default as AboutBlock } from "./AboutBlock";
+export { default as VideoBlock } from "./VideoBlock";
+export { default as FormBlock } from "./FormBlock";
+export { default as LogosBlock } from "./LogosBlock";
+export { default as FooterBlock } from "./FooterBlock";
