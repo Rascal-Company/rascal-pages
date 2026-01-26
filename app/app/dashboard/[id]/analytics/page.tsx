@@ -1,6 +1,7 @@
 import { createClient } from "@/src/utils/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import LeadsTable from "./LeadsTable";
 
 export const dynamic = "force-dynamic";
 
@@ -114,69 +115,7 @@ export default async function AnalyticsPage({ params }: PageProps) {
         </div>
 
         {/* Leads Table */}
-        <div className="mb-8 rounded-lg border border-brand-dark/10 bg-brand-beige">
-          <div className="border-b border-brand-dark/10 px-6 py-4">
-            <h2 className="text-xl font-semibold text-brand-dark">
-              Liidit ({totalLeads})
-            </h2>
-          </div>
-          <div className="overflow-x-auto">
-            {totalLeads === 0 ? (
-              <div className="p-8 text-center">
-                <p className="text-sm text-brand-dark/60">
-                  Ei vielä liidejä. Kun joku täyttää lomakkeen, se näkyy tässä.
-                </p>
-              </div>
-            ) : (
-              <table className="w-full">
-                <thead className="bg-white">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-brand-dark/70">
-                      Sähköposti
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-brand-dark/70">
-                      Nimi
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-brand-dark/70">
-                      Markkinointilupa
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-brand-dark/70">
-                      Päivämäärä
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-brand-dark/10 bg-brand-beige">
-                  {leads?.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-white/50">
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-brand-dark">
-                        {lead.email}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-brand-dark">
-                        {lead.name || "-"}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm">
-                        {lead.marketing_consent ? (
-                          <span className="inline-flex rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
-                            Kyllä
-                          </span>
-                        ) : (
-                          <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600">
-                            Ei
-                          </span>
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-sm text-brand-dark/70">
-                        {new Date(lead.created_at).toLocaleString("fi-FI", {
-                          timeZone: "Europe/Helsinki",
-                        })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
+        <LeadsTable leads={leads || []} />
 
         {/* Analytics Events Table */}
         <div className="rounded-lg border border-brand-dark/10 bg-brand-beige">

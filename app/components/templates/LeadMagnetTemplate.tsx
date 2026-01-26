@@ -26,10 +26,13 @@ export default function LeadMagnetTemplate({
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Don't submit in preview mode
+    // Don't submit in preview mode, but still show success and open link
     if (isPreview) {
       setFormStatus("success");
       setTimeout(() => setFormStatus("idle"), 2000);
+      if (content.hero.ctaLink) {
+        window.open(content.hero.ctaLink, "_blank", "noopener,noreferrer");
+      }
       return;
     }
 
@@ -44,6 +47,11 @@ export default function LeadMagnetTemplate({
         setFormStatus("success");
         setErrorMessage("");
         (e.target as HTMLFormElement).reset();
+
+        // Open the CTA link (e.g., download file) after successful submission
+        if (content.hero.ctaLink) {
+          window.open(content.hero.ctaLink, "_blank", "noopener,noreferrer");
+        }
       } else {
         setFormStatus("error");
         setErrorMessage(result.error || "Jokin meni pieleen. Yritä uudelleen.");
