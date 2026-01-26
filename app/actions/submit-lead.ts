@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/src/utils/supabase/server";
+import { SiteId } from "@/src/lib/types";
 
 interface SubmitLeadResult {
   success?: boolean;
@@ -35,29 +36,37 @@ async function verifySitePublished(
   return { published: true };
 }
 
-export async function submitLead(
-  siteId: string,
+/**
+ * Core lead submission logic (testable)
+ * Separated from server action wrapper for unit testing
+ */
+export async function submitLeadCore(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  siteId: SiteId,
   email: string,
   name?: string,
+  webhookUrl?: string,
 ): Promise<SubmitLeadResult> {
-  const supabase = await createClient();
+  // 1. Normalize inputs
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedName = name?.trim() || null;
 
-  // 1. Validate inputs
-  if (!isValidEmail(email)) {
+  // 2. Validate inputs
+  if (!isValidEmail(normalizedEmail)) {
     return { error: "Virheellinen sähköpostiosoite." };
   }
 
-  // 2. Verify site is published (RLS will also check, but fail fast)
+  // 3. Verify site is published (RLS will also check, but fail fast)
   const publishCheck = await verifySitePublished(supabase, siteId);
   if (!publishCheck.published) {
     return { error: publishCheck.error };
   }
 
-  // 3. Insert lead (RLS policy enforces published check)
+  // 4. Insert lead (RLS policy enforces published check)
   const { error: insertError } = await supabase.from("leads").insert({
     site_id: siteId,
-    email: email.trim().toLowerCase(),
-    name: name?.trim() || null,
+    email: normalizedEmail,
+    name: normalizedName,
     data: { source: "website_form" },
   });
 
@@ -66,16 +75,17 @@ export async function submitLead(
     return { error: "Tallennus epäonnistui. Yritä uudelleen." };
   }
 
-  // 4. Send to n8n webhook (optional, fire-and-forget)
-  if (process.env.N8N_WEBHOOK_URL) {
-    fetch(process.env.N8N_WEBHOOK_URL, {
+  // 5. Send to n8n webhook (optional, fire-and-forget)
+  const webhook = webhookUrl ?? process.env.N8N_RASCALPAGES_LEADS;
+  if (webhook) {
+    fetch(webhook, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: "new_lead",
         siteId,
-        email,
-        name,
+        email: normalizedEmail,
+        name: normalizedName,
         timestamp: new Date().toISOString(),
       }),
     }).catch((err) => {
@@ -84,4 +94,17 @@ export async function submitLead(
   }
 
   return { success: true };
+}
+
+/**
+ * Server action wrapper for submitLeadCore
+ * This is called from client components
+ */
+export async function submitLead(
+  siteId: SiteId,
+  email: string,
+  name?: string,
+): Promise<SubmitLeadResult> {
+  const supabase = await createClient();
+  return submitLeadCore(supabase, siteId, email, name);
 }

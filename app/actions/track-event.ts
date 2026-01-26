@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/src/utils/supabase/server";
+import { SiteId } from "@/src/lib/types";
 
 interface TrackEventResult {
   success?: boolean;
@@ -14,13 +15,16 @@ function isValidEventType(type: string): type is EventType {
   return VALID_EVENT_TYPES.includes(type as EventType);
 }
 
-export async function trackEvent(
-  siteId: string,
+/**
+ * Core event tracking logic (testable)
+ * Separated from server action wrapper for unit testing
+ */
+export async function trackEventCore(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  siteId: SiteId,
   eventType: string,
   metadata: Record<string, unknown> = {},
 ): Promise<TrackEventResult> {
-  const supabase = await createClient();
-
   // 1. Validate event type
   if (!isValidEventType(eventType)) {
     return { error: "Virheellinen tapahtumatyyppi." };
@@ -41,4 +45,17 @@ export async function trackEvent(
   }
 
   return { success: true };
+}
+
+/**
+ * Server action wrapper for trackEventCore
+ * This is called from client components
+ */
+export async function trackEvent(
+  siteId: SiteId,
+  eventType: string,
+  metadata: Record<string, unknown> = {},
+): Promise<TrackEventResult> {
+  const supabase = await createClient();
+  return trackEventCore(supabase, siteId, eventType, metadata);
 }

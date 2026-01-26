@@ -2,9 +2,10 @@
 
 import { trackEvent } from "@/app/actions/track-event";
 import { useEffect } from "react";
+import type { SiteId } from "@/src/lib/types";
 
 interface Props {
-  siteId: string;
+  siteId: SiteId;
 }
 
 export function PageViewTracker({ siteId }: Props) {

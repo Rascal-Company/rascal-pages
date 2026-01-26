@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { TemplateConfig } from '@/src/lib/templates';
+import { TemplateConfig } from "@/src/lib/templates";
 
 interface TestimonialsEditorProps {
-  testimonials: TemplateConfig['testimonials'] | undefined;
+  testimonials: TemplateConfig["testimonials"] | undefined;
   onAdd: () => void;
   onRemove: (index: number) => void;
   onUpdate: (index: number, field: string, value: string) => void;
@@ -50,8 +50,8 @@ export default function TestimonialsEditor({
                 </label>
                 <input
                   type="text"
-                  value={testimonial.name || ''}
-                  onChange={(e) => onUpdate(index, 'name', e.target.value)}
+                  value={testimonial.name || ""}
+                  onChange={(e) => onUpdate(index, "name", e.target.value)}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />
               </div>
@@ -60,8 +60,8 @@ export default function TestimonialsEditor({
                   Teksti
                 </label>
                 <textarea
-                  value={testimonial.text || ''}
-                  onChange={(e) => onUpdate(index, 'text', e.target.value)}
+                  value={testimonial.text || ""}
+                  onChange={(e) => onUpdate(index, "text", e.target.value)}
                   rows={3}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />
@@ -72,8 +72,8 @@ export default function TestimonialsEditor({
                 </label>
                 <input
                   type="text"
-                  value={testimonial.company || ''}
-                  onChange={(e) => onUpdate(index, 'company', e.target.value)}
+                  value={testimonial.company || ""}
+                  onChange={(e) => onUpdate(index, "company", e.target.value)}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />
               </div>
@@ -83,8 +83,8 @@ export default function TestimonialsEditor({
                 </label>
                 <input
                   type="url"
-                  value={testimonial.avatar || ''}
-                  onChange={(e) => onUpdate(index, 'avatar', e.target.value)}
+                  value={testimonial.avatar || ""}
+                  onChange={(e) => onUpdate(index, "avatar", e.target.value)}
                   placeholder="https://example.com/avatar.jpg"
                   className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/src/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import type { SiteId } from "@/src/lib/types";
 
 interface UpdateDomainResult {
   success?: boolean;
@@ -25,7 +26,7 @@ function isValidDomain(domain: string): boolean {
 
 async function verifySiteOwnership(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  siteId: string,
+  siteId: SiteId,
   orgId: string,
 ): Promise<{ error?: string }> {
   const { data: site, error: siteError } = await supabase
@@ -44,7 +45,7 @@ async function verifySiteOwnership(
 }
 
 export async function updateSiteDomain(
-  siteId: string,
+  siteId: SiteId,
   customDomain: string,
 ): Promise<UpdateDomainResult> {
   const supabase = await createClient();

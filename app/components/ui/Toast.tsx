@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
-export type ToastType = 'success' | 'error' | 'info' | 'warning';
+export type ToastType = "success" | "error" | "info" | "warning";
 
 export interface Toast {
   id: string;
@@ -25,17 +25,17 @@ export default function Toast({ toast, onClose }: ToastProps) {
   }, [toast.id, onClose]);
 
   const bgColors = {
-    success: 'bg-green-50 border-green-200 text-green-800',
-    error: 'bg-red-50 border-red-200 text-red-800',
-    info: 'bg-blue-50 border-blue-200 text-blue-800',
-    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+    success: "bg-green-50 border-green-200 text-green-800",
+    error: "bg-red-50 border-red-200 text-red-800",
+    info: "bg-blue-50 border-blue-200 text-blue-800",
+    warning: "bg-yellow-50 border-yellow-200 text-yellow-800",
   };
 
   const iconColors = {
-    success: 'text-green-400',
-    error: 'text-red-400',
-    info: 'text-blue-400',
-    warning: 'text-yellow-400',
+    success: "text-green-400",
+    error: "text-red-400",
+    info: "text-blue-400",
+    warning: "text-yellow-400",
   };
 
   return (
@@ -43,7 +43,7 @@ export default function Toast({ toast, onClose }: ToastProps) {
       className={`flex items-center gap-3 rounded-lg border p-4 shadow-lg transition-all ${bgColors[toast.type]}`}
     >
       <div className={`flex-shrink-0 ${iconColors[toast.type]}`}>
-        {toast.type === 'success' && (
+        {toast.type === "success" && (
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
@@ -52,7 +52,7 @@ export default function Toast({ toast, onClose }: ToastProps) {
             />
           </svg>
         )}
-        {toast.type === 'error' && (
+        {toast.type === "error" && (
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
@@ -61,7 +61,7 @@ export default function Toast({ toast, onClose }: ToastProps) {
             />
           </svg>
         )}
-        {toast.type === 'info' && (
+        {toast.type === "info" && (
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
@@ -70,7 +70,7 @@ export default function Toast({ toast, onClose }: ToastProps) {
             />
           </svg>
         )}
-        {toast.type === 'warning' && (
+        {toast.type === "warning" && (
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"

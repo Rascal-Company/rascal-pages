@@ -4,17 +4,20 @@ import { TemplateConfig } from "@/src/lib/templates";
 import { submitLead } from "@/app/actions/submit-lead";
 import { AnalyticsLink } from "@/app/components/AnalyticsLink";
 import { useState, useTransition } from "react";
+import type { SiteId } from "@/src/lib/types";
 
 interface LeadMagnetTemplateProps {
   content: TemplateConfig;
-  siteId: string;
+  siteId: SiteId;
+  isPreview?: boolean;
 }
 
 export default function LeadMagnetTemplate({
   content,
   siteId,
+  isPreview = false,
 }: LeadMagnetTemplateProps) {
-  const primaryColor = content.theme?.primaryColor || "#3B82F6";
+  const primaryColor = content?.theme?.primaryColor || "#3B82F6";
   const [isPending, startTransition] = useTransition();
   const [formStatus, setFormStatus] = useState<"idle" | "success" | "error">(
     "idle",
@@ -23,6 +26,14 @@ export default function LeadMagnetTemplate({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // Don't submit in preview mode
+    if (isPreview) {
+      setFormStatus("success");
+      setTimeout(() => setFormStatus("idle"), 2000);
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const name = formData.get("name") as string;
@@ -120,10 +131,12 @@ export default function LeadMagnetTemplate({
                 {formStatus === "success" && (
                   <div className="mb-6 rounded-lg bg-green-50 p-4 text-green-800 border border-green-200">
                     <p className="font-semibold">
-                      Kiitos! Tietosi on tallennettu.
+                      {content.successMessage?.title ||
+                        "Kiitos! Tietosi on tallennettu."}
                     </p>
                     <p className="text-sm mt-1">
-                      Saat pian lisätietoja sähköpostiisi.
+                      {content.successMessage?.description ||
+                        "Saat pian lisätietoja sähköpostiisi."}
                     </p>
                   </div>
                 )}

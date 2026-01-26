@@ -2,9 +2,10 @@
 
 import { trackEvent } from "@/app/actions/track-event";
 import type { ComponentProps } from "react";
+import type { SiteId } from "@/src/lib/types";
 
 interface Props extends ComponentProps<"a"> {
-  siteId: string;
+  siteId: SiteId;
   eventMetadata?: Record<string, unknown>;
 }
 

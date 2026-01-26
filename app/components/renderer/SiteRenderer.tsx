@@ -7,13 +7,19 @@ import SaasModernTemplate from "@/app/components/templates/SaasModernTemplate";
 import VslTemplate from "@/app/components/templates/VslTemplate";
 import PersonalTemplate from "@/app/components/templates/PersonalTemplate";
 import { PageViewTracker } from "@/app/components/PageViewTracker";
+import type { SiteId } from "@/src/lib/types";
 
 interface SiteRendererProps {
   content: TemplateConfig | any; // Tuki vanhalle muodolle myös
-  siteId: string;
+  siteId: SiteId;
+  isPreview?: boolean; // Flag to disable analytics in editor preview
 }
 
-export default function SiteRenderer({ content, siteId }: SiteRendererProps) {
+export default function SiteRenderer({
+  content,
+  siteId,
+  isPreview = false,
+}: SiteRendererProps) {
   // Normalisoi content - varmista että templateId on olemassa
   let normalizedContent: TemplateConfig;
 
@@ -47,16 +53,24 @@ export default function SiteRenderer({ content, siteId }: SiteRendererProps) {
 
   return (
     <>
-      <PageViewTracker siteId={siteId} />
+      {!isPreview && <PageViewTracker siteId={siteId} />}
       {(() => {
         switch (templateId) {
           case "lead-magnet":
             return (
-              <LeadMagnetTemplate content={normalizedContent} siteId={siteId} />
+              <LeadMagnetTemplate
+                content={normalizedContent}
+                siteId={siteId}
+                isPreview={isPreview}
+              />
             );
           case "waitlist":
             return (
-              <WaitlistTemplate content={normalizedContent} siteId={siteId} />
+              <WaitlistTemplate
+                content={normalizedContent}
+                siteId={siteId}
+                isPreview={isPreview}
+              />
             );
           case "vsl":
             return <VslTemplate content={normalizedContent} siteId={siteId} />;

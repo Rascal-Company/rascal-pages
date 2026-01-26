@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { TemplateConfig } from '@/src/lib/templates';
+import { TemplateConfig } from "@/src/lib/templates";
 
 interface FeaturesEditorProps {
-  features: TemplateConfig['features'] | undefined;
+  features: TemplateConfig["features"] | undefined;
   onAdd: () => void;
   onRemove: (index: number) => void;
   onUpdate: (index: number, field: string, value: string) => void;
@@ -50,8 +50,8 @@ export default function FeaturesEditor({
                 </label>
                 <input
                   type="text"
-                  value={feature.icon || ''}
-                  onChange={(e) => onUpdate(index, 'icon', e.target.value)}
+                  value={feature.icon || ""}
+                  onChange={(e) => onUpdate(index, "icon", e.target.value)}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                   placeholder="⭐"
                 />
@@ -62,8 +62,8 @@ export default function FeaturesEditor({
                 </label>
                 <input
                   type="text"
-                  value={feature.title || ''}
-                  onChange={(e) => onUpdate(index, 'title', e.target.value)}
+                  value={feature.title || ""}
+                  onChange={(e) => onUpdate(index, "title", e.target.value)}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />
               </div>
@@ -72,9 +72,9 @@ export default function FeaturesEditor({
                   Kuvaus
                 </label>
                 <textarea
-                  value={feature.description || ''}
+                  value={feature.description || ""}
                   onChange={(e) =>
-                    onUpdate(index, 'description', e.target.value)
+                    onUpdate(index, "description", e.target.value)
                   }
                   rows={2}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
@@ -86,8 +86,8 @@ export default function FeaturesEditor({
                 </label>
                 <input
                   type="url"
-                  value={feature.image || ''}
-                  onChange={(e) => onUpdate(index, 'image', e.target.value)}
+                  value={feature.image || ""}
+                  onChange={(e) => onUpdate(index, "image", e.target.value)}
                   placeholder="https://example.com/kuva.jpg"
                   className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />

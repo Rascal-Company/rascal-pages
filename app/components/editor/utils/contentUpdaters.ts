@@ -1,4 +1,4 @@
-import { TemplateConfig } from '@/src/lib/templates';
+import { TemplateConfig } from "@/src/lib/templates";
 
 type ContentUpdater = (prev: TemplateConfig) => TemplateConfig;
 
@@ -8,24 +8,24 @@ type ContentUpdater = (prev: TemplateConfig) => TemplateConfig;
 export function updateField(
   section: string,
   key: string,
-  value: any
+  value: any,
 ): ContentUpdater {
   return (prev: TemplateConfig) => {
-    if (section === 'root') {
+    if (section === "root") {
       return { ...prev, [key]: value };
     }
-    if (section === 'hero') {
+    if (section === "hero") {
       return {
         ...prev,
         hero: { ...prev.hero, [key]: value },
       };
     }
-    if (section === 'theme') {
+    if (section === "theme") {
       return {
         ...prev,
-        theme: { 
-          ...(prev.theme || { primaryColor: '#3B82F6' }), 
-          [key]: value 
+        theme: {
+          ...(prev.theme || { primaryColor: "#3B82F6" }),
+          [key]: value,
         },
       };
     }
@@ -37,14 +37,14 @@ export function updateField(
  * Update hero field
  */
 export function updateHeroField(key: string, value: string): ContentUpdater {
-  return updateField('hero', key, value);
+  return updateField("hero", key, value);
 }
 
 /**
  * Update theme field
  */
 export function updateThemeField(key: string, value: string): ContentUpdater {
-  return updateField('theme', key, value);
+  return updateField("theme", key, value);
 }
 
 /**
@@ -55,7 +55,7 @@ export function addFeature(): ContentUpdater {
     ...prev,
     features: [
       ...(prev.features || []),
-      { icon: '⭐', title: 'Uusi ominaisuus', description: 'Kuvaus' },
+      { icon: "⭐", title: "Uusi ominaisuus", description: "Kuvaus" },
     ],
   });
 }
@@ -76,12 +76,12 @@ export function removeFeature(index: number): ContentUpdater {
 export function updateFeature(
   index: number,
   field: string,
-  value: string
+  value: string,
 ): ContentUpdater {
   return (prev: TemplateConfig) => ({
     ...prev,
     features: (prev.features || []).map((feature, i) =>
-      i === index ? { ...feature, [field]: value } : feature
+      i === index ? { ...feature, [field]: value } : feature,
     ),
   });
 }
@@ -94,7 +94,7 @@ export function addTestimonial(): ContentUpdater {
     ...prev,
     testimonials: [
       ...(prev.testimonials || []),
-      { name: 'Nimi', text: 'Suosittelu', company: 'Yritys' },
+      { name: "Nimi", text: "Suosittelu", company: "Yritys" },
     ],
   });
 }
@@ -115,12 +115,12 @@ export function removeTestimonial(index: number): ContentUpdater {
 export function updateTestimonial(
   index: number,
   field: string,
-  value: string
+  value: string,
 ): ContentUpdater {
   return (prev: TemplateConfig) => ({
     ...prev,
     testimonials: (prev.testimonials || []).map((testimonial, i) =>
-      i === index ? { ...testimonial, [field]: value } : testimonial
+      i === index ? { ...testimonial, [field]: value } : testimonial,
     ),
   });
 }
@@ -131,10 +131,7 @@ export function updateTestimonial(
 export function addFaq(): ContentUpdater {
   return (prev: TemplateConfig) => ({
     ...prev,
-    faq: [
-      ...(prev.faq || []),
-      { question: 'Kysymys?', answer: 'Vastaus' },
-    ],
+    faq: [...(prev.faq || []), { question: "Kysymys?", answer: "Vastaus" }],
   });
 }
 
@@ -154,12 +151,12 @@ export function removeFaq(index: number): ContentUpdater {
 export function updateFaq(
   index: number,
   field: string,
-  value: string
+  value: string,
 ): ContentUpdater {
   return (prev: TemplateConfig) => ({
     ...prev,
     faq: (prev.faq || []).map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
+      i === index ? { ...item, [field]: value } : item,
     ),
   });
 }
@@ -168,13 +165,13 @@ export function updateFaq(
  * Update about field
  */
 export function updateAboutField(
-  field: keyof NonNullable<TemplateConfig['about']>,
-  value: string
+  field: keyof NonNullable<TemplateConfig["about"]>,
+  value: string,
 ): ContentUpdater {
   return (prev: TemplateConfig) => ({
     ...prev,
     about: {
-      ...(prev.about || { name: '', bio: '' }),
+      ...(prev.about || { name: "", bio: "" }),
       [field]: value,
     },
   });
@@ -187,5 +184,21 @@ export function updateVideoUrl(value: string): ContentUpdater {
   return (prev: TemplateConfig) => ({
     ...prev,
     videoUrl: value,
+  });
+}
+
+/**
+ * Update success message field
+ */
+export function updateSuccessMessageField(
+  field: keyof NonNullable<TemplateConfig["successMessage"]>,
+  value: string,
+): ContentUpdater {
+  return (prev: TemplateConfig) => ({
+    ...prev,
+    successMessage: {
+      ...(prev.successMessage || { title: "", description: "" }),
+      [field]: value,
+    },
   });
 }

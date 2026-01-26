@@ -4,6 +4,7 @@ import { useState } from "react";
 import { updatePageContent } from "@/app/actions/save-page";
 import { TemplateConfig, getTemplateById } from "@/src/lib/templates";
 import { normalizeContent, mergeTemplateContent } from "./utils/contentUtils";
+import type { SiteId } from "@/src/lib/types";
 import {
   updateHeroField,
   updateThemeField,
@@ -18,6 +19,7 @@ import {
   updateFaq,
   updateAboutField,
   updateVideoUrl,
+  updateSuccessMessageField,
 } from "./utils/contentUpdaters";
 import { useToast } from "@/app/components/ui/ToastContainer";
 import EditorHeader from "./EditorHeader";
@@ -30,12 +32,13 @@ import AboutFields from "./fields/AboutFields";
 import FeaturesEditor from "./fields/FeaturesEditor";
 import TestimonialsEditor from "./fields/TestimonialsEditor";
 import FaqEditor from "./fields/FaqEditor";
+import SuccessMessageFields from "./fields/SuccessMessageFields";
 import SaveButton from "./SaveButton";
 import EditorPreview from "./EditorPreview";
 import PublishedToggle from "./PublishedToggle";
 
 interface EditorProps {
-  siteId: string;
+  siteId: SiteId;
   pageId: string | null;
   siteSubdomain: string;
   initialContent: TemplateConfig | any; // Tuki vanhalle muodolle
@@ -108,6 +111,8 @@ export default function Editor({
   const supportsAbout = currentTemplate?.id === "personal";
   const supportsTestimonials = currentTemplate?.id === "personal";
   const supportsFaq = currentTemplate?.defaultContent.faq !== undefined;
+  const supportsSuccessMessage =
+    currentTemplate?.id === "lead-magnet" || currentTemplate?.id === "waitlist";
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -180,6 +185,15 @@ export default function Editor({
               onRemove={(index) => setContent(removeFaq(index))}
               onUpdate={(index, field, value) =>
                 setContent(updateFaq(index, field, value))
+              }
+            />
+          )}
+
+          {supportsSuccessMessage && (
+            <SuccessMessageFields
+              successMessage={content.successMessage}
+              onUpdate={(field, value) =>
+                setContent(updateSuccessMessageField(field, value))
               }
             />
           )}

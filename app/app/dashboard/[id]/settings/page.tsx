@@ -1,6 +1,7 @@
 import { createClient } from "@/src/utils/supabase/server";
 import { redirect } from "next/navigation";
 import SettingsClient from "./SettingsClient";
+import { createSiteId } from "@/src/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,7 @@ export default async function SettingsPage({ params }: PageProps) {
 
   return (
     <SettingsClient
-      siteId={id}
+      siteId={createSiteId(id)}
       subdomain={site.subdomain}
       initialCustomDomain={site.custom_domain || ""}
       rootDomain={rootDomain}

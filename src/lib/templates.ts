@@ -34,6 +34,10 @@ export interface TemplateConfig {
     question: string;
     answer: string;
   }>;
+  successMessage?: {
+    title: string;
+    description: string;
+  }; // Lomakkeen onnistumisviesti
   theme?: {
     primaryColor: string;
   };
@@ -48,177 +52,201 @@ export interface Template {
 
 export const TEMPLATES: Template[] = [
   {
-    id: 'lead-magnet',
-    name: 'E-kirja / Lead Magnet',
-    description: 'Optimaalinen konversion kannalta. Vasemmalla teksti/pisteet, oikealla lomake/kuva.',
+    id: "lead-magnet",
+    name: "E-kirja / Lead Magnet",
+    description:
+      "Optimaalinen konversion kannalta. Vasemmalla teksti/pisteet, oikealla lomake/kuva.",
     defaultContent: {
-      templateId: 'lead-magnet',
+      templateId: "lead-magnet",
       hero: {
-        title: 'Lataa ilmainen E-kirja',
-        subtitle: 'Opit tärkeimmät vinkit ja strategiat jo tänään. Aloita heti!',
-        ctaText: 'Lataa nyt ilmaiseksi',
-        ctaLink: '#download',
+        title: "Lataa ilmainen E-kirja",
+        subtitle:
+          "Opit tärkeimmät vinkit ja strategiat jo tänään. Aloita heti!",
+        ctaText: "Lataa nyt ilmaiseksi",
+        ctaLink: "#download",
       },
       features: [
         {
-          icon: '📚',
-          title: 'Yli 50 sivua käytännön vinkkejä',
-          description: 'Saat välittömästi toimivia strategioita, joita voit soveltaa heti.',
+          icon: "📚",
+          title: "Yli 50 sivua käytännön vinkkejä",
+          description:
+            "Saat välittömästi toimivia strategioita, joita voit soveltaa heti.",
         },
         {
-          icon: '⚡',
-          title: 'Aloita heti',
-          description: 'Ei vaadi erityistä osaamista. Kaikki selitetty yksinkertaisesti.',
+          icon: "⚡",
+          title: "Aloita heti",
+          description:
+            "Ei vaadi erityistä osaamista. Kaikki selitetty yksinkertaisesti.",
         },
         {
-          icon: '🎯',
-          title: 'Todistettu menetelmä',
-          description: 'Tuhannet ovat jo hyötyneet tästä oppaasta. Olet seuraava.',
+          icon: "🎯",
+          title: "Todistettu menetelmä",
+          description:
+            "Tuhannet ovat jo hyötyneet tästä oppaasta. Olet seuraava.",
         },
       ],
+      successMessage: {
+        title: "Kiitos! Tietosi on tallennettu.",
+        description: "Saat pian lisätietoja sähköpostiisi.",
+      },
       theme: {
-        primaryColor: '#3B82F6',
+        primaryColor: "#3B82F6",
       },
     },
   },
   {
-    id: 'waitlist',
-    name: 'Odotuslista',
-    description: 'Keskitetty, minimalistinen. Iso syöttökenttä. Taustakuvio.',
+    id: "waitlist",
+    name: "Odotuslista",
+    description: "Keskitetty, minimalistinen. Iso syöttökenttä. Taustakuvio.",
     defaultContent: {
-      templateId: 'waitlist',
+      templateId: "waitlist",
       hero: {
-        title: 'Olemme tulossa pian',
-        subtitle: 'Ole ensimmäisten joukossa. Ilmoita sähköpostisi ja saat eksklusiivisen pääsyn.',
-        ctaText: 'Liity odotuslistalle',
-        ctaLink: '#waitlist',
+        title: "Olemme tulossa pian",
+        subtitle:
+          "Ole ensimmäisten joukossa. Ilmoita sähköpostisi ja saat eksklusiivisen pääsyn.",
+        ctaText: "Liity odotuslistalle",
+        ctaLink: "#waitlist",
+      },
+      successMessage: {
+        title: "Kiitos! Olet nyt odotuslistalla.",
+        description: "Saat pian lisätietoja sähköpostiisi.",
       },
       theme: {
-        primaryColor: '#8B5CF6',
+        primaryColor: "#8B5CF6",
       },
     },
   },
   {
-    id: 'saas-modern',
-    name: 'SaaS Modern',
-    description: 'Pitkä scrollaus. Hero -> Logot -> Ominaisuudet Grid -> UKK -> Footer.',
+    id: "saas-modern",
+    name: "SaaS Modern",
+    description:
+      "Pitkä scrollaus. Hero -> Logot -> Ominaisuudet Grid -> UKK -> Footer.",
     defaultContent: {
-      templateId: 'saas-modern',
+      templateId: "saas-modern",
       hero: {
-        title: 'Muuta työtapasi kokonaan',
-        subtitle: 'Nykyaikainen työkalupakki, joka tehostaa työskentelyäsi ja auttaa saavuttamaan enemmän.',
-        ctaText: 'Kokeile ilmaiseksi',
-        ctaLink: '#signup',
+        title: "Muuta työtapasi kokonaan",
+        subtitle:
+          "Nykyaikainen työkalupakki, joka tehostaa työskentelyäsi ja auttaa saavuttamaan enemmän.",
+        ctaText: "Kokeile ilmaiseksi",
+        ctaLink: "#signup",
       },
       features: [
         {
-          icon: '🚀',
-          title: 'Nopea käyttöönotto',
-          description: 'Aloita minuuteissa. Ei vaadi monimutkaista konfigurointia.',
+          icon: "🚀",
+          title: "Nopea käyttöönotto",
+          description:
+            "Aloita minuuteissa. Ei vaadi monimutkaista konfigurointia.",
         },
         {
-          icon: '🔒',
-          title: 'Turvallinen',
-          description: 'Tietosi ovat turvassa. GDPR-yhteensopiva ja salattu.',
+          icon: "🔒",
+          title: "Turvallinen",
+          description: "Tietosi ovat turvassa. GDPR-yhteensopiva ja salattu.",
         },
         {
-          icon: '📊',
-          title: 'Täydelliset analytiikat',
-          description: 'Seuraa suorituksiasi reaaliaikaisesti ja optimoi prosesseja.',
+          icon: "📊",
+          title: "Täydelliset analytiikat",
+          description:
+            "Seuraa suorituksiasi reaaliaikaisesti ja optimoi prosesseja.",
         },
         {
-          icon: '👥',
-          title: 'Tiimityöskentely',
-          description: 'Työskentele yhdessä tehokkaasti. Aina ja kaikkialla.',
+          icon: "👥",
+          title: "Tiimityöskentely",
+          description: "Työskentele yhdessä tehokkaasti. Aina ja kaikkialla.",
         },
         {
-          icon: '⚡',
-          title: 'Automaatio',
-          description: 'Päästä irti toistuvista tehtävistä. Automaatio hoitaa työn.',
+          icon: "⚡",
+          title: "Automaatio",
+          description:
+            "Päästä irti toistuvista tehtävistä. Automaatio hoitaa työn.",
         },
         {
-          icon: '🎨',
-          title: 'Mukautettava',
-          description: 'Sovita työkalu tarpeisiisi. Täysin joustava.',
+          icon: "🎨",
+          title: "Mukautettava",
+          description: "Sovita työkalu tarpeisiisi. Täysin joustava.",
         },
       ],
       faq: [
         {
-          question: 'Kuinka paljon tämä maksaa?',
-          answer: 'Tarjoamme 14 päivän ilmaisen kokeilun. Sen jälkeen hinnat alkavat 29€/kk.',
+          question: "Kuinka paljon tämä maksaa?",
+          answer:
+            "Tarjoamme 14 päivän ilmaisen kokeilun. Sen jälkeen hinnat alkavat 29€/kk.",
         },
         {
-          question: 'Voinko peruuttaa milloin tahansa?',
-          answer: 'Kyllä, voit peruuttaa tilauksesi milloin tahansa ilman velvoitteita.',
+          question: "Voinko peruuttaa milloin tahansa?",
+          answer:
+            "Kyllä, voit peruuttaa tilauksesi milloin tahansa ilman velvoitteita.",
         },
         {
-          question: 'Onko tämä turvallinen?',
-          answer: 'Kyllä, käytämme teollisuuden standardeja tietosuojaan ja salaamme kaiken datan.',
+          question: "Onko tämä turvallinen?",
+          answer:
+            "Kyllä, käytämme teollisuuden standardeja tietosuojaan ja salaamme kaiken datan.",
         },
         {
-          question: 'Tuenneko tiimiä?',
-          answer: 'Kyllä, tarjoamme erilaisia hinnoitteluja tiimeille. Ota yhteyttä myyntiin.',
+          question: "Tuenneko tiimiä?",
+          answer:
+            "Kyllä, tarjoamme erilaisia hinnoitteluja tiimeille. Ota yhteyttä myyntiin.",
         },
       ],
       theme: {
-        primaryColor: '#3B82F6',
+        primaryColor: "#3B82F6",
       },
     },
   },
   {
-    id: 'vsl',
-    name: 'VSL (Video Sales Letter)',
-    description: 'Otsikko -> Iso 16:9 Video Placeholder -> Iso Nappi alle.',
+    id: "vsl",
+    name: "VSL (Video Sales Letter)",
+    description: "Otsikko -> Iso 16:9 Video Placeholder -> Iso Nappi alle.",
     defaultContent: {
-      templateId: 'vsl',
+      templateId: "vsl",
       hero: {
-        title: 'Oletko valmis muuttamaan elämäsi?',
-        subtitle: 'Katso tämä video ja löydä ratkaisu, jota olet etsinyt.',
-        ctaText: 'Katso video',
-        ctaLink: '#video',
+        title: "Oletko valmis muuttamaan elämäsi?",
+        subtitle: "Katso tämä video ja löydä ratkaisu, jota olet etsinyt.",
+        ctaText: "Katso video",
+        ctaLink: "#video",
       },
-      videoUrl: 'https://example.com/video.mp4',
+      videoUrl: "https://example.com/video.mp4",
       theme: {
-        primaryColor: '#EF4444',
+        primaryColor: "#EF4444",
       },
     },
   },
   {
-    id: 'personal',
-    name: 'Personal',
+    id: "personal",
+    name: "Personal",
     description: 'Pyöreä profiilikuva, "Tarinan" osio, suosittelut.',
     defaultContent: {
-      templateId: 'personal',
+      templateId: "personal",
       hero: {
-        title: 'Hei, olen [Nimesi]',
-        subtitle: 'Autan ihmisiä saavuttamaan unelmansa ja elämään täysipainoista elämää.',
-        ctaText: 'Ota yhteyttä',
-        ctaLink: '#contact',
+        title: "Hei, olen [Nimesi]",
+        subtitle:
+          "Autan ihmisiä saavuttamaan unelmansa ja elämään täysipainoista elämää.",
+        ctaText: "Ota yhteyttä",
+        ctaLink: "#contact",
       },
       about: {
-        name: 'Matti Meikäläinen',
-        bio: 'Olen kokenut valmentaja ja mentor, joka on auttanut satoja ihmisiä saavuttamaan tavoitteensa. Vuosien kokemukseni ja todistetut menetelmäni auttavat sinuakin eteenpäin.',
-        image: '',
+        name: "Matti Meikäläinen",
+        bio: "Olen kokenut valmentaja ja mentor, joka on auttanut satoja ihmisiä saavuttamaan tavoitteensa. Vuosien kokemukseni ja todistetut menetelmäni auttavat sinuakin eteenpäin.",
+        image: "",
       },
       testimonials: [
         {
-          name: 'Liisa Virtanen',
-          text: 'Matin ohjaus muutti elämäni kokonaan. Suosittelen lämpimästi kaikille!',
-          company: 'Yrittäjä',
+          name: "Liisa Virtanen",
+          text: "Matin ohjaus muutti elämäni kokonaan. Suosittelen lämpimästi kaikille!",
+          company: "Yrittäjä",
         },
         {
-          name: 'Jussi Korhonen',
-          text: 'En olisi uskonut, että muutos voi olla näin nopeaa. Kiitos!',
-          company: 'Toimitusjohtaja',
+          name: "Jussi Korhonen",
+          text: "En olisi uskonut, että muutos voi olla näin nopeaa. Kiitos!",
+          company: "Toimitusjohtaja",
         },
         {
-          name: 'Maria Lahti',
-          text: 'Paras investointi, jonka olen koskaan tehnyt. Erityinen ja ammattimainen.',
-          company: 'Vapaa-ammattilainen',
+          name: "Maria Lahti",
+          text: "Paras investointi, jonka olen koskaan tehnyt. Erityinen ja ammattimainen.",
+          company: "Vapaa-ammattilainen",
         },
       ],
       theme: {
-        primaryColor: '#10B981',
+        primaryColor: "#10B981",
       },
     },
   },
@@ -235,5 +263,5 @@ export function getTemplateById(id: string): Template | undefined {
  * Hakee oletustemplaten (saas-modern)
  */
 export function getDefaultTemplate(): Template {
-  return TEMPLATES.find((t) => t.id === 'saas-modern') || TEMPLATES[0];
+  return TEMPLATES.find((t) => t.id === "saas-modern") || TEMPLATES[0];
 }

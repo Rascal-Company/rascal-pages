@@ -1,6 +1,7 @@
 import { createClient } from "@/src/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Editor from "@/app/components/editor/Editor";
+import { createSiteId } from "@/src/lib/types";
 
 // Estetään pre-rendering build-aikana, koska sivu vaatii käyttäjäsession
 export const dynamic = "force-dynamic";
@@ -66,7 +67,7 @@ export default async function SiteEditorPage({ params }: PageProps) {
 
   return (
     <Editor
-      siteId={id}
+      siteId={createSiteId(id)}
       pageId={pageId}
       siteSubdomain={site.subdomain}
       initialContent={pageContent}

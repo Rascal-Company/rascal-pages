@@ -3,17 +3,20 @@
 import { TemplateConfig } from "@/src/lib/templates";
 import { submitLead } from "@/app/actions/submit-lead";
 import { useState, useTransition } from "react";
+import type { SiteId } from "@/src/lib/types";
 
 interface WaitlistTemplateProps {
   content: TemplateConfig;
-  siteId: string;
+  siteId: SiteId;
+  isPreview?: boolean;
 }
 
 export default function WaitlistTemplate({
   content,
   siteId,
+  isPreview = false,
 }: WaitlistTemplateProps) {
-  const primaryColor = content.theme?.primaryColor || "#8B5CF6";
+  const primaryColor = content?.theme?.primaryColor || "#8B5CF6";
   const [isPending, startTransition] = useTransition();
   const [formStatus, setFormStatus] = useState<"idle" | "success" | "error">(
     "idle",
@@ -22,6 +25,14 @@ export default function WaitlistTemplate({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // Don't submit in preview mode
+    if (isPreview) {
+      setFormStatus("success");
+      setTimeout(() => setFormStatus("idle"), 2000);
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
 
@@ -42,7 +53,7 @@ export default function WaitlistTemplate({
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50">
       {/* Background Pattern */}
       <div
-        className="absolute inset-0 opacity-5"
+        className="absolute inset-0 opacity-5 pointer-events-none"
         style={{
           backgroundImage: `radial-gradient(circle, ${primaryColor} 1px, transparent 1px)`,
           backgroundSize: "50px 50px",
@@ -52,7 +63,7 @@ export default function WaitlistTemplate({
       {/* Hero Section - Centered */}
       <section className="relative min-h-screen flex items-center justify-center px-6 py-24 sm:py-32">
         <div className="mx-auto max-w-2xl text-center">
-          {content.hero.image && (
+          {content?.hero?.image && (
             <div className="mb-8">
               <img
                 src={content.hero.image}
@@ -62,10 +73,10 @@ export default function WaitlistTemplate({
             </div>
           )}
           <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-            {content.hero.title}
+            {content?.hero?.title || "Otsikko"}
           </h1>
           <p className="mt-6 text-xl leading-8 text-gray-600">
-            {content.hero.subtitle}
+            {content?.hero?.subtitle || "Alaotsikko"}
           </p>
 
           {/* Waitlist Form */}
@@ -73,10 +84,12 @@ export default function WaitlistTemplate({
             {formStatus === "success" && (
               <div className="mb-6 rounded-lg bg-green-50 p-4 text-green-800 border border-green-200 max-w-md mx-auto">
                 <p className="font-semibold">
-                  Kiitos! Olet nyt odotuslistalla.
+                  {content.successMessage?.title ||
+                    "Kiitos! Olet nyt odotuslistalla."}
                 </p>
                 <p className="text-sm mt-1">
-                  Saat pian lisätietoja sähköpostiisi.
+                  {content.successMessage?.description ||
+                    "Saat pian lisätietoja sähköpostiisi."}
                 </p>
               </div>
             )}
@@ -106,7 +119,9 @@ export default function WaitlistTemplate({
                 className="rounded-lg px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 style={{ backgroundColor: primaryColor }}
               >
-                {isPending ? "Lähetetään..." : content.hero.ctaText}
+                {isPending
+                  ? "Lähetetään..."
+                  : content?.hero?.ctaText || "Liity odotuslistalle"}
               </button>
             </form>
             <p className="mt-4 text-sm text-gray-500">

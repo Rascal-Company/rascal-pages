@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { togglePagePublish } from "@/app/actions/toggle-publish";
 import { useToast } from "@/app/components/ui/ToastContainer";
 import { getDashboardUrl, isLocalhost } from "@/app/lib/navigation";
+import { createSiteId } from "@/src/lib/types";
 
 interface Site {
   id: string;
@@ -85,7 +86,10 @@ export default function DashboardClient({
     setUpdatingPublished((prev) => ({ ...prev, [siteId]: true }));
 
     try {
-      const result = await togglePagePublish(siteId, !currentPublished);
+      const result = await togglePagePublish(
+        createSiteId(siteId),
+        !currentPublished,
+      );
       if (result?.error) {
         showToast(result.error, "error");
       } else {
@@ -384,6 +388,16 @@ export default function DashboardClient({
                         }}
                       >
                         Muokkaa
+                      </Link>
+                      <Link
+                        href={`/app/dashboard/${site.id}/analytics`}
+                        className="flex-1 rounded-md border border-brand-dark/20 bg-white px-3 py-1.5 text-center text-sm font-medium text-brand-dark transition-colors hover:bg-brand-light"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          navigateToDashboard(`/${site.id}/analytics`);
+                        }}
+                      >
+                        Analytiikka
                       </Link>
                       <button
                         onClick={() => handleDeleteSite(site.id)}

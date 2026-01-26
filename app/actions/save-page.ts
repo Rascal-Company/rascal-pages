@@ -2,9 +2,10 @@
 
 import { createClient } from '@/src/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import type { SiteId } from '@/src/lib/types';
 
 export async function updatePageContent(
-  siteId: string,
+  siteId: SiteId,
   content: any,
   published: boolean = false
 ): Promise<{ error?: string } | void> {

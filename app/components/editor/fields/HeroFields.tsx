@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { TemplateConfig } from '@/src/lib/templates';
+import { TemplateConfig } from "@/src/lib/templates";
 
 interface HeroFieldsProps {
-  hero: TemplateConfig['hero'];
+  hero: TemplateConfig["hero"];
   onUpdate: (field: string, value: string) => void;
 }
 
@@ -18,8 +18,8 @@ export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
           </label>
           <input
             type="text"
-            value={hero?.title || ''}
-            onChange={(e) => onUpdate('title', e.target.value)}
+            value={hero?.title || ""}
+            onChange={(e) => onUpdate("title", e.target.value)}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
           />
         </div>
@@ -28,8 +28,8 @@ export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
             Alaotsikko
           </label>
           <textarea
-            value={hero?.subtitle || ''}
-            onChange={(e) => onUpdate('subtitle', e.target.value)}
+            value={hero?.subtitle || ""}
+            onChange={(e) => onUpdate("subtitle", e.target.value)}
             rows={3}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
           />
@@ -40,8 +40,8 @@ export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
           </label>
           <input
             type="text"
-            value={hero?.ctaText || ''}
-            onChange={(e) => onUpdate('ctaText', e.target.value)}
+            value={hero?.ctaText || ""}
+            onChange={(e) => onUpdate("ctaText", e.target.value)}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
           />
         </div>
@@ -51,8 +51,8 @@ export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
           </label>
           <input
             type="text"
-            value={hero?.ctaLink || ''}
-            onChange={(e) => onUpdate('ctaLink', e.target.value)}
+            value={hero?.ctaLink || ""}
+            onChange={(e) => onUpdate("ctaLink", e.target.value)}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
           />
         </div>
@@ -62,8 +62,8 @@ export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
           </label>
           <input
             type="url"
-            value={hero?.image || ''}
-            onChange={(e) => onUpdate('image', e.target.value)}
+            value={hero?.image || ""}
+            onChange={(e) => onUpdate("image", e.target.value)}
             placeholder="https://example.com/kuva.jpg"
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
           />

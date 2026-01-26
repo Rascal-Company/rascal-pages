@@ -1,4 +1,8 @@
-import { TemplateConfig, getDefaultTemplate, getTemplateById } from '@/src/lib/templates';
+import {
+  TemplateConfig,
+  getDefaultTemplate,
+  getTemplateById,
+} from "@/src/lib/templates";
 
 /**
  * Normalisoi content - varmista että templateId on olemassa
@@ -11,10 +15,17 @@ export function normalizeContent(content: any): TemplateConfig {
       hero: {
         ...defaultTemplate.defaultContent.hero,
         ...content.hero,
-        ctaText: content.hero?.cta || content.hero?.ctaText || defaultTemplate.defaultContent.hero.ctaText,
-        cta: content.hero?.cta || content.hero?.ctaText || defaultTemplate.defaultContent.hero.ctaText,
+        ctaText:
+          content.hero?.cta ||
+          content.hero?.ctaText ||
+          defaultTemplate.defaultContent.hero.ctaText,
+        cta:
+          content.hero?.cta ||
+          content.hero?.ctaText ||
+          defaultTemplate.defaultContent.hero.ctaText,
       },
-      features: content.features || defaultTemplate.defaultContent.features || [],
+      features:
+        content.features || defaultTemplate.defaultContent.features || [],
       theme: content.theme || defaultTemplate.defaultContent.theme,
     };
   }
@@ -26,7 +37,7 @@ export function normalizeContent(content: any): TemplateConfig {
  */
 export function mergeTemplateContent(
   currentContent: TemplateConfig,
-  newTemplateId: string
+  newTemplateId: string,
 ): TemplateConfig | null {
   const newTemplate = getTemplateById(newTemplateId);
   if (!newTemplate) return null;
@@ -36,10 +47,15 @@ export function mergeTemplateContent(
     hero: {
       ...newTemplate.defaultContent.hero,
       // Säilytä vanhat hero-kentät jos ne ovat yhteensopivia
-      title: currentContent.hero?.title || newTemplate.defaultContent.hero.title,
-      subtitle: currentContent.hero?.subtitle || newTemplate.defaultContent.hero.subtitle,
-      ctaText: currentContent.hero?.ctaText || newTemplate.defaultContent.hero.ctaText,
-      ctaLink: currentContent.hero?.ctaLink || newTemplate.defaultContent.hero.ctaLink,
+      title:
+        currentContent.hero?.title || newTemplate.defaultContent.hero.title,
+      subtitle:
+        currentContent.hero?.subtitle ||
+        newTemplate.defaultContent.hero.subtitle,
+      ctaText:
+        currentContent.hero?.ctaText || newTemplate.defaultContent.hero.ctaText,
+      ctaLink:
+        currentContent.hero?.ctaLink || newTemplate.defaultContent.hero.ctaLink,
     },
     theme: currentContent.theme || newTemplate.defaultContent.theme,
     // Säilytä features jos uusi template tukee niitä
@@ -49,7 +65,11 @@ export function mergeTemplateContent(
     // Säilytä muut kentät jos ne ovat yhteensopivia
     videoUrl: currentContent.videoUrl || newTemplate.defaultContent.videoUrl,
     about: currentContent.about || newTemplate.defaultContent.about,
-    testimonials: currentContent.testimonials || newTemplate.defaultContent.testimonials,
+    testimonials:
+      currentContent.testimonials || newTemplate.defaultContent.testimonials,
     faq: currentContent.faq || newTemplate.defaultContent.faq,
+    successMessage:
+      currentContent.successMessage ||
+      newTemplate.defaultContent.successMessage,
   };
 }

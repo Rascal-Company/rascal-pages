@@ -2,9 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import type { SiteId } from "@/src/lib/types";
 
 interface EditorHeaderProps {
-  siteId: string;
+  siteId: SiteId;
   siteSubdomain: string;
 }
 

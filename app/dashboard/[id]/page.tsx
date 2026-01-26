@@ -1,9 +1,10 @@
-import { createClient } from '@/src/utils/supabase/server';
-import { redirect } from 'next/navigation';
-import Editor from '@/app/components/editor/Editor';
+import { createClient } from "@/src/utils/supabase/server";
+import { redirect } from "next/navigation";
+import Editor from "@/app/components/editor/Editor";
+import { createSiteId } from "@/src/lib/types";
 
 // Estetään pre-rendering build-aikana, koska sivu vaatii käyttäjäsession
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -14,16 +15,18 @@ export default async function SiteEditorPage({ params }: PageProps) {
   const supabase = await createClient();
 
   // 1. Tarkista käyttäjä
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    redirect('/');
+    redirect("/");
   }
 
   // 2. Hae käyttäjän organisaatio
   const { data: orgMember, error: orgMemberError } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('auth_user_id', user.id)
+    .from("org_members")
+    .select("org_id, role")
+    .eq("auth_user_id", user.id)
     .maybeSingle();
 
   if (!orgMember || orgMemberError) {
@@ -32,26 +35,26 @@ export default async function SiteEditorPage({ params }: PageProps) {
 
   // 3. Hae sivuston tiedot
   const { data: site, error: siteError } = await supabase
-    .from('sites')
-    .select('*')
-    .eq('id', id)
-    .eq('user_id', orgMember.org_id)
+    .from("sites")
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", orgMember.org_id)
     .single();
 
   if (siteError || !site) {
-    redirect('/dashboard');
+    redirect("/dashboard");
   }
 
   // 4. Hae sivuston 'home' sivu tai luo oletusrakenne
   const { data: page, error: pageError } = await supabase
-    .from('pages')
-    .select('*')
-    .eq('site_id', id)
-    .eq('slug', 'home')
+    .from("pages")
+    .select("*")
+    .eq("site_id", id)
+    .eq("slug", "home")
     .maybeSingle();
 
   // Oletussisältö jos sivua ei ole - käytä oletustemplatea
-  const { getDefaultTemplate } = await import('@/src/lib/templates');
+  const { getDefaultTemplate } = await import("@/src/lib/templates");
   const defaultTemplate = getDefaultTemplate();
   const defaultContent = defaultTemplate.defaultContent;
 
@@ -62,7 +65,7 @@ export default async function SiteEditorPage({ params }: PageProps) {
 
   return (
     <Editor
-      siteId={id}
+      siteId={createSiteId(id)}
       pageId={pageId}
       siteSubdomain={site.subdomain}
       initialContent={pageContent}

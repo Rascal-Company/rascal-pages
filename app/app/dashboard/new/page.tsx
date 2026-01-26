@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { createSite } from '@/app/actions';
+import { useState } from "react";
+import Link from "next/link";
+import { createSite } from "@/app/actions";
 
 export default function NewSitePage() {
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export default function NewSitePage() {
       }
       // Redirect tapahtuu Server Actionissa automaattisesti onnistuessa
     } catch (err) {
-      setError('Odottamaton virhe. Yritä uudelleen.');
+      setError("Odottamaton virhe. Yritä uudelleen.");
       setIsSubmitting(false);
     }
   }
@@ -89,7 +89,7 @@ export default function NewSitePage() {
                 disabled={isSubmitting}
                 className="flex-1 rounded-md bg-brand-accent px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-accent-hover focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 disabled:bg-brand-accent/60 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Luodaan...' : 'Luo sivusto'}
+                {isSubmitting ? "Luodaan..." : "Luo sivusto"}
               </button>
               <Link
                 href="/app/dashboard"

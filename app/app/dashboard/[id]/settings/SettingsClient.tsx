@@ -4,9 +4,10 @@ import { useState, useRef } from "react";
 import { updateSiteDomain } from "@/app/actions/update-domain";
 import { useToast } from "@/app/components/ui/ToastContainer";
 import Link from "next/link";
+import type { SiteId } from "@/src/lib/types";
 
 interface SettingsClientProps {
-  siteId: string;
+  siteId: SiteId;
   subdomain: string;
   initialCustomDomain: string;
   rootDomain: string;

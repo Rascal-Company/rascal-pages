@@ -70,7 +70,7 @@ Add to your `.env.local`:
 
 ```bash
 # Optional: n8n webhook URL for lead notifications
-N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/leads
+N8N_RASCALPAGES_LEADS=https://your-n8n-instance.com/webhook/leads
 ```
 
 If not set, leads will still be saved to the database, but won't be sent to n8n.

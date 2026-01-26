@@ -2,10 +2,11 @@
 
 import { TemplateConfig } from "@/src/lib/templates";
 import { AnalyticsLink } from "@/app/components/AnalyticsLink";
+import type { SiteId } from "@/src/lib/types";
 
 interface PersonalTemplateProps {
   content: TemplateConfig;
-  siteId: string;
+  siteId: SiteId;
 }
 
 export default function PersonalTemplate({

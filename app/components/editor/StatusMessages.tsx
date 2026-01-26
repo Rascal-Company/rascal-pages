@@ -1,11 +1,14 @@
-'use client';
+"use client";
 
 interface StatusMessagesProps {
   error: string | null;
   success: boolean;
 }
 
-export default function StatusMessages({ error, success }: StatusMessagesProps) {
+export default function StatusMessages({
+  error,
+  success,
+}: StatusMessagesProps) {
   return (
     <>
       {error && (

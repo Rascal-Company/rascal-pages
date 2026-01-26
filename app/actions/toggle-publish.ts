@@ -2,9 +2,10 @@
 
 import { createClient } from '@/src/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
+import type { SiteId } from '@/src/lib/types';
 
 export async function togglePagePublish(
-  siteId: string,
+  siteId: SiteId,
   published: boolean
 ): Promise<{ error?: string } | void> {
   const supabase = await createClient();

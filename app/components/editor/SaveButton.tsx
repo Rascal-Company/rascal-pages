@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 interface SaveButtonProps {
   isSaving: boolean;
@@ -13,7 +13,7 @@ export default function SaveButton({ isSaving, onSave }: SaveButtonProps) {
         disabled={isSaving}
         className="w-full rounded-md bg-brand-accent px-4 py-3 text-sm font-medium text-white hover:bg-brand-accent-hover focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 disabled:bg-brand-accent/60 disabled:cursor-not-allowed"
       >
-        {isSaving ? 'Tallennetaan...' : 'Tallenna muutokset'}
+        {isSaving ? "Tallennetaan..." : "Tallenna muutokset"}
       </button>
     </div>
   );

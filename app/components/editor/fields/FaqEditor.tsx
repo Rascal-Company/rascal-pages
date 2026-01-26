@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { TemplateConfig } from '@/src/lib/templates';
+import { TemplateConfig } from "@/src/lib/templates";
 
 interface FaqEditorProps {
-  faq: TemplateConfig['faq'] | undefined;
+  faq: TemplateConfig["faq"] | undefined;
   onAdd: () => void;
   onRemove: (index: number) => void;
   onUpdate: (index: number, field: string, value: string) => void;
@@ -50,8 +50,8 @@ export default function FaqEditor({
                 </label>
                 <input
                   type="text"
-                  value={item.question || ''}
-                  onChange={(e) => onUpdate(index, 'question', e.target.value)}
+                  value={item.question || ""}
+                  onChange={(e) => onUpdate(index, "question", e.target.value)}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />
               </div>
@@ -60,8 +60,8 @@ export default function FaqEditor({
                   Vastaus
                 </label>
                 <textarea
-                  value={item.answer || ''}
-                  onChange={(e) => onUpdate(index, 'answer', e.target.value)}
+                  value={item.answer || ""}
+                  onChange={(e) => onUpdate(index, "answer", e.target.value)}
                   rows={3}
                   className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
                 />
