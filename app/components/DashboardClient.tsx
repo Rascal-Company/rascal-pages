@@ -79,7 +79,8 @@ export default function DashboardClient({
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.refresh();
+    // Ohjaa etusivulle uloskirjautumisen jälkeen
+    window.location.href = "/";
   };
 
   const handleTogglePublish = async (
