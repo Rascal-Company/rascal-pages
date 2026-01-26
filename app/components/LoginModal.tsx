@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/src/utils/supabase/client";
+import { getAppUrl } from "@/app/lib/navigation";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -41,22 +42,8 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         onClose();
         setLoading(false);
 
-        // Tarkista ympäristö ja ohjaa oikeaan paikkaan
-        const isLocalhost =
-          window.location.hostname === "localhost" ||
-          window.location.hostname.endsWith(".localhost");
-
-        if (isLocalhost) {
-          // Localhost: käytä window.location.href eikä router.push
-          // Tämä varmistaa että evästeet menevät varmasti perille
-          window.location.href = "/app/dashboard";
-        } else {
-          // Tuotanto: ohjaa app-subdomainiin juuripolkuun
-          // Middleware lisää automaattisesti /app prefixin
-          const rootDomain =
-            process.env.NEXT_PUBLIC_ROOT_DOMAIN || "rascalpages.fi";
-          window.location.href = `https://app.${rootDomain}/`;
-        }
+        // Ohjaa dashboardiin - getAppUrl hoitaa localhost/tuotanto -eron
+        window.location.href = getAppUrl("/dashboard");
       }
     } catch (err) {
       setError("Odottamaton virhe tapahtui. Yritä uudelleen.");

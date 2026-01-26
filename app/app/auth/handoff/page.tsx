@@ -3,18 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/src/utils/supabase/client";
-
-function getRedirectUrl(): string {
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "rascalpages.fi";
-  const isLocalhost =
-    window.location.hostname === "localhost" ||
-    window.location.hostname.endsWith(".localhost");
-
-  if (isLocalhost) {
-    return "/app/dashboard";
-  }
-  return `https://app.${rootDomain}/dashboard`;
-}
+import { getAppUrl, isLocalhost } from "@/app/lib/navigation";
 
 export default function AuthHandoff() {
   const router = useRouter();
@@ -36,11 +25,11 @@ export default function AuthHandoff() {
           data: { user },
         } = await supabase.auth.getUser();
         if (user) {
-          const redirectUrl = getRedirectUrl();
-          if (redirectUrl.startsWith("/")) {
-            router.replace(redirectUrl);
+          // Käytä getAppUrl yhtenäiseen navigointiin
+          if (isLocalhost()) {
+            router.replace("/app/dashboard");
           } else {
-            window.location.href = redirectUrl;
+            window.location.href = getAppUrl("/dashboard");
           }
           return;
         }
@@ -61,11 +50,10 @@ export default function AuthHandoff() {
         // 3. Päivitä router ja ohjaa dashboardiin
         router.refresh();
 
-        const redirectUrl = getRedirectUrl();
-        if (redirectUrl.startsWith("/")) {
-          router.replace(redirectUrl);
+        if (isLocalhost()) {
+          router.replace("/app/dashboard");
         } else {
-          window.location.href = redirectUrl;
+          window.location.href = getAppUrl("/dashboard");
         }
       }
     };
