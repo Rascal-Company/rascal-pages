@@ -1,13 +1,25 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/src/utils/supabase/client';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/src/utils/supabase/client";
+
+function getRedirectUrl(): string {
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "rascalpages.fi";
+  const isLocalhost =
+    window.location.hostname === "localhost" ||
+    window.location.hostname.endsWith(".localhost");
+
+  if (isLocalhost) {
+    return "/app/dashboard";
+  }
+  return `https://app.${rootDomain}/dashboard`;
+}
 
 export default function AuthHandoff() {
   const router = useRouter();
   const supabase = createClient();
-  const [status, setStatus] = useState('Autentikoidaan...');
+  const [status, setStatus] = useState("Autentikoidaan...");
 
   useEffect(() => {
     const handleSession = async () => {
@@ -15,25 +27,24 @@ export default function AuthHandoff() {
       const hash = window.location.hash.substring(1);
       const params = new URLSearchParams(hash);
 
-      const accessToken = params.get('access_token');
-      const refreshToken = params.get('refresh_token');
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
 
       if (!accessToken || !refreshToken) {
         // Jos tokeneita ei ole hashissa, tarkistetaan onko käyttäjä jo kirjautunut
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          // Tarkista ympäristö ja ohjaa oikeaan paikkaan
-          if (typeof window !== 'undefined') {
-            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.localhost');
-            if (isLocalhost) {
-              router.replace('/app/dashboard');
-            } else {
-              window.location.href = 'https://app.rascalpages.fi/dashboard';
-            }
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          const redirectUrl = getRedirectUrl();
+          if (redirectUrl.startsWith("/")) {
+            router.replace(redirectUrl);
+          } else {
+            window.location.href = redirectUrl;
           }
           return;
         }
-        setStatus('Virhe: Ei kirjautumistietoja.');
+        setStatus("Virhe: Ei kirjautumistietoja.");
         return;
       }
 
@@ -44,20 +55,17 @@ export default function AuthHandoff() {
       });
 
       if (error) {
-        console.error('Handoff error:', error);
-        setStatus('Kirjautuminen epäonnistui.');
+        console.error("Handoff error:", error);
+        setStatus("Kirjautuminen epäonnistui.");
       } else {
         // 3. Päivitä router ja ohjaa dashboardiin
-        router.refresh(); // Varmistaa että server componentit tajuavat uuden keksin
-        
-        // Tarkista ympäristö ja ohjaa oikeaan paikkaan
-        if (typeof window !== 'undefined') {
-          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname.endsWith('.localhost');
-          if (isLocalhost) {
-            router.replace('/app/dashboard');
-          } else {
-            window.location.href = 'https://app.rascalpages.fi/dashboard';
-          }
+        router.refresh();
+
+        const redirectUrl = getRedirectUrl();
+        if (redirectUrl.startsWith("/")) {
+          router.replace(redirectUrl);
+        } else {
+          window.location.href = redirectUrl;
         }
       }
     };
