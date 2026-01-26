@@ -49,15 +49,24 @@ export default function DashboardClient({
     }
 
     // Listen for auth changes (login/logout)
+    // HUOM: Älä reagoi INITIAL_SESSION eventiin jos userId on jo olemassa,
+    // koska serveri on jo validoinut käyttäjän
     const supabase = createClient();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Ohita INITIAL_SESSION jos serveri on jo validoinut käyttäjän
+      if (event === "INITIAL_SESSION" && userId) {
+        return;
+      }
+
       setIsAuthenticated(!!session);
       if (session) {
         setIsLoginModalOpen(false);
-        router.refresh();
-      } else {
+        if (event === "SIGNED_IN") {
+          router.refresh();
+        }
+      } else if (event === "SIGNED_OUT") {
         setIsLoginModalOpen(true);
       }
     });
