@@ -49,6 +49,11 @@ export default async function middleware(req: NextRequest) {
   // 1. App Subdomain (Editori/Dashboard)
   // Jos osoite on app.rascalpages.fi, ohjaa dashboardiin
   if (hostname === `app.${rootDomain}`) {
+    // Jos polku alkaa jo /app, älä lisää uudelleen
+    if (path.startsWith("/app")) {
+      return updateSupabaseSession(req);
+    }
+    // Muuten lisää /app prefix
     return updateSupabaseSession(
       req,
       new URL(`/app${path === "/" ? "/dashboard" : path}`, req.url),

@@ -49,3 +49,14 @@ export function getAppUrl(path: string = "/dashboard"): string {
 export function getDashboardPath(subpath: string = ""): string {
   return `/app/dashboard${subpath}`;
 }
+
+/**
+ * Gets the home/landing page URL for logout redirect
+ * This redirects to the root domain, not app subdomain
+ */
+export function getHomeUrl(): string {
+  if (isLocalhost()) {
+    return "/";
+  }
+  return `https://${getRootDomain()}/`;
+}

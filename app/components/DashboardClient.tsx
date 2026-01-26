@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { togglePagePublish } from "@/app/actions/toggle-publish";
 import { useToast } from "@/app/components/ui/ToastContainer";
 import { createSiteId } from "@/src/lib/types";
+import { getHomeUrl } from "@/app/lib/navigation";
 
 interface Site {
   id: string;
@@ -79,8 +80,8 @@ export default function DashboardClient({
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    // Ohjaa etusivulle uloskirjautumisen jälkeen
-    window.location.href = "/";
+    // Ohjaa etusivulle (root domain, ei app subdomain)
+    window.location.href = getHomeUrl();
   };
 
   const handleTogglePublish = async (
