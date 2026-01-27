@@ -65,6 +65,13 @@ export default async function SiteEditorPage({ params }: PageProps) {
   const pageId = page?.id || null;
   const initialPublished = page?.published ?? false;
 
+  // Hae analytiikka-asetukset
+  const siteSettings = (site.settings as Record<string, unknown>) || {};
+  const initialSettings = {
+    googleTagManagerId: (siteSettings.googleTagManagerId as string) || "",
+    metaPixelId: (siteSettings.metaPixelId as string) || "",
+  };
+
   return (
     <Editor
       siteId={createSiteId(id)}
@@ -72,6 +79,7 @@ export default async function SiteEditorPage({ params }: PageProps) {
       siteSubdomain={site.subdomain}
       initialContent={pageContent}
       initialPublished={initialPublished}
+      initialSettings={initialSettings}
     />
   );
 }

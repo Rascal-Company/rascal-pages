@@ -45,7 +45,6 @@ export default function SiteRenderer({
         .filter((section) => section.isVisible)
         .map((section) => {
           const baseProps = {
-            key: section.id,
             theme,
             siteId,
             isPreview,
@@ -55,6 +54,7 @@ export default function SiteRenderer({
             case "hero":
               return (
                 <HeroBlock
+                  key={section.id}
                   {...baseProps}
                   content={section.content as SectionContentMap["hero"]}
                 />
@@ -62,6 +62,7 @@ export default function SiteRenderer({
             case "features":
               return (
                 <FeaturesBlock
+                  key={section.id}
                   {...baseProps}
                   content={section.content as SectionContentMap["features"]}
                 />
@@ -69,6 +70,7 @@ export default function SiteRenderer({
             case "faq":
               return (
                 <FaqBlock
+                  key={section.id}
                   {...baseProps}
                   content={section.content as SectionContentMap["faq"]}
                 />
@@ -76,6 +78,7 @@ export default function SiteRenderer({
             case "testimonials":
               return (
                 <TestimonialsBlock
+                  key={section.id}
                   {...baseProps}
                   content={section.content as SectionContentMap["testimonials"]}
                 />
@@ -83,6 +86,7 @@ export default function SiteRenderer({
             case "about":
               return (
                 <AboutBlock
+                  key={section.id}
                   {...baseProps}
                   content={section.content as SectionContentMap["about"]}
                 />
@@ -90,6 +94,7 @@ export default function SiteRenderer({
             case "video":
               return (
                 <VideoBlock
+                  key={section.id}
                   {...baseProps}
                   content={section.content as SectionContentMap["video"]}
                 />
@@ -97,6 +102,7 @@ export default function SiteRenderer({
             case "form":
               return (
                 <FormBlock
+                  key={section.id}
                   {...baseProps}
                   content={section.content as SectionContentMap["form"]}
                   hero={heroContent}
@@ -105,6 +111,7 @@ export default function SiteRenderer({
             case "logos":
               return (
                 <LogosBlock
+                  key={section.id}
                   {...baseProps}
                   content={section.content as SectionContentMap["logos"]}
                 />
@@ -112,6 +119,7 @@ export default function SiteRenderer({
             case "footer":
               return (
                 <FooterBlock
+                  key={section.id}
                   {...baseProps}
                   content={section.content as SectionContentMap["footer"]}
                 />

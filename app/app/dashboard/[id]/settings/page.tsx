@@ -46,12 +46,19 @@ export default async function SettingsPage({ params }: PageProps) {
 
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "rascalpages.fi";
 
+  // Hae analytiikka-asetukset settings-kentästä
+  const siteSettings = (site.settings as Record<string, unknown>) || {};
+  const initialSettings = {
+    googleTagManagerId: (siteSettings.googleTagManagerId as string) || "",
+    metaPixelId: (siteSettings.metaPixelId as string) || "",
+  };
+
   return (
     <SettingsClient
       siteId={createSiteId(id)}
       subdomain={site.subdomain}
-      initialCustomDomain={site.custom_domain || ""}
       rootDomain={rootDomain}
+      initialSettings={initialSettings}
     />
   );
 }

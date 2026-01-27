@@ -2,6 +2,7 @@ import { createClient } from "@/src/utils/supabase/server";
 import { notFound } from "next/navigation";
 import SiteRenderer from "@/app/components/renderer/SiteRenderer";
 import { createSiteId } from "@/src/lib/types";
+import ThirdPartyScripts from "@/app/components/analytics/ThirdPartyScripts";
 
 // Estetään pre-rendering build-aikana, koska sivu vaatii runtime-tietokantakutsuja
 export const dynamic = "force-dynamic";
@@ -69,5 +70,15 @@ export default async function PublicSitePage({ params }: PageProps) {
 
   const content = page?.content || defaultContent;
 
-  return <SiteRenderer content={content} siteId={createSiteId(site.id)} />;
+  // Hae analytiikka-asetukset
+  const settings = (site.settings as Record<string, unknown>) || {};
+  const gtmId = settings.googleTagManagerId as string | undefined;
+  const metaPixelId = settings.metaPixelId as string | undefined;
+
+  return (
+    <>
+      <ThirdPartyScripts gtmId={gtmId} metaPixelId={metaPixelId} />
+      <SiteRenderer content={content} siteId={createSiteId(site.id)} />
+    </>
+  );
 }

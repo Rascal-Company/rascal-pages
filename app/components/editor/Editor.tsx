@@ -39,6 +39,7 @@ import PublishedToggle from "./PublishedToggle";
 import SortableSectionItem from "./SortableSectionItem";
 import BlockEditor from "./BlockEditor";
 import AddSectionButton from "./AddSectionButton";
+import SettingsModal from "./SettingsModal";
 
 type EditorProps = {
   siteId: SiteId;
@@ -46,6 +47,10 @@ type EditorProps = {
   siteSubdomain: string;
   initialContent: TemplateConfig | Record<string, unknown>;
   initialPublished?: boolean;
+  initialSettings?: {
+    googleTagManagerId?: string;
+    metaPixelId?: string;
+  };
 };
 
 export default function Editor({
@@ -54,6 +59,7 @@ export default function Editor({
   siteSubdomain,
   initialContent,
   initialPublished = false,
+  initialSettings = {},
 }: EditorProps) {
   const { showToast, showConfirm } = useToast();
   const [content, setContent] = useState<TemplateConfig>(
@@ -70,6 +76,9 @@ export default function Editor({
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">(
     "desktop",
   );
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const rootDomain = "rascalpages.fi";
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -151,7 +160,10 @@ export default function Editor({
       {/* Left Sidebar - Section List (25%) */}
       {!isFullPreview && (
         <div className="w-1/4 min-w-[250px] max-w-[350px] overflow-y-auto border-r border-gray-200 bg-white p-4">
-          <EditorHeader siteId={siteId} siteSubdomain={siteSubdomain} />
+          <EditorHeader
+              siteSubdomain={siteSubdomain}
+              onSettingsClick={() => setIsSettingsOpen(true)}
+            />
           <StatusMessages error={error} success={success} />
 
           <div className="space-y-4">
@@ -329,6 +341,15 @@ export default function Editor({
           previewMode={previewMode}
         />
       </div>
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        siteId={siteId}
+        subdomain={siteSubdomain}
+        rootDomain={rootDomain}
+        initialSettings={initialSettings}
+      />
     </div>
   );
 }
