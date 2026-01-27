@@ -24,11 +24,15 @@ export type HeroContent = {
   image?: string;
   // Embedded form options
   showForm?: boolean;
-  collectName?: boolean;
+  formFields?: FormField[];
+  formSubmitButtonText?: string;
+  formWebhookUrl?: string;
   formSuccessMessage?: {
     title: string;
     description: string;
   };
+  // DEPRECATED: Use formFields instead
+  collectName?: boolean;
 };
 
 export type FeatureItem = {
@@ -60,7 +64,22 @@ export type VideoContent = {
   url: string;
 };
 
+export type FormFieldType = "email" | "text" | "textarea" | "checkbox";
+
+export type FormField = {
+  id: string;
+  type: FormFieldType;
+  label: string;
+  placeholder?: string;
+  required: boolean;
+  name: string;
+};
+
 export type FormContent = {
+  fields: FormField[];
+  formTitle?: string;
+  submitButtonText?: string;
+  webhookUrl?: string;
   successMessage: {
     title: string;
     description: string;
@@ -167,6 +186,32 @@ export const TEMPLATES: Template[] = [
           },
         ]),
         createSection("lm-form-1", "form", {
+          fields: [
+            {
+              id: "field-email-1",
+              type: "email" as const,
+              label: "Sähköpostiosoite",
+              placeholder: "nimi@esimerkki.fi",
+              required: true,
+              name: "email",
+            },
+            {
+              id: "field-name-1",
+              type: "text" as const,
+              label: "Nimi",
+              placeholder: "Etunimesi",
+              required: false,
+              name: "name",
+            },
+            {
+              id: "field-consent-1",
+              type: "checkbox" as const,
+              label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+              required: false,
+              name: "marketingConsent",
+            },
+          ],
+          submitButtonText: "Lataa nyt ilmaiseksi",
           successMessage: {
             title: "Kiitos! Tietosi on tallennettu.",
             description: "Saat pian lisätietoja sähköpostiisi.",
@@ -192,6 +237,32 @@ export const TEMPLATES: Template[] = [
           ctaLink: "#waitlist",
         }),
         createSection("wl-form-1", "form", {
+          fields: [
+            {
+              id: "field-email-1",
+              type: "email" as const,
+              label: "Sähköpostiosoite",
+              placeholder: "nimi@esimerkki.fi",
+              required: true,
+              name: "email",
+            },
+            {
+              id: "field-name-1",
+              type: "text" as const,
+              label: "Nimi",
+              placeholder: "Etunimesi",
+              required: false,
+              name: "name",
+            },
+            {
+              id: "field-consent-1",
+              type: "checkbox" as const,
+              label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+              required: false,
+              name: "marketingConsent",
+            },
+          ],
+          submitButtonText: "Liity odotuslistalle",
           successMessage: {
             title: "Kiitos! Olet nyt odotuslistalla.",
             description: "Saat pian lisätietoja sähköpostiisi.",

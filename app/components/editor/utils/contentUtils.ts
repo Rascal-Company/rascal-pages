@@ -11,6 +11,7 @@ import type {
   FormContent,
   VideoContent,
   SectionContentMap,
+  FormField,
 } from "@/src/lib/templates";
 import { getDefaultTemplate, getTemplateById } from "@/src/lib/templates";
 import type { SectionId } from "@/src/lib/types";
@@ -43,6 +44,51 @@ function hasSections(
 }
 
 /**
+ * Migrate Hero form from old collectName boolean to formFields array
+ */
+function migrateHeroForm(hero: HeroContent): HeroContent {
+  // If showForm is enabled but formFields is missing, create default fields
+  if (hero.showForm && !hero.formFields) {
+    const fields: FormField[] = [
+      {
+        id: "field-email-1",
+        type: "email",
+        label: "Sähköpostiosoite",
+        placeholder: "nimi@esimerkki.fi",
+        required: true,
+        name: "email",
+      },
+      {
+        id: "field-consent-1",
+        type: "checkbox",
+        label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+        required: false,
+        name: "marketingConsent",
+      },
+    ];
+
+    // If collectName was true, add name field
+    if (hero.collectName) {
+      fields.splice(1, 0, {
+        id: "field-name-1",
+        type: "text",
+        label: "Nimi",
+        placeholder: "Etunimesi",
+        required: false,
+        name: "name",
+      });
+    }
+
+    return {
+      ...hero,
+      formFields: fields,
+    };
+  }
+
+  return hero;
+}
+
+/**
  * Migrate old fixed-field content to section-based format
  */
 export function migrateToSections(
@@ -55,14 +101,30 @@ export function migrateToSections(
   }
 
   if (hasSections(content)) {
-    return content;
+    // Migrate Hero forms in sections
+    const migratedSections = content.sections.map((section) => {
+      if (section.type === "hero") {
+        const heroContent = section.content as HeroContent;
+        return {
+          ...section,
+          content: migrateHeroForm(heroContent),
+        };
+      }
+      return section;
+    });
+
+    return {
+      ...content,
+      sections: migratedSections,
+    };
   }
 
   const legacy = content as LegacyContent;
   const sections: Section[] = [];
 
   if (legacy.hero) {
-    sections.push(createSection("hero", legacy.hero));
+    const migratedHero = migrateHeroForm(legacy.hero);
+    sections.push(createSection("hero", migratedHero));
   }
 
   if (legacy.features && legacy.features.length > 0) {
@@ -88,6 +150,32 @@ export function migrateToSections(
   if (legacy.successMessage) {
     sections.push(
       createSection("form", {
+        fields: [
+          {
+            id: "field-email-1",
+            type: "email" as const,
+            label: "Sähköpostiosoite",
+            placeholder: "nimi@esimerkki.fi",
+            required: true,
+            name: "email",
+          },
+          {
+            id: "field-name-1",
+            type: "text" as const,
+            label: "Nimi",
+            placeholder: "Etunimesi",
+            required: false,
+            name: "name",
+          },
+          {
+            id: "field-consent-1",
+            type: "checkbox" as const,
+            label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+            required: false,
+            name: "marketingConsent",
+          },
+        ],
+        submitButtonText: "Lähetä",
         successMessage: legacy.successMessage,
       }),
     );
@@ -143,6 +231,32 @@ export function getDefaultSectionContent<T extends SectionType>(
     about: { name: "Nimi", bio: "Tietoa itsestäni" },
     video: { url: "" },
     form: {
+      fields: [
+        {
+          id: "field-email-1",
+          type: "email" as const,
+          label: "Sähköpostiosoite",
+          placeholder: "nimi@esimerkki.fi",
+          required: true,
+          name: "email",
+        },
+        {
+          id: "field-name-1",
+          type: "textarea" as const,
+          label: "Nimi",
+          placeholder: "Etunimesi",
+          required: false,
+          name: "name",
+        },
+        {
+          id: "field-consent-1",
+          type: "checkbox" as const,
+          label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+          required: false,
+          name: "marketingConsent",
+        },
+      ],
+      submitButtonText: "Lähetä",
       successMessage: {
         title: "Kiitos!",
         description: "Tietosi on tallennettu.",

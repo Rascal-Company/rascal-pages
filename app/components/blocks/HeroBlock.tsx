@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { HeroContent } from "@/src/lib/templates";
+import type { HeroContent, FormField } from "@/src/lib/templates";
 import { AnalyticsLink } from "@/app/components/AnalyticsLink";
 import { submitLead } from "@/app/actions/submit-lead";
 import type { SiteId } from "@/src/lib/types";
@@ -12,6 +12,32 @@ type HeroBlockProps = {
   siteId: SiteId;
   isPreview?: boolean;
 };
+
+const DEFAULT_HERO_FIELDS: FormField[] = [
+  {
+    id: "field-email-1",
+    type: "email",
+    label: "Sähköpostiosoite",
+    placeholder: "nimi@esimerkki.fi",
+    required: true,
+    name: "email",
+  },
+  {
+    id: "field-name-1",
+    type: "text",
+    label: "Nimi",
+    placeholder: "Etunimesi",
+    required: false,
+    name: "name",
+  },
+  {
+    id: "field-consent-1",
+    type: "checkbox",
+    label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+    required: false,
+    name: "marketingConsent",
+  },
+];
 
 export default function HeroBlock({
   content,
@@ -26,6 +52,10 @@ export default function HeroBlock({
   );
   const [errorMessage, setErrorMessage] = useState<string>("");
 
+  const formFields = content.formFields || DEFAULT_HERO_FIELDS;
+  const formSubmitButtonText =
+    content.formSubmitButtonText || content.ctaText || "Lähetä";
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -36,12 +66,23 @@ export default function HeroBlock({
     }
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const name = formData.get("name") as string;
-    const marketingConsent = formData.get("marketingConsent") === "on";
+    const fields: Record<string, string | boolean> = {};
+
+    formFields.forEach((field) => {
+      const value = formData.get(field.name);
+      if (field.type === "checkbox") {
+        fields[field.name] = value === "on";
+      } else {
+        fields[field.name] = (value as string) || "";
+      }
+    });
 
     startTransition(async () => {
-      const result = await submitLead(siteId, email, name, marketingConsent);
+      const result = await submitLead(
+        siteId,
+        fields,
+        content.formWebhookUrl || null,
+      );
       if (result.success) {
         setFormStatus("success");
         setErrorMessage("");
@@ -115,64 +156,83 @@ export default function HeroBlock({
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label
-                    htmlFor="hero-email"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Sähköpostiosoite
-                  </label>
-                  <input
-                    type="email"
-                    id="hero-email"
-                    name="email"
-                    required
-                    disabled={isPending}
-                    className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="nimi@esimerkki.fi"
-                  />
-                </div>
-                {content.collectName && (
-                  <div>
-                    <label
-                      htmlFor="hero-name"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      Nimi
-                    </label>
-                    <input
-                      type="text"
-                      id="hero-name"
-                      name="name"
-                      disabled={isPending}
-                      className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                      placeholder="Etunimesi"
-                    />
-                  </div>
-                )}
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    id="hero-marketingConsent"
-                    name="marketingConsent"
-                    disabled={isPending}
-                    className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
-                  />
-                  <label
-                    htmlFor="hero-marketingConsent"
-                    className="text-sm text-gray-600"
-                  >
-                    Haluan vastaanottaa markkinointiviestejä ja uutisia
-                    sähköpostiini.
-                  </label>
-                </div>
+                {formFields.map((field) => {
+                  if (field.type === "checkbox") {
+                    return (
+                      <div key={field.id} className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          id={`hero-${field.id}`}
+                          name={field.name}
+                          required={field.required}
+                          disabled={isPending}
+                          className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                        />
+                        <label
+                          htmlFor={`hero-${field.id}`}
+                          className="text-sm text-gray-600"
+                        >
+                          {field.label}
+                        </label>
+                      </div>
+                    );
+                  }
+
+                  if (field.type === "textarea") {
+                    return (
+                      <div key={field.id}>
+                        <label
+                          htmlFor={`hero-${field.id}`}
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
+                          {field.label}
+                          {field.required && (
+                            <span className="text-red-500 ml-1">*</span>
+                          )}
+                        </label>
+                        <textarea
+                          id={`hero-${field.id}`}
+                          name={field.name}
+                          required={field.required}
+                          disabled={isPending}
+                          placeholder={field.placeholder}
+                          rows={3}
+                          className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={field.id}>
+                      <label
+                        htmlFor={`hero-${field.id}`}
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        {field.label}
+                        {field.required && (
+                          <span className="text-red-500 ml-1">*</span>
+                        )}
+                      </label>
+                      <input
+                        type={field.type}
+                        id={`hero-${field.id}`}
+                        name={field.name}
+                        required={field.required}
+                        disabled={isPending}
+                        placeholder={field.placeholder}
+                        className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                  );
+                })}
                 <button
                   type="submit"
                   disabled={isPending}
                   className="w-full rounded-md px-6 py-3 text-base font-semibold text-white shadow-md transition-colors hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: primaryColor }}
                 >
-                  {isPending ? "Lähetetään..." : content.ctaText || "Lähetä"}
+                  {isPending ? "Lähetetään..." : formSubmitButtonText}
                 </button>
                 <p className="text-xs text-center text-gray-500 mt-2">
                   Emme koskaan jaa tietojasi kolmansien osapuolten kanssa.

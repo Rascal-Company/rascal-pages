@@ -43,45 +43,45 @@ async function verifySitePublished(
 export async function submitLeadCore(
   supabase: Awaited<ReturnType<typeof createClient>>,
   siteId: SiteId,
-  email: string,
-  name?: string,
-  marketingConsent?: boolean,
-  webhookUrl?: string,
+  fields: Record<string, string | boolean>,
+  customWebhookUrl?: string | null,
 ): Promise<SubmitLeadResult> {
-  // 1. Normalize inputs
-  const normalizedEmail = email.trim().toLowerCase();
-  const normalizedName = name?.trim() || null;
-
-  // 2. Validate inputs
-  if (!isValidEmail(normalizedEmail)) {
+  // 1. Extract and normalize email (required field)
+  const email = fields.email as string;
+  if (!email || !isValidEmail(email.trim())) {
     return { error: "Virheellinen sähköpostiosoite." };
   }
+  const normalizedEmail = email.trim().toLowerCase();
 
-  // 3. Verify site is published
+  // 2. Verify site is published
   const publishCheck = await verifySitePublished(supabase, siteId);
   if (!publishCheck.published) {
     return { error: publishCheck.error };
   }
 
-  // 4. Send to n8n webhook (n8n handles Supabase insert)
-  const webhook = webhookUrl ?? process.env.N8N_RASCALPAGES_LEADS;
-  if (!webhook) {
+  // 3. Prepare payload
+  const payload = {
+    type: "new_lead",
+    siteId,
+    fields: {
+      ...fields,
+      email: normalizedEmail,
+    },
+    timestamp: new Date().toISOString(),
+  };
+
+  // 4. Send to default n8n webhook (always)
+  const defaultWebhook = process.env.N8N_RASCALPAGES_LEADS;
+  if (!defaultWebhook) {
     console.error("N8N_RASCALPAGES_LEADS webhook URL not configured");
     return { error: "Palveluvirhe. Yritä myöhemmin uudelleen." };
   }
 
   try {
-    const response = await fetch(webhook, {
+    const response = await fetch(defaultWebhook, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "new_lead",
-        siteId,
-        email: normalizedEmail,
-        name: normalizedName,
-        marketingConsent: marketingConsent ?? false,
-        timestamp: new Date().toISOString(),
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -93,6 +93,20 @@ export async function submitLeadCore(
     return { error: "Tallennus epäonnistui. Yritä uudelleen." };
   }
 
+  // 5. Send to custom webhook if provided (optional, don't fail if this errors)
+  if (customWebhookUrl) {
+    try {
+      await fetch(customWebhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.error("Custom webhook error:", err);
+      // Don't return error - default webhook succeeded
+    }
+  }
+
   return { success: true };
 }
 
@@ -102,10 +116,9 @@ export async function submitLeadCore(
  */
 export async function submitLead(
   siteId: SiteId,
-  email: string,
-  name?: string,
-  marketingConsent?: boolean,
+  fields: Record<string, string | boolean>,
+  customWebhookUrl?: string | null,
 ): Promise<SubmitLeadResult> {
   const supabase = await createClient();
-  return submitLeadCore(supabase, siteId, email, name, marketingConsent);
+  return submitLeadCore(supabase, siteId, fields, customWebhookUrl);
 }
