@@ -77,7 +77,7 @@ export default function HeroBlockEditor({
       <div className="border-t border-gray-200 pt-4">
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium text-gray-700">
-            Näytä lomake herossa
+            Näytä lomake pääosiossa
           </label>
           <button
             type="button"
@@ -96,7 +96,7 @@ export default function HeroBlockEditor({
           </button>
         </div>
         <p className="mt-1 text-xs text-gray-500">
-          Kerää sähköposteja suoraan hero-osiossa
+          Kerää sähköposteja suoraan pääosiossa
         </p>
       </div>
 
@@ -201,7 +201,7 @@ export default function HeroBlockEditor({
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          Hero-kuvan URL (valinnainen)
+          Pääosion kuva (valinnainen)
         </label>
         <input
           type="url"
@@ -213,7 +213,7 @@ export default function HeroBlockEditor({
         {content?.image && (
           <img
             src={content.image}
-            alt="Hero preview"
+            alt="Kuvan esikatselu"
             className="mt-2 h-24 w-auto rounded-md object-cover"
           />
         )}

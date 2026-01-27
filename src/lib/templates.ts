@@ -361,7 +361,7 @@ export function getDefaultTemplate(): Template {
  * Section type display names for UI
  */
 export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
-  hero: "Hero",
+  hero: "Pääosio",
   features: "Ominaisuudet",
   faq: "UKK",
   testimonials: "Suosittelut",
@@ -369,7 +369,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   video: "Video",
   form: "Lomake",
   logos: "Logot",
-  footer: "Footer",
+  footer: "Alapalkki",
 };
 
 /**

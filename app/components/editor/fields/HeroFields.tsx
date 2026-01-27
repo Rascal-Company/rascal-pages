@@ -10,7 +10,7 @@ interface HeroFieldsProps {
 export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
   return (
     <div className="rounded-lg border border-gray-200 p-4">
-      <h2 className="mb-4 text-lg font-semibold text-gray-900">Hero-osa</h2>
+      <h2 className="mb-4 text-lg font-semibold text-gray-900">Pääosio</h2>
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">
@@ -58,7 +58,7 @@ export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Hero-kuvan URL (valinnainen)
+            Pääosion kuva (valinnainen)
           </label>
           <input
             type="url"
@@ -70,7 +70,7 @@ export default function HeroFields({ hero, onUpdate }: HeroFieldsProps) {
           {hero?.image && (
             <img
               src={hero.image}
-              alt="Hero preview"
+              alt="Kuvan esikatselu"
               className="mt-2 h-24 w-auto rounded-md object-cover"
             />
           )}
