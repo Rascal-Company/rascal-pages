@@ -1,13 +1,20 @@
 import { createBrowserClient } from "@supabase/ssr";
 
+let clientInstance: ReturnType<typeof createBrowserClient> | null = null;
+
 export function createClient() {
+  // Käytä singleton-mallia välttääksesi useita auth-yrityksiä
+  if (clientInstance) {
+    return clientInstance;
+  }
+
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "rascalpages.fi";
   const isLocalhost =
     typeof window !== "undefined" &&
     (window.location.hostname === "localhost" ||
       window.location.hostname.endsWith(".localhost"));
 
-  return createBrowserClient(
+  clientInstance = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -19,4 +26,6 @@ export function createClient() {
       },
     },
   );
+
+  return clientInstance;
 }

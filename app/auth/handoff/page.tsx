@@ -22,7 +22,7 @@ export default function AuthHandoff() {
         // Jos tokeneita ei ole hashissa, tarkistetaan onko käyttäjä jo kirjautunut
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          router.replace('/dashboard');
+          router.replace('/app/dashboard');
           return;
         }
         setStatus('Virhe: Ei kirjautumistietoja.');
@@ -41,7 +41,7 @@ export default function AuthHandoff() {
       } else {
         // 3. Päivitä router ja ohjaa dashboardiin
         router.refresh(); // Varmistaa että server componentit tajuavat uuden keksin
-        router.replace('/dashboard');
+        router.replace('/app/dashboard');
       }
     };
 

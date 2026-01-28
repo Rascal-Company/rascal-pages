@@ -44,19 +44,18 @@ export default function DashboardClient({
 
   useEffect(() => {
     // Jos serveri on jo validoinut käyttäjän (userId on olemassa),
-    // luotetaan siihen eikä tarkisteta uudelleen
+    // ei tarvitse avata login-modaalia
     if (!userId) {
       setIsLoginModalOpen(true);
     }
 
-    // Listen for auth changes (login/logout)
-    // HUOM: Älä reagoi INITIAL_SESSION eventiin jos userId on jo olemassa,
-    // koska serveri on jo validoinut käyttäjän
+    // Kuuntele auth-muutoksia (kirjautuminen/uloskirjautuminen)
     const supabase = createClient();
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      // Ohita INITIAL_SESSION jos serveri on jo validoinut käyttäjän
+      // Jos serveri on jo validoinut käyttäjän, ohita INITIAL_SESSION
+      // koska se aiheuttaa tarpeettomia token refresh -yrityksiä
       if (event === "INITIAL_SESSION" && userId) {
         return;
       }
