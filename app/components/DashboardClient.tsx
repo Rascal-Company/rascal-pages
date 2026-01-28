@@ -9,6 +9,7 @@ import { togglePagePublish } from "@/app/actions/toggle-publish";
 import { useToast } from "@/app/components/ui/ToastContainer";
 import { createSiteId } from "@/src/lib/types";
 import { getHomeUrl } from "@/app/lib/navigation";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 interface Site {
   id: string;
@@ -53,23 +54,25 @@ export default function DashboardClient({
     const supabase = createClient();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      // Jos serveri on jo validoinut käyttäjän, ohita INITIAL_SESSION
-      // koska se aiheuttaa tarpeettomia token refresh -yrityksiä
-      if (event === "INITIAL_SESSION" && userId) {
-        return;
-      }
-
-      setIsAuthenticated(!!session);
-      if (session) {
-        setIsLoginModalOpen(false);
-        if (event === "SIGNED_IN") {
-          router.refresh();
+    } = supabase.auth.onAuthStateChange(
+      (event: AuthChangeEvent, session: Session | null) => {
+        // Jos serveri on jo validoinut käyttäjän, ohita INITIAL_SESSION
+        // koska se aiheuttaa tarpeettomia token refresh -yrityksiä
+        if (event === "INITIAL_SESSION" && userId) {
+          return;
         }
-      } else if (event === "SIGNED_OUT") {
-        setIsLoginModalOpen(true);
-      }
-    });
+
+        setIsAuthenticated(!!session);
+        if (session) {
+          setIsLoginModalOpen(false);
+          if (event === "SIGNED_IN") {
+            router.refresh();
+          }
+        } else if (event === "SIGNED_OUT") {
+          setIsLoginModalOpen(true);
+        }
+      },
+    );
 
     return () => {
       subscription.unsubscribe();
