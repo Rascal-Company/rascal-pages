@@ -56,6 +56,23 @@ describe("mergeSettings", () => {
       metaPixelId: "456789",
     });
   });
+
+  test("handles all three analytics settings at once", () => {
+    const result = mergeSettings(
+      {},
+      {
+        googleTagManagerId: "GTM-123",
+        googleAnalyticsId: "G-1J3WFE74E4",
+        metaPixelId: "456789",
+      },
+    );
+
+    expect(result).toEqual({
+      googleTagManagerId: "GTM-123",
+      googleAnalyticsId: "G-1J3WFE74E4",
+      metaPixelId: "456789",
+    });
+  });
 });
 
 describe("updateSiteSettingsCore", () => {

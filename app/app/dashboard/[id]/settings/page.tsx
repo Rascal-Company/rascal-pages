@@ -50,6 +50,7 @@ export default async function SettingsPage({ params }: PageProps) {
   const siteSettings = (site.settings as Record<string, unknown>) || {};
   const initialSettings = {
     googleTagManagerId: (siteSettings.googleTagManagerId as string) || "",
+    googleAnalyticsId: (siteSettings.googleAnalyticsId as string) || "",
     metaPixelId: (siteSettings.metaPixelId as string) || "",
   };
 

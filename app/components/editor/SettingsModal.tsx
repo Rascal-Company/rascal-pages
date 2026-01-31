@@ -13,6 +13,7 @@ interface SettingsModalProps {
   rootDomain: string;
   initialSettings: {
     googleTagManagerId?: string;
+    googleAnalyticsId?: string;
     metaPixelId?: string;
   };
 }
@@ -27,6 +28,7 @@ export default function SettingsModal({
 }: SettingsModalProps) {
   const { showToast } = useToast();
   const [gtmId, setGtmId] = useState(initialSettings.googleTagManagerId || "");
+  const [ga4Id, setGa4Id] = useState(initialSettings.googleAnalyticsId || "");
   const [pixelId, setPixelId] = useState(initialSettings.metaPixelId || "");
   const [isSaving, setIsSaving] = useState(false);
   const lastSaveRef = useRef<Date | null>(null);
@@ -36,6 +38,7 @@ export default function SettingsModal({
   useEffect(() => {
     if (isOpen) {
       setGtmId(initialSettings.googleTagManagerId || "");
+      setGa4Id(initialSettings.googleAnalyticsId || "");
       setPixelId(initialSettings.metaPixelId || "");
     }
   }, [isOpen, initialSettings]);
@@ -74,6 +77,7 @@ export default function SettingsModal({
     try {
       const result = await updateSiteSettings(siteId, {
         googleTagManagerId: gtmId || undefined,
+        googleAnalyticsId: ga4Id || undefined,
         metaPixelId: pixelId || undefined,
       });
 
@@ -177,6 +181,26 @@ export default function SettingsModal({
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Löydät ID:n Google Tag Managerista (esim. GTM-ABCD123)
+                </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="ga4Id"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  Google Analytics 4 ID
+                </label>
+                <input
+                  type="text"
+                  id="ga4Id"
+                  value={ga4Id}
+                  onChange={(e) => setGa4Id(e.target.value)}
+                  placeholder="G-XXXXXXXXXX"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Löydät ID:n Google Analyticsista (esim. G-1J3WFE74E4)
                 </p>
               </div>
 

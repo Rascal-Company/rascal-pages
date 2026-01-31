@@ -49,6 +49,7 @@ type EditorProps = {
   initialPublished?: boolean;
   initialSettings?: {
     googleTagManagerId?: string;
+    googleAnalyticsId?: string;
     metaPixelId?: string;
   };
 };
@@ -161,9 +162,9 @@ export default function Editor({
       {!isFullPreview && (
         <div className="w-1/4 min-w-[250px] max-w-[350px] overflow-y-auto border-r border-gray-200 bg-white p-4">
           <EditorHeader
-              siteSubdomain={siteSubdomain}
-              onSettingsClick={() => setIsSettingsOpen(true)}
-            />
+            siteSubdomain={siteSubdomain}
+            onSettingsClick={() => setIsSettingsOpen(true)}
+          />
           <StatusMessages error={error} success={success} />
 
           <div className="space-y-4">

@@ -73,11 +73,16 @@ export default async function PublicSitePage({ params }: PageProps) {
   // Hae analytiikka-asetukset
   const settings = (site.settings as Record<string, unknown>) || {};
   const gtmId = settings.googleTagManagerId as string | undefined;
+  const ga4Id = settings.googleAnalyticsId as string | undefined;
   const metaPixelId = settings.metaPixelId as string | undefined;
 
   return (
     <>
-      <ThirdPartyScripts gtmId={gtmId} metaPixelId={metaPixelId} />
+      <ThirdPartyScripts
+        gtmId={gtmId}
+        ga4Id={ga4Id}
+        metaPixelId={metaPixelId}
+      />
       <SiteRenderer content={content} siteId={createSiteId(site.id)} />
     </>
   );

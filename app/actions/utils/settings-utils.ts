@@ -1,5 +1,6 @@
 type AnalyticsSettings = {
   googleTagManagerId?: string;
+  googleAnalyticsId?: string;
   metaPixelId?: string;
 };
 

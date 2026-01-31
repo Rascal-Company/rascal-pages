@@ -6,21 +6,50 @@ import { useEffect } from "react";
 
 interface ThirdPartyScriptsProps {
   gtmId?: string;
+  ga4Id?: string;
   metaPixelId?: string;
 }
 
 declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void;
+    dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
   }
 }
 
 export default function ThirdPartyScripts({
   gtmId,
+  ga4Id,
   metaPixelId,
 }: ThirdPartyScriptsProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // GTM PageView seuranta kun reitti muuttuu (SPA-navigointi)
+  useEffect(() => {
+    if (gtmId && typeof window !== "undefined" && window.dataLayer) {
+      const url =
+        pathname +
+        (searchParams?.toString() ? `?${searchParams.toString()}` : "");
+      window.dataLayer.push({
+        event: "pageview",
+        page: url,
+      });
+    }
+  }, [pathname, searchParams, gtmId]);
+
+  // GA4 PageView seuranta kun reitti muuttuu (SPA-navigointi)
+  useEffect(() => {
+    if (ga4Id && typeof window !== "undefined" && window.gtag) {
+      const url =
+        pathname +
+        (searchParams?.toString() ? `?${searchParams.toString()}` : "");
+      window.gtag("event", "page_view", {
+        page_path: url,
+      });
+    }
+  }, [pathname, searchParams, ga4Id]);
 
   // Meta Pixel PageView seuranta kun reitti muuttuu (SPA-navigointi)
   useEffect(() => {
@@ -55,6 +84,30 @@ export default function ThirdPartyScripts({
               style={{ display: "none", visibility: "hidden" }}
             />
           </noscript>
+        </>
+      )}
+
+      {/* Google Analytics 4 */}
+      {ga4Id && (
+        <>
+          <Script
+            src={`https://www.googletagmanager.com/gtag/js?id=${ga4Id}`}
+            strategy="afterInteractive"
+          />
+          <Script
+            id="ga4-script"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${ga4Id}', {
+                  page_path: window.location.pathname,
+                });
+              `,
+            }}
+          />
         </>
       )}
 

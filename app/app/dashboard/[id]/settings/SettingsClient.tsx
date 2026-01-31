@@ -12,6 +12,7 @@ interface SettingsClientProps {
   rootDomain: string;
   initialSettings: {
     googleTagManagerId?: string;
+    googleAnalyticsId?: string;
     metaPixelId?: string;
   };
 }
@@ -24,6 +25,7 @@ export default function SettingsClient({
 }: SettingsClientProps) {
   const { showToast } = useToast();
   const [gtmId, setGtmId] = useState(initialSettings.googleTagManagerId || "");
+  const [ga4Id, setGa4Id] = useState(initialSettings.googleAnalyticsId || "");
   const [pixelId, setPixelId] = useState(initialSettings.metaPixelId || "");
   const [isSaving, setIsSaving] = useState(false);
   const lastSaveRef = useRef<Date | null>(null);
@@ -45,6 +47,7 @@ export default function SettingsClient({
     try {
       const result = await updateSiteSettings(siteId, {
         googleTagManagerId: gtmId || undefined,
+        googleAnalyticsId: ga4Id || undefined,
         metaPixelId: pixelId || undefined,
       });
 
@@ -142,6 +145,26 @@ export default function SettingsClient({
               />
               <p className="mt-1 text-xs text-brand-dark/60">
                 Löydät ID:n Google Tag Managerista (esim. GTM-ABCD123)
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="ga4Id"
+                className="mb-1 block text-sm font-medium text-brand-dark"
+              >
+                Google Analytics 4 ID
+              </label>
+              <input
+                type="text"
+                id="ga4Id"
+                value={ga4Id}
+                onChange={(e) => setGa4Id(e.target.value)}
+                placeholder="G-XXXXXXXXXX"
+                className="w-full rounded-md border border-brand-dark/20 bg-white px-4 py-2 text-sm text-brand-dark outline-none transition-colors focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
+              />
+              <p className="mt-1 text-xs text-brand-dark/60">
+                Löydät ID:n Google Analyticsista (esim. G-1J3WFE74E4)
               </p>
             </div>
 
