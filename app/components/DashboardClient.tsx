@@ -7,10 +7,12 @@ import LoginModal from "./LoginModal";
 import CreateAiSiteModal from "./CreateAiSiteModal";
 import { useRouter } from "next/navigation";
 import { togglePagePublish } from "@/app/actions/toggle-publish";
+import { deleteSite } from "@/app/actions";
 import { useToast } from "@/app/components/ui/ToastContainer";
 import { createSiteId } from "@/src/lib/types";
 import { getHomeUrl } from "@/app/lib/navigation";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import { useMutation } from "@tanstack/react-query";
 
 interface Site {
   id: string;
@@ -36,14 +38,52 @@ export default function DashboardClient({
   const [sites, setSites] = useState(initialSites);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(!!userId);
-  const [updatingPublished, setUpdatingPublished] = useState<
-    Record<string, boolean>
-  >({});
   const [deletingSiteId, setDeletingSiteId] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const router = useRouter();
+
+  const togglePublishMutation = useMutation({
+    mutationFn: (params: { siteId: string; published: boolean }) =>
+      togglePagePublish(createSiteId(params.siteId), params.published),
+    onSuccess: (result, variables) => {
+      if (!result?.error) {
+        setSites((prev) =>
+          prev.map((site) =>
+            site.id === variables.siteId
+              ? { ...site, published: variables.published }
+              : site,
+          ),
+        );
+        showToast(
+          variables.published ? "Sivu julkaistu!" : "Sivu piilotettu!",
+          "success",
+        );
+      } else {
+        showToast(result.error, "error");
+      }
+    },
+    onError: () => {
+      showToast("Julkaisutilan päivitys epäonnistui.", "error");
+    },
+  });
+
+  const deleteSiteMutation = useMutation({
+    mutationFn: (siteId: string) => deleteSite(siteId),
+    onSuccess: (result, siteId) => {
+      if (result.success) {
+        setSites((prev) => prev.filter((site) => site.id !== siteId));
+        showToast("Sivusto poistettu onnistuneesti!", "success");
+        setIsConfirmingDelete(false);
+        setDeletingSiteId(null);
+      } else {
+        showToast(result.error || "Sivuston poisto epäonnistui.", "error");
+      }
+    },
+    onError: () => {
+      showToast("Odottamaton virhe tapahtui.", "error");
+    },
+  });
 
   useEffect(() => {
     // Jos serveri on jo validoinut käyttäjän (userId on olemassa),
@@ -88,40 +128,11 @@ export default function DashboardClient({
     window.location.href = getHomeUrl();
   };
 
-  const handleTogglePublish = async (
-    siteId: string,
-    currentPublished: boolean,
-  ) => {
-    setUpdatingPublished((prev) => ({ ...prev, [siteId]: true }));
-
-    try {
-      const result = await togglePagePublish(
-        createSiteId(siteId),
-        !currentPublished,
-      );
-      if (result?.error) {
-        showToast(result.error, "error");
-      } else {
-        // Päivitä paikallinen tila
-        setSites((prevSites) =>
-          prevSites.map((site) =>
-            site.id === siteId
-              ? { ...site, published: !currentPublished }
-              : site,
-          ),
-        );
-        showToast(
-          !currentPublished
-            ? "Sivu julkaistu onnistuneesti!"
-            : "Sivu piilotettu onnistuneesti!",
-          "success",
-        );
-      }
-    } catch (err) {
-      showToast("Julkaisutilan päivitys epäonnistui.", "error");
-    } finally {
-      setUpdatingPublished((prev) => ({ ...prev, [siteId]: false }));
-    }
+  const handleTogglePublish = (siteId: string, currentPublished: boolean) => {
+    togglePublishMutation.mutate({
+      siteId,
+      published: !currentPublished,
+    });
   };
 
   // Poistotoiminto
@@ -130,36 +141,9 @@ export default function DashboardClient({
     setIsConfirmingDelete(true);
   };
 
-  const confirmDeleteSite = async () => {
+  const confirmDeleteSite = () => {
     if (!deletingSiteId) return;
-
-    setIsDeleting(true);
-    try {
-      const response = await fetch("/api/delete-site", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ siteId: deletingSiteId }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Päivitä sivustolista
-        setSites(sites.filter((site) => site.id !== deletingSiteId));
-        showToast("Sivusto poistettu onnistuneesti!", "success");
-      } else {
-        showToast(result.error || "Sivuston poisto epäonnistui.", "error");
-      }
-    } catch (error) {
-      console.error("Virhe sivuston poistossa:", error);
-      showToast("Odottamaton virhe tapahtui. Yritä uudelleen.", "error");
-    } finally {
-      setDeletingSiteId(null);
-      setIsConfirmingDelete(false);
-      setIsDeleting(false);
-    }
+    deleteSiteMutation.mutate(deletingSiteId);
   };
 
   const cancelDeleteSite = () => {
@@ -313,7 +297,10 @@ export default function DashboardClient({
                         onClick={() =>
                           handleTogglePublish(site.id, site.published)
                         }
-                        disabled={updatingPublished[site.id]}
+                        disabled={
+                          togglePublishMutation.isPending &&
+                          togglePublishMutation.variables?.siteId === site.id
+                        }
                         className={`
                           relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
                           transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-accent
@@ -391,7 +378,12 @@ export default function DashboardClient({
                       <button
                         onClick={() => handleDeleteSite(site.id)}
                         className="flex-shrink-0 rounded-md border border-red-300 bg-white px-3 py-1.5 text-center text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-                        disabled={updatingPublished[site.id] || isDeleting}
+                        disabled={
+                          (togglePublishMutation.isPending &&
+                            togglePublishMutation.variables?.siteId ===
+                              site.id) ||
+                          deleteSiteMutation.isPending
+                        }
                       >
                         <svg
                           className="mx-auto h-4 w-4"
@@ -430,16 +422,16 @@ export default function DashboardClient({
               <button
                 onClick={cancelDeleteSite}
                 className="rounded-md border border-brand-dark/20 bg-white px-4 py-2 text-sm font-medium text-brand-dark transition-colors hover:bg-brand-light"
-                disabled={deletingSiteId !== null}
+                disabled={deleteSiteMutation.isPending}
               >
                 Peruuta
               </button>
               <button
                 onClick={confirmDeleteSite}
                 className="rounded-md border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-                disabled={isDeleting}
+                disabled={deleteSiteMutation.isPending}
               >
-                {isDeleting ? "Poistetaan..." : "Poista"}
+                {deleteSiteMutation.isPending ? "Poistetaan..." : "Poista"}
               </button>
             </div>
           </div>
