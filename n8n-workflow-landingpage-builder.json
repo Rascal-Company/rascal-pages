@@ -1,0 +1,365 @@
+{
+  "name": "Landing Page Builder - AI Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "landingpage-builder",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "webhookId": "landingpage-builder"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "title",
+              "value": "={{ $json.body.title }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $json.body.description }}"
+            },
+            {
+              "name": "link",
+              "value": "={{ $json.body.link }}"
+            },
+            {
+              "name": "orgId",
+              "value": "={{ $json.body.orgId }}"
+            },
+            {
+              "name": "userId",
+              "value": "={{ $json.body.userId }}"
+            },
+            {
+              "name": "userEmail",
+              "value": "={{ $json.body.userEmail }}"
+            }
+          ],
+          "object": [
+            {
+              "name": "aiInput",
+              "value": "={{ { \"title\": $json.body.title, \"description\": $json.body.description, \"link\": $json.body.link } }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-variables",
+      "name": "Set Variables",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.3,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "function generateSubdomain(title) {\n  // Convert to lowercase\n  let subdomain = title.toLowerCase();\n\n  // Replace Finnish characters\n  subdomain = subdomain\n    .replace(/ä/g, 'a')\n    .replace(/ö/g, 'o')\n    .replace(/å/g, 'a');\n\n  // Remove special characters and replace spaces with hyphens\n  subdomain = subdomain\n    .replace(/[^a-z0-9\\s-]/g, '')\n    .trim()\n    .replace(/\\s+/g, '-')\n    .replace(/-+/g, '-');\n\n  // Limit to 50 characters\n  subdomain = subdomain.substring(0, 50);\n\n  // Remove trailing hyphen\n  subdomain = subdomain.replace(/-$/, '');\n\n  // Add random suffix to ensure uniqueness (4 random chars)\n  const randomSuffix = Math.random().toString(36).substring(2, 6);\n  subdomain = `${subdomain}-${randomSuffix}`;\n\n  return subdomain;\n}\n\nreturn {\n  json: {\n    ...items[0].json,\n    subdomain: generateSubdomain(items[0].json.title)\n  }\n};"
+      },
+      "id": "generate-subdomain",
+      "name": "Generate Subdomain",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "claude-3-5-sonnet-20241022"
+            },
+            {
+              "name": "max_tokens",
+              "value": "4096"
+            },
+            {
+              "name": "system",
+              "value": "={{ $env.AI_PROMPT_SYSTEM }}"
+            },
+            {
+              "name": "messages",
+              "value": "={{ [{ \"role\": \"user\", \"content\": JSON.stringify($json.aiInput) }] }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "ai-agent-claude",
+      "name": "AI Agent (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "anthropic-api-key",
+          "name": "Anthropic API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract the AI response text\nlet aiResponse = items[0].json.content[0].text;\n\n// Try to parse JSON\nlet templateConfig;\ntry {\n  templateConfig = JSON.parse(aiResponse);\n} catch (error) {\n  return {\n    json: {\n      error: 'Invalid JSON from AI',\n      rawResponse: aiResponse,\n      parseError: error.message\n    }\n  };\n}\n\n// Basic validation\nif (!templateConfig.templateId || !templateConfig.theme || !templateConfig.sections) {\n  return {\n    json: {\n      error: 'Missing required fields in TemplateConfig',\n      templateConfig: templateConfig\n    }\n  };\n}\n\nreturn {\n  json: {\n    ...items[0].json,\n    templateConfig: templateConfig,\n    validationPassed: true\n  }\n};"
+      },
+      "id": "parse-json",
+      "name": "Parse JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const config = items[0].json.templateConfig;\nconst errors = [];\n\n// Validation rules\nif (!['lead-magnet', 'waitlist', 'saas-modern', 'vsl', 'personal'].includes(config.templateId)) {\n  errors.push('Invalid templateId');\n}\n\nif (!config.theme?.primaryColor || !config.theme.primaryColor.match(/^#[0-9A-Fa-f]{6}$/)) {\n  errors.push('Invalid theme.primaryColor (must be hex color)');\n}\n\nif (!Array.isArray(config.sections) || config.sections.length < 3 || config.sections.length > 8) {\n  errors.push('Invalid sections array (must have 3-8 sections)');\n}\n\nif (config.sections.length > 0) {\n  // First section must be hero\n  if (config.sections[0].type !== 'hero') {\n    errors.push('First section must be hero');\n  }\n\n  // Last section must be footer\n  if (config.sections[config.sections.length - 1].type !== 'footer') {\n    errors.push('Last section must be footer');\n  }\n\n  // Check unique section IDs\n  const ids = config.sections.map(s => s.id);\n  if (new Set(ids).size !== ids.length) {\n    errors.push('Duplicate section IDs found');\n  }\n\n  // Check all sections have isVisible\n  config.sections.forEach((section, index) => {\n    if (typeof section.isVisible !== 'boolean') {\n      errors.push(`Section ${index} missing isVisible field`);\n    }\n  });\n}\n\nif (errors.length > 0) {\n  return {\n    json: {\n      validationPassed: false,\n      errors: errors,\n      templateConfig: config\n    }\n  };\n}\n\nreturn {\n  json: {\n    ...items[0].json,\n    validationPassed: true,\n    validationErrors: []\n  }\n};"
+      },
+      "id": "validate-config",
+      "name": "Validate Config",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://enrploxjigoyqajoqgkj.supabase.co/rest/v1/sites",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  \"user_id\": $json.orgId,\n  \"subdomain\": $json.subdomain,\n  \"custom_domain\": null,\n  \"settings\": {}\n}) }}",
+        "options": {
+          "retry": {
+            "enabled": true,
+            "maxTries": 3,
+            "waitBetweenTries": 1000
+          }
+        }
+      },
+      "id": "insert-site",
+      "name": "Insert Site",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-role",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://enrploxjigoyqajoqgkj.supabase.co/rest/v1/pages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "={{ \"Bearer \" + $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  \"site_id\": $('Insert Site').item.json[0].id,\n  \"slug\": \"home\",\n  \"title\": $json.title,\n  \"content\": $json.templateConfig,\n  \"published\": false\n}) }}",
+        "options": {}
+      },
+      "id": "insert-page",
+      "name": "Insert Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "supabase-service-role",
+          "name": "Supabase Service Role"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  \"success\": true,\n  \"siteId\": $('Insert Site').item.json[0].id,\n  \"pageId\": $('Insert Page').item.json[0].id,\n  \"subdomain\": $json.subdomain,\n  \"url\": \"https://\" + $json.subdomain + \".rascalpages.fi\"\n}) }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2000, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Variables": {
+      "main": [
+        [
+          {
+            "node": "Generate Subdomain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Subdomain": {
+      "main": [
+        [
+          {
+            "node": "AI Agent (Claude)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent (Claude)": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON": {
+      "main": [
+        [
+          {
+            "node": "Validate Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Config": {
+      "main": [
+        [
+          {
+            "node": "Insert Site",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Site": {
+      "main": [
+        [
+          {
+            "node": "Insert Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Page": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "pinData": {},
+  "versionId": "1",
+  "meta": {
+    "instanceId": "rascal-pages-landingpage-builder"
+  }
+}
