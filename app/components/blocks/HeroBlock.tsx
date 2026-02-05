@@ -98,18 +98,21 @@ export default function HeroBlock({
   };
 
   const hasForm = content.showForm;
-  const hasImage = content.image && !hasForm;
 
   return (
     <section
-      className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-purple-700 text-white"
+      className="relative overflow-hidden text-white"
       style={{
-        background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
+        background: content.image
+          ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${content.image})`
+          : `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
       <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
         <div
-          className={`mx-auto ${hasImage || hasForm ? "grid lg:grid-cols-2 gap-12 items-center" : "max-w-2xl text-center"}`}
+          className={`mx-auto ${hasForm ? "grid lg:grid-cols-2 gap-12 items-center" : "max-w-2xl text-center"}`}
         >
           <div>
             <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
@@ -119,9 +122,7 @@ export default function HeroBlock({
               {content.subtitle}
             </p>
             {!hasForm && content.ctaText && (
-              <div
-                className={`mt-10 flex items-center gap-x-6 ${hasImage ? "" : "justify-center"}`}
-              >
+              <div className="mt-10 flex items-center gap-x-6 justify-center">
                 <AnalyticsLink
                   siteId={siteId}
                   href={content.ctaLink}
@@ -238,16 +239,6 @@ export default function HeroBlock({
                   Emme koskaan jaa tietojasi kolmansien osapuolten kanssa.
                 </p>
               </form>
-            </div>
-          )}
-
-          {hasImage && (
-            <div className="relative">
-              <img
-                src={content.image}
-                alt={content.title}
-                className="rounded-2xl shadow-2xl w-full h-auto object-cover"
-              />
             </div>
           )}
         </div>

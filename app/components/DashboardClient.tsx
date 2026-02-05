@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/src/utils/supabase/client";
 import LoginModal from "./LoginModal";
+import CreateAiSiteModal from "./CreateAiSiteModal";
 import { useRouter } from "next/navigation";
 import { togglePagePublish } from "@/app/actions/toggle-publish";
 import { useToast } from "@/app/components/ui/ToastContainer";
@@ -41,6 +42,7 @@ export default function DashboardClient({
   const [deletingSiteId, setDeletingSiteId] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -201,6 +203,12 @@ export default function DashboardClient({
               </h1>
             </div>
             <div className="flex gap-3">
+              <button
+                onClick={() => setIsAiModalOpen(true)}
+                className="rounded-lg border border-brand-accent bg-white px-6 py-3 text-sm font-medium text-brand-accent transition-colors hover:bg-brand-accent/5"
+              >
+                ✨ Luo AI:n avulla
+              </button>
               <Link
                 href="/app/dashboard/new"
                 className="rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-accent-hover"
@@ -441,6 +449,10 @@ export default function DashboardClient({
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
+      />
+      <CreateAiSiteModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
       />
     </>
   );
