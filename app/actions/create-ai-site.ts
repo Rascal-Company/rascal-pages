@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/src/utils/supabase/server";
 
 type CreateAiSiteInput = {
@@ -44,31 +45,46 @@ export async function createAiSite(
   }
 
   try {
+    const payload = {
+      title: input.title,
+      description: input.description,
+      link: input.link,
+      userId: user.id,
+      orgId: orgMember.org_id,
+      userEmail: user.email,
+    };
+
+    console.log("🔍 AI Site Creation - Sending to webhook:", webhookUrl);
+    console.log("🔍 Payload:", JSON.stringify(payload, null, 2));
+
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        title: input.title,
-        description: input.description,
-        link: input.link,
-        userId: user.id,
-        orgId: orgMember.org_id,
-        userEmail: user.email,
-      }),
+      body: JSON.stringify(payload),
     });
+
+    console.log("🔍 Webhook response status:", response.status);
+    console.log("🔍 Webhook response statusText:", response.statusText);
+
+    // Try to read response body for debugging
+    const responseText = await response.text();
+    console.log("🔍 Webhook response body:", responseText);
 
     if (!response.ok) {
       return {
         success: false,
-        error: `Webhook-pyyntö epäonnistui: ${response.statusText}`,
+        error: `Webhook-pyyntö epäonnistui: ${response.statusText} - ${responseText.substring(0, 200)}`,
       };
     }
 
+    // Revalidate dashboard to show new site
+    revalidatePath("/app/dashboard");
+
     return { success: true };
   } catch (error) {
-    console.error("Virhe AI-sivun luonnissa:", error);
+    console.error("🔍 Virhe AI-sivun luonnissa:", error);
     return { success: false, error: "Odottamaton virhe tapahtui" };
   }
 }

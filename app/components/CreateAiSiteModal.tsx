@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { createAiSite } from "@/app/actions/create-ai-site";
 import { useToast } from "@/app/components/ui/ToastContainer";
 
@@ -13,6 +14,7 @@ export default function CreateAiSiteModal({
   isOpen,
   onClose,
 }: CreateAiSiteModalProps) {
+  const router = useRouter();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState({
@@ -33,11 +35,14 @@ export default function CreateAiSiteModal({
       const result = await createAiSite(formData);
       if (result.success) {
         showToast(
-          "AI-pyyntö lähetetty! Saat ilmoituksen kun sivu on valmis.",
+          "AI-sivu luotu onnistuneesti! Dashboard päivitetään.",
           "success",
         );
         setFormData({ title: "", description: "", link: "" });
         onClose();
+
+        // Refresh the page to show the new site
+        router.refresh();
       } else {
         showToast(result.error || "Jokin meni pieleen", "error");
       }
