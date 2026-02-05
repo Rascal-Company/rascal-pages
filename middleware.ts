@@ -53,11 +53,9 @@ export default async function middleware(req: NextRequest) {
     if (path.startsWith("/app")) {
       return updateSupabaseSession(req);
     }
-    // Muuten lisää /app prefix
-    return updateSupabaseSession(
-      req,
-      new URL(`/app${path === "/" ? "/dashboard" : path}`, req.url),
-    );
+    // Redirect (ei rewrite) kun polku ei ala /app
+    const targetPath = path === "/" ? "/app/dashboard" : `/app${path}`;
+    return NextResponse.redirect(new URL(targetPath, req.url));
   }
 
   // 2. Root Domain tai www (Landing page itse palvelulle)
@@ -67,6 +65,11 @@ export default async function middleware(req: NextRequest) {
     if (path.startsWith("/app")) {
       return updateSupabaseSession(req);
     }
+    // Jos polku alkaa jo /home, rewriteta (sisäinen reititys)
+    if (path.startsWith("/home")) {
+      return updateSupabaseSession(req);
+    }
+    // Muuten rewriteta /home-prefixillä (tämä on OK koska /home on sisäinen)
     return updateSupabaseSession(
       req,
       new URL(`/home${path === "/" ? "" : path}`, req.url),
