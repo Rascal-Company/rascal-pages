@@ -136,7 +136,13 @@ async function updateSupabaseSession(req: NextRequest, rewriteUrl?: URL) {
     },
   );
 
-  await supabase.auth.getUser();
+  // VAIN refreshaa sessio, älä pakota uutta hakua
+  // Tämä estää loputtomat fetch-silmukat
+  try {
+    await supabase.auth.getSession();
+  } catch {
+    // Ignore auth errors in middleware
+  }
 
   return response;
 }

@@ -18,6 +18,14 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      auth: {
+        // Estä automaattinen token refresh -silmukka
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        // Vähennä refresh-yrityksiä
+        storageKey: 'supabase.auth.token',
+      },
       cookieOptions: {
         // Aseta evästeet juuritason domainiin, jotta ne toimivat kaikkien subdomainien välillä
         // Localhost: ei aseteta domainia
