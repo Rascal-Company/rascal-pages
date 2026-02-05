@@ -18,6 +18,11 @@ export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "rascalpages.fi";
 
+  // Estä infinite loop: jos pyyntö on jo käsitelty, älä käsittele uudelleen
+  if (req.headers.get("x-middleware-processed") === "true") {
+    return NextResponse.next();
+  }
+
   // Hae hostname (esim. "kalle.rascalpages.fi" tai "localhost:3000")
   let hostname = req.headers.get("host")!;
   const originalHostname = hostname;
@@ -49,13 +54,16 @@ export default async function middleware(req: NextRequest) {
   // 1. App Subdomain (Editori/Dashboard)
   // Jos osoite on app.rascalpages.fi, ohjaa dashboardiin
   if (hostname === `app.${rootDomain}`) {
-    // Jos polku alkaa jo /app, älä lisää uudelleen
-    if (path.startsWith("/app")) {
+    // Jos polku alkaa jo /app tai on _next-asset, älä käsittele
+    if (path.startsWith("/app") || url.pathname.startsWith("/_next")) {
       return updateSupabaseSession(req);
     }
-    // Redirect (ei rewrite) kun polku ei ala /app
+    // Rewriteta /app-prefixillä (sisäinen reititys, ei näy käyttäjälle)
     const targetPath = path === "/" ? "/app/dashboard" : `/app${path}`;
-    return NextResponse.redirect(new URL(targetPath, req.url));
+    return updateSupabaseSession(
+      req,
+      new URL(targetPath, req.url),
+    );
   }
 
   // 2. Root Domain tai www (Landing page itse palvelulle)
@@ -146,6 +154,9 @@ async function updateSupabaseSession(req: NextRequest, rewriteUrl?: URL) {
   } catch {
     // Ignore auth errors in middleware
   }
+
+  // Merkitse pyyntö käsitellyksi estääksesi infinite loopin
+  response.headers.set("x-middleware-processed", "true");
 
   return response;
 }
