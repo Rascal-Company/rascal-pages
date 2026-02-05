@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/src/utils/supabase/client";
-import { getAppUrl } from "@/app/lib/navigation";
+import { login } from "@/app/actions/auth/login";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -23,28 +22,19 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setError(null);
 
     try {
-      const supabase = createClient();
-      const { data, error: authError } = await supabase.auth.signInWithPassword(
-        {
-          email,
-          password,
-        },
-      );
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("password", password);
 
-      if (authError) {
-        setError(authError.message);
+      const result = await login(formData);
+
+      if (result?.error) {
+        setError(result.error);
         setLoading(false);
         return;
       }
 
-      if (data.session) {
-        // Sulje modal
-        onClose();
-        setLoading(false);
-
-        // Ohjaa dashboardiin - getAppUrl hoitaa localhost/tuotanto -eron
-        window.location.href = getAppUrl("/dashboard");
-      }
+      // Server action handles redirect, modal will close automatically
     } catch (err) {
       setError("Odottamaton virhe tapahtui. Yritä uudelleen.");
       setLoading(false);

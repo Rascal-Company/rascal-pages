@@ -14,6 +14,7 @@ export default async function Dashboard() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   if (!user) {
     // Redirect to home page (root domain) for login
     redirect(getHomeUrl());
