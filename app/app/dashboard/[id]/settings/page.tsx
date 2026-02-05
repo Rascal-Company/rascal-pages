@@ -2,6 +2,7 @@ import { createClient } from "@/src/utils/supabase/server";
 import { redirect } from "next/navigation";
 import SettingsClient from "./SettingsClient";
 import { createSiteId } from "@/src/lib/types";
+import { getHomeUrl } from "@/app/lib/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function SettingsPage({ params }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    redirect("/");
+    redirect(getHomeUrl());
   }
 
   // 2. Hae käyttäjän organisaatio

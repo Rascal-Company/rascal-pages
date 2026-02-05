@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/src/utils/supabase/client";
-import { getAppUrl, isLocalhost } from "@/app/lib/navigation";
+import { getAppUrl } from "@/app/lib/navigation";
 
 export default function AuthHandoff() {
   const router = useRouter();
@@ -25,12 +25,8 @@ export default function AuthHandoff() {
           data: { user },
         } = await supabase.auth.getUser();
         if (user) {
-          // Käytä getAppUrl yhtenäiseen navigointiin
-          if (isLocalhost()) {
-            router.replace("/app/dashboard");
-          } else {
-            window.location.href = getAppUrl("/dashboard");
-          }
+          // Navigate to dashboard
+          window.location.href = getAppUrl("/dashboard");
           return;
         }
         setStatus("Virhe: Ei kirjautumistietoja.");
@@ -47,14 +43,8 @@ export default function AuthHandoff() {
         console.error("Handoff error:", error);
         setStatus("Kirjautuminen epäonnistui.");
       } else {
-        // 3. Päivitä router ja ohjaa dashboardiin
-        router.refresh();
-
-        if (isLocalhost()) {
-          router.replace("/app/dashboard");
-        } else {
-          window.location.href = getAppUrl("/dashboard");
-        }
+        // 3. Navigate to dashboard
+        window.location.href = getAppUrl("/dashboard");
       }
     };
 

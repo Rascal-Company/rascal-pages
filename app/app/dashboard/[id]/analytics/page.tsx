@@ -2,6 +2,7 @@ import { createClient } from "@/src/utils/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import LeadsTable from "./LeadsTable";
+import { getHomeUrl } from "@/app/lib/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function AnalyticsPage({ params }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    redirect("/");
+    redirect(getHomeUrl());
   }
 
   // 2. Get user's organization

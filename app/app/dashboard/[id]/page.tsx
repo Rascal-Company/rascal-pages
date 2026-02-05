@@ -2,6 +2,7 @@ import { createClient } from "@/src/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Editor from "@/app/components/editor/Editor";
 import { createSiteId } from "@/src/lib/types";
+import { getHomeUrl } from "@/app/lib/navigation";
 
 // Estetään pre-rendering build-aikana, koska sivu vaatii käyttäjäsession
 export const dynamic = "force-dynamic";
@@ -19,9 +20,8 @@ export default async function SiteEditorPage({ params }: PageProps) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    // Älä ohjaa kovakoodattuun HTTPS-osoitteeseen, vaan suhteelliseen polkuun
-    // Tämä pitää sinut localhostissa kehityksen aikana
-    redirect("/");
+    // Redirect to home page (root domain) for login
+    redirect(getHomeUrl());
   }
 
   // 2. Hae käyttäjän organisaatio

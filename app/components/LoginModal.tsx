@@ -43,7 +43,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         setLoading(false);
 
         // Ohjaa dashboardiin - getAppUrl hoitaa localhost/tuotanto -eron
-        window.location.href = getAppUrl("/app/dashboard");
+        window.location.href = getAppUrl("/dashboard");
       }
     } catch (err) {
       setError("Odottamaton virhe tapahtui. Yritä uudelleen.");

@@ -1,6 +1,7 @@
 import { createClient } from "@/src/utils/supabase/server";
 import { redirect } from "next/navigation";
 import DashboardClient from "@/app/components/DashboardClient";
+import { getHomeUrl } from "@/app/lib/navigation";
 
 // Estetään pre-rendering build-aikana, koska sivu vaatii käyttäjäsession
 export const dynamic = "force-dynamic";
@@ -14,9 +15,8 @@ export default async function Dashboard() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    // Älä ohjaa kovakoodattuun HTTPS-osoitteeseen, vaan suhteelliseen polkuun
-    // Middleware hoitaa ohjauksen oikeaan paikkaan
-    redirect("/");
+    // Redirect to home page (root domain) for login
+    redirect(getHomeUrl());
   }
 
   // 3. Hae käyttäjän organisaatio org_members taulusta
