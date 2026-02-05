@@ -27,11 +27,6 @@ export default async function middleware(req: NextRequest) {
   let hostname = req.headers.get("host")!;
   const originalHostname = hostname;
 
-  // Localhost-kehityksessä ilman subdomainia: päästä läpi suoraan
-  if (hostname === "localhost:3000") {
-    return updateSupabaseSession(req);
-  }
-
   // Localhost-kehityksessä: test.localhost:3000 -> test.rascalpages.fi
   if (hostname.includes(".localhost:")) {
     hostname = hostname.replace(".localhost:3000", `.${rootDomain}`);
@@ -51,6 +46,23 @@ export default async function middleware(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams.toString();
   const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""}`;
 
+  // Localhost-kehityksessä ilman subdomainia: käsittele kuten root domain
+  if (hostname === "localhost:3000") {
+    // Salli /app reitti localhostilla
+    if (path.startsWith("/app")) {
+      return updateSupabaseSession(req);
+    }
+    // Jos polku alkaa jo /home, päästä läpi
+    if (path.startsWith("/home")) {
+      return updateSupabaseSession(req);
+    }
+    // Muuten rewriteta /home-prefixillä
+    return updateSupabaseSession(
+      req,
+      new URL(`/home${path === "/" ? "" : path}`, req.url),
+    );
+  }
+
   // 1. App Subdomain (Editori/Dashboard)
   // Jos osoite on app.rascalpages.fi, ohjaa dashboardiin
   if (hostname === `app.${rootDomain}`) {
@@ -60,10 +72,7 @@ export default async function middleware(req: NextRequest) {
     }
     // Rewriteta /app-prefixillä (sisäinen reititys, ei näy käyttäjälle)
     const targetPath = path === "/" ? "/app/dashboard" : `/app${path}`;
-    return updateSupabaseSession(
-      req,
-      new URL(targetPath, req.url),
-    );
+    return updateSupabaseSession(req, new URL(targetPath, req.url));
   }
 
   // 2. Root Domain tai www (Landing page itse palvelulle)
