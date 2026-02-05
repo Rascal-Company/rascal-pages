@@ -103,7 +103,7 @@ export default function HeroBlock({
     <section
       className="relative overflow-hidden text-white"
       style={{
-        background: content.image
+        backgroundImage: content.image
           ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${content.image})`
           : `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
         backgroundSize: "cover",
