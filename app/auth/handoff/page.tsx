@@ -1,13 +1,14 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/src/utils/supabase/client';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/src/utils/supabase/client";
+import { handleAuthHandoff } from "@/app/actions/auth/handoff";
 
 export default function AuthHandoff() {
   const router = useRouter();
   const supabase = createClient();
-  const [status, setStatus] = useState('Autentikoidaan...');
+  const [status, setStatus] = useState("Autentikoidaan...");
 
   useEffect(() => {
     const handleSession = async () => {
@@ -15,34 +16,30 @@ export default function AuthHandoff() {
       const hash = window.location.hash.substring(1);
       const params = new URLSearchParams(hash);
 
-      const accessToken = params.get('access_token');
-      const refreshToken = params.get('refresh_token');
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
 
       if (!accessToken || !refreshToken) {
         // Jos tokeneita ei ole hashissa, tarkistetaan onko käyttäjä jo kirjautunut
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (session) {
-          router.replace('/app/dashboard');
+          router.replace("/app/dashboard");
           return;
         }
-        setStatus('Virhe: Ei kirjautumistietoja.');
+        setStatus("Virhe: Ei kirjautumistietoja.");
         return;
       }
 
-      // 2. Aseta istunto (Tämä asettaa evästeet automaattisesti @supabase/ssr avulla)
-      const { error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
+      // 2. Käytä server actionia, joka asettaa session server-puolella
+      const result = await handleAuthHandoff(accessToken, refreshToken);
 
-      if (error) {
-        console.error('Handoff error:', error);
-        setStatus('Kirjautuminen epäonnistui.');
-      } else {
-        // 3. Päivitä router ja ohjaa dashboardiin
-        router.refresh(); // Varmistaa että server componentit tajuavat uuden keksin
-        router.replace('/app/dashboard');
+      if (result?.error) {
+        console.error("Handoff error:", result.error);
+        setStatus("Kirjautuminen epäonnistui.");
       }
+      // Server action hoitaa redirectin automaattisesti
     };
 
     handleSession();

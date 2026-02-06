@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/src/utils/supabase/client";
-import { getAppUrl } from "@/app/lib/navigation";
+import { handleAuthHandoff } from "@/app/actions/auth/handoff";
 
 export default function AuthHandoff() {
   const router = useRouter();
@@ -26,26 +26,21 @@ export default function AuthHandoff() {
         } = await supabase.auth.getUser();
         if (user) {
           // Navigate to dashboard
-          window.location.href = getAppUrl("/dashboard");
+          router.replace("/app/dashboard");
           return;
         }
         setStatus("Virhe: Ei kirjautumistietoja.");
         return;
       }
 
-      // 2. Aseta istunto (Tämä asettaa evästeet automaattisesti @supabase/ssr avulla)
-      const { error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
+      // 2. Käytä server actionia, joka asettaa session server-puolella
+      const result = await handleAuthHandoff(accessToken, refreshToken);
 
-      if (error) {
-        console.error("Handoff error:", error);
+      if (result?.error) {
+        console.error("Handoff error:", result.error);
         setStatus("Kirjautuminen epäonnistui.");
-      } else {
-        // 3. Navigate to dashboard
-        window.location.href = getAppUrl("/dashboard");
       }
+      // Server action hoitaa redirectin automaattisesti
     };
 
     handleSession();
