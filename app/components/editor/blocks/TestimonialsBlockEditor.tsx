@@ -1,11 +1,21 @@
 "use client";
 
 import type { TestimonialItem } from "@/src/lib/templates";
+import SortableFieldList from "../fields/SortableFieldList";
 
 type TestimonialsBlockEditorProps = {
   content: TestimonialItem[];
   onUpdate: (content: TestimonialItem[]) => void;
 };
+
+const TESTIMONIAL_FIELDS = [
+  { key: "avatar", label: "Profiilikuva" },
+  { key: "text", label: "Teksti" },
+  { key: "name", label: "Nimi" },
+  { key: "company", label: "Yritys" },
+];
+
+const DEFAULT_TESTIMONIAL_ORDER = ["avatar", "text", "name", "company"];
 
 export default function TestimonialsBlockEditor({
   content,
@@ -36,6 +46,75 @@ export default function TestimonialsBlockEditor({
     );
   };
 
+  const handleFieldOrderChange = (index: number, newOrder: string[]) => {
+    onUpdate(
+      testimonials.map((item, i) =>
+        i === index ? { ...item, fieldOrder: newOrder } : item,
+      ),
+    );
+  };
+
+  const renderField = (
+    index: number,
+    testimonial: TestimonialItem,
+    fieldKey: string,
+  ) => {
+    switch (fieldKey) {
+      case "name":
+        return (
+          <input
+            type="text"
+            value={testimonial.name || ""}
+            onChange={(e) => handleFieldUpdate(index, "name", e.target.value)}
+            className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+          />
+        );
+      case "text":
+        return (
+          <textarea
+            value={testimonial.text || ""}
+            onChange={(e) => handleFieldUpdate(index, "text", e.target.value)}
+            rows={3}
+            className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+          />
+        );
+      case "company":
+        return (
+          <input
+            type="text"
+            value={testimonial.company || ""}
+            onChange={(e) =>
+              handleFieldUpdate(index, "company", e.target.value)
+            }
+            className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+          />
+        );
+      case "avatar":
+        return (
+          <div>
+            <input
+              type="url"
+              value={testimonial.avatar || ""}
+              onChange={(e) =>
+                handleFieldUpdate(index, "avatar", e.target.value)
+              }
+              placeholder="https://example.com/avatar.jpg"
+              className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+            />
+            {testimonial.avatar && (
+              <img
+                src={testimonial.avatar}
+                alt={testimonial.name}
+                className="mt-2 h-10 w-10 rounded-full object-cover"
+              />
+            )}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -53,7 +132,7 @@ export default function TestimonialsBlockEditor({
             key={index}
             className="rounded-md border border-gray-200 bg-gray-50 p-4"
           >
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between">
               <span className="text-sm font-medium text-gray-700">
                 Suosittelu {index + 1}
               </span>
@@ -64,68 +143,14 @@ export default function TestimonialsBlockEditor({
                 Poista
               </button>
             </div>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600">
-                  Nimi
-                </label>
-                <input
-                  type="text"
-                  value={testimonial.name || ""}
-                  onChange={(e) =>
-                    handleFieldUpdate(index, "name", e.target.value)
-                  }
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600">
-                  Teksti
-                </label>
-                <textarea
-                  value={testimonial.text || ""}
-                  onChange={(e) =>
-                    handleFieldUpdate(index, "text", e.target.value)
-                  }
-                  rows={3}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600">
-                  Yritys (valinnainen)
-                </label>
-                <input
-                  type="text"
-                  value={testimonial.company || ""}
-                  onChange={(e) =>
-                    handleFieldUpdate(index, "company", e.target.value)
-                  }
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600">
-                  Profiilikuvan URL (valinnainen)
-                </label>
-                <input
-                  type="url"
-                  value={testimonial.avatar || ""}
-                  onChange={(e) =>
-                    handleFieldUpdate(index, "avatar", e.target.value)
-                  }
-                  placeholder="https://example.com/avatar.jpg"
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
-                />
-                {testimonial.avatar && (
-                  <img
-                    src={testimonial.avatar}
-                    alt={testimonial.name}
-                    className="mt-2 h-10 w-10 rounded-full object-cover"
-                  />
-                )}
-              </div>
-            </div>
+            <SortableFieldList
+              fields={TESTIMONIAL_FIELDS}
+              fieldOrder={testimonial.fieldOrder || DEFAULT_TESTIMONIAL_ORDER}
+              onReorder={(newOrder) => handleFieldOrderChange(index, newOrder)}
+              renderField={(fieldKey) =>
+                renderField(index, testimonial, fieldKey)
+              }
+            />
           </div>
         ))}
       </div>

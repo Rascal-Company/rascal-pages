@@ -4,11 +4,11 @@ import type {
   TemplateConfig,
   HeroContent,
   SectionContentMap,
-  SectionType,
 } from "@/src/lib/templates";
 import { PageViewTracker } from "@/app/components/PageViewTracker";
 import type { SiteId } from "@/src/lib/types";
 import { migrateToSections } from "@/app/components/editor/utils/contentUtils";
+import { buildGoogleFontsUrl } from "@/src/lib/fonts";
 import {
   HeroBlock,
   FeaturesBlock,
@@ -38,8 +38,22 @@ export default function SiteRenderer({
   const heroSection = sections.find((s) => s.type === "hero");
   const heroContent = heroSection?.content as HeroContent | undefined;
 
+  const fontsUrl = buildGoogleFontsUrl(theme.headingFont, theme.bodyFont);
+
+  const fontStyles: React.CSSProperties = {
+    ...(theme.headingFont && {
+      ["--heading-font" as string]: `'${theme.headingFont}', sans-serif`,
+    }),
+    ...(theme.bodyFont && {
+      ["--body-font" as string]: `'${theme.bodyFont}', sans-serif`,
+    }),
+  };
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" style={fontStyles}>
+      {fontsUrl && (
+        <link rel="stylesheet" href={fontsUrl} />
+      )}
       {!isPreview && <PageViewTracker siteId={siteId} />}
       {sections
         .filter((section) => section.isVisible)

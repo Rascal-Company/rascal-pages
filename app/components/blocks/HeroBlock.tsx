@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { ReactNode } from "react";
 import type { HeroContent, FormField } from "@/src/lib/templates";
 import { AnalyticsLink } from "@/app/components/AnalyticsLink";
 import { submitLead } from "@/app/actions/submit-lead";
@@ -98,6 +99,49 @@ export default function HeroBlock({
   };
 
   const hasForm = content.showForm;
+  const defaultOrder = ["title", "subtitle", "cta", "image"];
+  const order = content.fieldOrder || defaultOrder;
+
+  const renderHeroField = (fieldKey: string): ReactNode => {
+    switch (fieldKey) {
+      case "title":
+        return (
+          <h1
+            className="text-4xl font-bold tracking-tight sm:text-6xl"
+            style={{ fontFamily: "var(--heading-font, inherit)" }}
+          >
+            {content.title}
+          </h1>
+        );
+      case "subtitle":
+        return (
+          <p
+            className="mt-6 text-lg leading-8 text-white/90"
+            style={{ fontFamily: "var(--body-font, inherit)" }}
+          >
+            {content.subtitle}
+          </p>
+        );
+      case "cta":
+        if (hasForm || !content.ctaText) return null;
+        return (
+          <div className="mt-10 flex items-center gap-x-6 justify-center">
+            <AnalyticsLink
+              siteId={siteId}
+              href={content.ctaLink}
+              className="rounded-md bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors"
+              eventMetadata={{ location: "hero_cta" }}
+            >
+              {content.ctaText}
+            </AnalyticsLink>
+          </div>
+        );
+      case "image":
+        return null;
+      default:
+        return null;
+    }
+  };
 
   return (
     <section
@@ -115,24 +159,12 @@ export default function HeroBlock({
           className={`mx-auto ${hasForm ? "grid lg:grid-cols-2 gap-12 items-center" : "max-w-2xl text-center"}`}
         >
           <div>
-            <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-              {content.title}
-            </h1>
-            <p className="mt-6 text-lg leading-8 text-white/90">
-              {content.subtitle}
-            </p>
-            {!hasForm && content.ctaText && (
-              <div className="mt-10 flex items-center gap-x-6 justify-center">
-                <AnalyticsLink
-                  siteId={siteId}
-                  href={content.ctaLink}
-                  className="rounded-md bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors"
-                  eventMetadata={{ location: "hero_cta" }}
-                >
-                  {content.ctaText}
-                </AnalyticsLink>
-              </div>
-            )}
+            {order.map((fieldKey) => {
+              const rendered = renderHeroField(fieldKey);
+              return rendered ? (
+                <div key={fieldKey}>{rendered}</div>
+              ) : null;
+            })}
           </div>
 
           {hasForm && (

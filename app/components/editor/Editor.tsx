@@ -26,6 +26,7 @@ import {
   removeSection,
   duplicateSection,
   updateThemeColor,
+  updateThemeFont,
 } from "./utils/sectionUpdaters";
 import type { SiteId, SectionId } from "@/src/lib/types";
 import { useToast } from "@/app/components/ui/ToastContainer";
@@ -214,7 +215,12 @@ export default function Editor({
 
             <ThemeFields
               primaryColor={content.theme?.primaryColor}
-              onUpdate={(value) => setContent(updateThemeColor(value))}
+              headingFont={content.theme?.headingFont}
+              bodyFont={content.theme?.bodyFont}
+              onColorUpdate={(value) => setContent(updateThemeColor(value))}
+              onFontUpdate={(field, fontName) =>
+                setContent(updateThemeFont(field, fontName))
+              }
             />
 
             <SaveButton isSaving={isSaving} onSave={handleSave} />

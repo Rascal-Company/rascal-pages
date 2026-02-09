@@ -22,6 +22,7 @@ export type HeroContent = {
   ctaText: string;
   ctaLink: string;
   image?: string;
+  fieldOrder?: string[];
   // Embedded form options
   showForm?: boolean;
   formFields?: FormField[];
@@ -40,6 +41,7 @@ export type FeatureItem = {
   title: string;
   description: string;
   image?: string;
+  fieldOrder?: string[];
 };
 
 export type FaqItem = {
@@ -52,12 +54,14 @@ export type TestimonialItem = {
   text: string;
   company?: string;
   avatar?: string;
+  fieldOrder?: string[];
 };
 
 export type AboutContent = {
   name: string;
   bio: string;
   image?: string;
+  fieldOrder?: string[];
 };
 
 export type VideoContent = {
@@ -108,11 +112,15 @@ export type Section<T extends SectionType = SectionType> = {
   isVisible: boolean;
 };
 
+export type ThemeConfig = {
+  primaryColor: string;
+  headingFont?: string;
+  bodyFont?: string;
+};
+
 export type TemplateConfig = {
   templateId: string;
-  theme: {
-    primaryColor: string;
-  };
+  theme: ThemeConfig;
   sections: Section[];
   // DEPRECATED: Keep for migration, remove later
   hero?: HeroContent;

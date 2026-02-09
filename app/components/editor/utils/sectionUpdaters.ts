@@ -1,6 +1,5 @@
 import type {
   TemplateConfig,
-  Section,
   SectionType,
   SectionContentMap,
 } from "@/src/lib/templates";
@@ -127,5 +126,18 @@ export function updateThemeColor(color: string): ContentUpdater {
   return (prev) => ({
     ...prev,
     theme: { ...prev.theme, primaryColor: color },
+  });
+}
+
+/**
+ * Update theme font (heading or body)
+ */
+export function updateThemeFont(
+  field: "headingFont" | "bodyFont",
+  fontName: string,
+): ContentUpdater {
+  return (prev) => ({
+    ...prev,
+    theme: { ...prev.theme, [field]: fontName || undefined },
   });
 }
