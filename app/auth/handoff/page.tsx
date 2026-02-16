@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/src/utils/supabase/client";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { handleAuthHandoff } from "@/app/actions/auth/handoff";
 
 export default function AuthHandoff() {
@@ -12,34 +13,38 @@ export default function AuthHandoff() {
 
   useEffect(() => {
     const handleSession = async () => {
-      // 1. Lue tokenit URL:n hashista (#access_token=...&refresh_token=...)
-      const hash = window.location.hash.substring(1);
-      const params = new URLSearchParams(hash);
+      try {
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
 
-      const accessToken = params.get("access_token");
-      const refreshToken = params.get("refresh_token");
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
 
-      if (!accessToken || !refreshToken) {
-        // Jos tokeneita ei ole hashissa, tarkistetaan onko käyttäjä jo kirjautunut
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (session) {
-          router.replace("/app/dashboard");
+        if (!accessToken || !refreshToken) {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (session) {
+            router.replace("/app/dashboard");
+            return;
+          }
+          setStatus("Virhe: Ei kirjautumistietoja.");
           return;
         }
-        setStatus("Virhe: Ei kirjautumistietoja.");
-        return;
-      }
 
-      // 2. Käytä server actionia, joka asettaa session server-puolella
-      const result = await handleAuthHandoff(accessToken, refreshToken);
+        const result = await handleAuthHandoff(accessToken, refreshToken);
 
-      if (result?.error) {
-        console.error("Handoff error:", result.error);
+        if (result?.error) {
+          console.error("Handoff error:", result.error);
+          setStatus("Kirjautuminen epäonnistui.");
+        }
+      } catch (err) {
+        if (isRedirectError(err)) {
+          throw err;
+        }
+        console.error("Handoff error:", err);
         setStatus("Kirjautuminen epäonnistui.");
       }
-      // Server action hoitaa redirectin automaattisesti
     };
 
     handleSession();

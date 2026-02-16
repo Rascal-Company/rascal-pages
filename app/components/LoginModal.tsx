@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { login } from "@/app/actions/auth/login";
 
 interface LoginModalProps {
@@ -36,6 +37,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
       // Server action handles redirect, modal will close automatically
     } catch (err) {
+      if (isRedirectError(err)) {
+        throw err;
+      }
       setError("Odottamaton virhe tapahtui. Yritä uudelleen.");
       setLoading(false);
     }

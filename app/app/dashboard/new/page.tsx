@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { createSite } from "@/app/actions";
 
 export default function NewSitePage() {
@@ -23,6 +24,9 @@ export default function NewSitePage() {
       }
       // Redirect tapahtuu Server Actionissa automaattisesti onnistuessa
     } catch (err) {
+      if (isRedirectError(err)) {
+        throw err;
+      }
       setError("Odottamaton virhe. Yritä uudelleen.");
       setIsSubmitting(false);
     }
