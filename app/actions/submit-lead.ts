@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/src/utils/supabase/server";
-import { SiteId } from "@/src/lib/types";
+import type { SiteId } from "@/src/lib/types";
 
 interface SubmitLeadResult {
   success?: boolean;
@@ -36,6 +36,24 @@ async function verifySitePublished(
   return { published: true };
 }
 
+const MIN_SUBMISSION_TIME_MS = 2000;
+
+function isBotSubmission(fields: Record<string, string | boolean>): boolean {
+  if (fields._hp_website) return true;
+
+  const ts = Number(fields._hp_ts);
+  if (ts > 0 && Date.now() - ts < MIN_SUBMISSION_TIME_MS) return true;
+
+  return false;
+}
+
+function stripBotFields(
+  fields: Record<string, string | boolean>,
+): Record<string, string | boolean> {
+  const { _hp_website, _hp_ts, ...clean } = fields;
+  return clean;
+}
+
 /**
  * Core lead submission logic (testable)
  * Sends lead data to n8n webhook for processing
@@ -46,8 +64,14 @@ export async function submitLeadCore(
   fields: Record<string, string | boolean>,
   customWebhookUrl?: string | null,
 ): Promise<SubmitLeadResult> {
+  // 0. Bot protection: honeypot + timing check
+  if (isBotSubmission(fields)) {
+    return { success: true };
+  }
+  const cleanFields = stripBotFields(fields);
+
   // 1. Extract and normalize email (required field)
-  const email = fields.email as string;
+  const email = cleanFields.email as string;
   if (!email || !isValidEmail(email.trim())) {
     return { error: "Virheellinen sähköpostiosoite." };
   }
@@ -64,7 +88,7 @@ export async function submitLeadCore(
     type: "new_lead",
     siteId,
     fields: {
-      ...fields,
+      ...cleanFields,
       email: normalizedEmail,
     },
     timestamp: new Date().toISOString(),

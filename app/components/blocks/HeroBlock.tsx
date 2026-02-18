@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import type { HeroContent, FormField } from "@/src/lib/templates";
 import { AnalyticsLink } from "@/app/components/AnalyticsLink";
@@ -52,6 +52,7 @@ export default function HeroBlock({
     "idle",
   );
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const formLoadedAt = useRef(Date.now());
 
   const formFields = content.formFields || DEFAULT_HERO_FIELDS;
   const formSubmitButtonText =
@@ -77,6 +78,9 @@ export default function HeroBlock({
         fields[field.name] = (value as string) || "";
       }
     });
+
+    fields._hp_website = (formData.get("_hp_website") as string) || "";
+    fields._hp_ts = String(formLoadedAt.current);
 
     startTransition(async () => {
       const result = await submitLead(
@@ -189,6 +193,14 @@ export default function HeroBlock({
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div aria-hidden="true" className="absolute -left-[9999px]">
+                  <input
+                    type="text"
+                    name="_hp_website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
                 {formFields.map((field) => {
                   if (field.type === "checkbox") {
                     return (
