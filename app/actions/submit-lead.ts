@@ -1,6 +1,8 @@
 "use server";
 
+import { headers } from "next/headers";
 import { createClient } from "@/src/utils/supabase/server";
+import { ipLimiter, ipSiteLimiter } from "@/src/lib/rate-limit";
 import type { SiteId } from "@/src/lib/types";
 
 interface SubmitLeadResult {
@@ -143,6 +145,17 @@ export async function submitLead(
   fields: Record<string, string | boolean>,
   customWebhookUrl?: string | null,
 ): Promise<SubmitLeadResult> {
+  const headerStore = await headers();
+  const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+
+  if (!ipLimiter.check(ip).allowed) {
+    return { error: "Liian monta yritystä. Yritä myöhemmin uudelleen." };
+  }
+
+  if (!ipSiteLimiter.check(`${ip}:${siteId}`).allowed) {
+    return { error: "Liian monta yritystä. Yritä myöhemmin uudelleen." };
+  }
+
   const supabase = await createClient();
   return submitLeadCore(supabase, siteId, fields, customWebhookUrl);
 }
