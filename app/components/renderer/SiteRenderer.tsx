@@ -7,6 +7,7 @@ import type {
 } from "@/src/lib/templates";
 import { PageViewTracker } from "@/app/components/PageViewTracker";
 import type { SiteId } from "@/src/lib/types";
+import type { Post } from "@/src/lib/posts";
 import { migrateToSections } from "@/app/components/editor/utils/contentUtils";
 import { buildGoogleFontsUrl } from "@/src/lib/fonts";
 import {
@@ -18,6 +19,7 @@ import {
   VideoBlock,
   FormBlock,
   LogosBlock,
+  BlogListBlock,
   FooterBlock,
 } from "@/app/components/blocks";
 
@@ -25,12 +27,14 @@ type SiteRendererProps = {
   content: TemplateConfig | Record<string, unknown> | null | undefined;
   siteId: SiteId;
   isPreview?: boolean;
+  posts?: Post[];
 };
 
 export default function SiteRenderer({
   content,
   siteId,
   isPreview = false,
+  posts,
 }: SiteRendererProps) {
   const normalizedContent = migrateToSections(content);
   const { sections, theme } = normalizedContent;
@@ -128,6 +132,15 @@ export default function SiteRenderer({
                   key={section.id}
                   {...baseProps}
                   content={section.content as SectionContentMap["logos"]}
+                />
+              );
+            case "blog":
+              return (
+                <BlogListBlock
+                  key={section.id}
+                  {...baseProps}
+                  content={section.content as SectionContentMap["blog"]}
+                  posts={posts}
                 />
               );
             case "footer":

@@ -14,6 +14,7 @@ export type SectionType =
   | "video"
   | "form"
   | "logos"
+  | "blog"
   | "footer";
 
 export type HeroContent = {
@@ -93,6 +94,17 @@ export type FormContent = {
 export type LogosContent = null;
 export type FooterContent = null;
 
+/**
+ * Blog listing section. Actual posts are loaded from the `posts` table at
+ * render time; this content only configures the heading and how many of the
+ * latest posts to surface on the page.
+ */
+export type BlogContent = {
+  heading: string;
+  subheading?: string;
+  postsToShow: number;
+};
+
 export type SectionContentMap = {
   hero: HeroContent;
   features: FeatureItem[];
@@ -102,6 +114,7 @@ export type SectionContentMap = {
   video: VideoContent;
   form: FormContent;
   logos: LogosContent;
+  blog: BlogContent;
   footer: FooterContent;
 };
 
@@ -420,6 +433,36 @@ export const TEMPLATES: Template[] = [
       ],
     },
   },
+  {
+    id: "personal-brand",
+    name: "Henkilöbrändi + Blogi",
+    description:
+      "SEO-henkilöbrändi: hero, yhteenveto 'mitä tapahtuu' -osio ja blogi uusimmilla julkaisuilla.",
+    defaultContent: {
+      templateId: "personal-brand",
+      theme: { primaryColor: "#0EA5E9" },
+      sections: [
+        createSection("pb-hero-1", "hero", {
+          title: "Hei, olen [Nimesi]",
+          subtitle:
+            "Kirjoitan ja jaan ajatuksiani aiheesta X. Tältä sivulta näet mitä teen juuri nyt ja luet uusimmat kirjoitukseni.",
+          ctaText: "Lue blogia",
+          ctaLink: "#blogi",
+        }),
+        createSection("pb-about-1", "about", {
+          name: "[Nimesi]",
+          bio: "Lyhyt yhteenveto siitä mitä teen juuri nyt: projektit, fokus ja missä minut tavoittaa. Päivitä tätä säännöllisesti, niin sivu pysyy tuoreena.",
+          image: "",
+        }),
+        createSection("pb-blog-1", "blog", {
+          heading: "Uusimmat kirjoitukset",
+          subheading: "Ajatuksia, oppeja ja kuulumisia.",
+          postsToShow: 6,
+        }),
+        createSection("pb-footer-1", "footer", null),
+      ],
+    },
+  },
 ];
 
 /**
@@ -448,6 +491,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   video: "Video",
   form: "Lomake",
   logos: "Logot",
+  blog: "Blogi",
   footer: "Alapalkki",
 };
 
@@ -463,5 +507,6 @@ export const ADDABLE_SECTION_TYPES: SectionType[] = [
   "video",
   "form",
   "logos",
+  "blog",
   "footer",
 ];
