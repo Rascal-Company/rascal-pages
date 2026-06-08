@@ -1,0 +1,57 @@
+{
+  "name": "Content → commit markdown to customer repo",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "b1a1c0de-0001-4000-8000-000000000001",
+      "name": "When clicked",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Inputs (from a webhook, AI node, schedule, etc.). Defaults shown for testing.\nconst input = $input.first().json;\nconst repoFullName = input.repoFullName || 'rascal-sites/rascal-site-samikiias';\nconst title = input.title || 'Automaattinen kirjoitus';\nconst slug = (input.slug || title)\n  .toLowerCase()\n  .replace(/[äå]/g, 'a')\n  .replace(/ö/g, 'o')\n  .normalize('NFD')\n  .replace(/[\\u0300-\\u036f]/g, '')\n  .replace(/[^a-z0-9]+/g, '-')\n  .replace(/^-+|-+$/g, '');\nconst date = input.date || new Date().toISOString().slice(0, 10);\nconst body = input.body || 'Sisältö tähän.';\n\nconst markdown = `---\\ntitle: ${title}\\nslug: ${slug}\\ndate: ${date}\\npublished: true\\n---\\n\\n${body}\\n`;\nconst content = Buffer.from(markdown, 'utf8').toString('base64');\nconst path = `content/posts/${slug}.md`;\n\nreturn [{\n  json: {\n    url: `https://api.github.com/repos/${repoFullName}/contents/${path}`,\n    ghBody: { message: `content: add ${slug}`, content }\n  }\n}];"
+      },
+      "id": "b1a1c0de-0002-4000-8000-000000000002",
+      "name": "Build markdown + GitHub payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.GITHUB_TOKEN }}" },
+            { "name": "Accept", "value": "application/vnd.github+json" },
+            { "name": "X-GitHub-Api-Version", "value": "2022-11-28" },
+            { "name": "User-Agent", "value": "rascal-provisioning" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.ghBody) }}",
+        "options": {}
+      },
+      "id": "b1a1c0de-0003-4000-8000-000000000003",
+      "name": "Commit to GitHub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [720, 300]
+    }
+  ],
+  "connections": {
+    "When clicked": {
+      "main": [[{ "node": "Build markdown + GitHub payload", "type": "main", "index": 0 }]]
+    },
+    "Build markdown + GitHub payload": {
+      "main": [[{ "node": "Commit to GitHub", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {},
+  "active": false
+}

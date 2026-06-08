@@ -1,0 +1,149 @@
+{
+  "subdomain": "samikiias",
+  "customDomain": "samikiias.fi",
+  "site": {
+    "name": "Sami Kiias",
+    "url": "https://samikiias.fi"
+  },
+  "templateId": "personal-brand",
+  "theme": {
+    "primaryColor": "#0EA5E9",
+    "headingFont": "Inter",
+    "bodyFont": "Inter"
+  },
+  "sections": [
+    {
+      "id": "pb-hero-1",
+      "type": "hero",
+      "isVisible": true,
+      "content": {
+        "title": "Hei, olen Sami Kiias",
+        "subtitle": "Rakennan tuotteita ja kirjoitan opeista matkan varrelta. Täältä näet mitä teen juuri nyt ja luet uusimmat kirjoitukseni.",
+        "ctaText": "Lue blogia",
+        "ctaLink": "#blogi"
+      }
+    },
+    {
+      "id": "pb-about-1",
+      "type": "about",
+      "isVisible": true,
+      "content": {
+        "name": "Mitä teen juuri nyt",
+        "bio": "Rakennan Rascal-tuoteperhettä: AI-tehostettua sisällöntuotantoa ja git-native-sivustoja.\n\nFokus tällä hetkellä: tämän sivuston pohja, jonka voi luovuttaa kenelle vain — kirjoita markdownia, julkaise git pushilla."
+      }
+    },
+    {
+      "id": "pb-features-1",
+      "type": "features",
+      "isVisible": true,
+      "content": [
+        {
+          "icon": "🧩",
+          "title": "Tuotekehitys",
+          "description": "Ideasta toimivaan tuotteeseen: nopeat iteraatiot ja mitattava arvo."
+        },
+        {
+          "icon": "🤖",
+          "title": "AI-automaatiot",
+          "description": "n8n- ja LLM-putket, jotka hoitavat toistuvan työn puolestasi."
+        },
+        {
+          "icon": "✍️",
+          "title": "Git-native sisältö",
+          "description": "Sivustot, jotka sinä omistat — sisältö markdownina, julkaisu pushilla."
+        }
+      ]
+    },
+    {
+      "id": "pb-logos-1",
+      "type": "logos",
+      "isVisible": true,
+      "content": null
+    },
+    {
+      "id": "pb-video-1",
+      "type": "video",
+      "isVisible": true,
+      "content": { "url": "" }
+    },
+    {
+      "id": "pb-testimonials-1",
+      "type": "testimonials",
+      "isVisible": true,
+      "content": [
+        {
+          "name": "Anna Virtanen",
+          "text": "Sami vei ideamme tuotantoon viikoissa. Selkeää tekemistä alusta loppuun.",
+          "company": "Toimitusjohtaja"
+        },
+        {
+          "name": "Jukka Mäkinen",
+          "text": "Automaatiot säästävät meiltä tunteja joka viikko. Suosittelen.",
+          "company": "Yrittäjä"
+        }
+      ]
+    },
+    {
+      "id": "pb-faq-1",
+      "type": "faq",
+      "isVisible": true,
+      "content": [
+        {
+          "question": "Miten julkaisen sisältöä?",
+          "answer": "Kirjoita markdownia content-kansioon (vaikka Obsidianilla) ja tee git push. Sivu päivittyy automaattisesti."
+        },
+        {
+          "question": "Omistanko sivustoni?",
+          "answer": "Kyllä. Koko sivu on oma Git-repo, jonka voi siirtää sinulle milloin tahansa."
+        }
+      ]
+    },
+    {
+      "id": "pb-blog-1",
+      "type": "blog",
+      "isVisible": true,
+      "content": {
+        "heading": "Uusimmat kirjoitukset",
+        "subheading": "Ajatuksia, oppeja ja kuulumisia.",
+        "postsToShow": 6
+      }
+    },
+    {
+      "id": "pb-form-1",
+      "type": "form",
+      "isVisible": true,
+      "content": {
+        "formTitle": "Ota yhteyttä",
+        "submitButtonText": "Lähetä viesti",
+        "fields": [
+          {
+            "id": "field-email-1",
+            "type": "email",
+            "label": "Sähköpostiosoite",
+            "placeholder": "nimi@esimerkki.fi",
+            "required": true,
+            "name": "email"
+          },
+          {
+            "id": "field-message-1",
+            "type": "textarea",
+            "label": "Viesti",
+            "placeholder": "Mitä mielessä?",
+            "required": true,
+            "name": "message"
+          }
+        ],
+        "successMessage": {
+          "title": "Kiitos viestistä!",
+          "description": "Vastaan sinulle pian."
+        }
+      }
+    },
+    {
+      "id": "pb-footer-1",
+      "type": "footer",
+      "isVisible": true,
+      "content": null
+    }
+  ]
+}

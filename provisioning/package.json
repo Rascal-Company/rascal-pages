@@ -1,0 +1,19 @@
+{
+  "name": "rascal-provisioning",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Control-plane scripts that provision and hand off repo-per-site customer sites (GitHub + Vercel + Supabase registry).",
+  "scripts": {
+    "provision": "tsx provision-site.ts",
+    "transfer": "tsx transfer-site.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsx": "^4.19.2",
+    "typescript": "^5",
+    "vitest": "^4.0.18"
+  }
+}
