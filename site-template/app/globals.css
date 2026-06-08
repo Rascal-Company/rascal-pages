@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+:root {
+  --heading-font: system-ui, sans-serif;
+  --body-font: system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--body-font);
+}

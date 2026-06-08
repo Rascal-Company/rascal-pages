@@ -1,0 +1,52 @@
+{
+  "subdomain": "samikiias",
+  "customDomain": "samikiias.fi",
+  "site": {
+    "name": "Sami Kiias",
+    "url": "https://samikiias.fi"
+  },
+  "templateId": "personal-brand",
+  "theme": {
+    "primaryColor": "#0EA5E9",
+    "headingFont": "Inter",
+    "bodyFont": "Inter"
+  },
+  "sections": [
+    {
+      "id": "pb-hero-1",
+      "type": "hero",
+      "isVisible": true,
+      "content": {
+        "title": "Hei, olen Sami Kiias",
+        "subtitle": "Rakennan tuotteita ja kirjoitan opeista matkan varrelta. Täältä näet mitä teen juuri nyt ja luet uusimmat kirjoitukseni.",
+        "ctaText": "Lue blogia",
+        "ctaLink": "#blogi"
+      }
+    },
+    {
+      "id": "pb-about-1",
+      "type": "about",
+      "isVisible": true,
+      "content": {
+        "name": "Mitä teen juuri nyt",
+        "bio": "Rakennan Rascal-tuoteperhettä: AI-tehostettua sisällöntuotantoa ja git-native-sivustoja.\n\nFokus tällä hetkellä: tämän sivuston pohja, jonka voi luovuttaa kenelle vain — kirjoita markdownia, julkaise git pushilla."
+      }
+    },
+    {
+      "id": "pb-blog-1",
+      "type": "blog",
+      "isVisible": true,
+      "content": {
+        "heading": "Uusimmat kirjoitukset",
+        "subheading": "Ajatuksia, oppeja ja kuulumisia.",
+        "postsToShow": 6
+      }
+    },
+    {
+      "id": "pb-footer-1",
+      "type": "footer",
+      "isVisible": true,
+      "content": null
+    }
+  ]
+}
