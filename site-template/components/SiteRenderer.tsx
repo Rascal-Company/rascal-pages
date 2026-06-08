@@ -2,8 +2,13 @@ import type { CSSProperties } from "react";
 import type {
   AboutContent,
   BlogContent,
+  FaqItem,
+  FeatureItem,
+  FormContent,
   HeroContent,
   TemplateConfig,
+  TestimonialItem,
+  VideoContent,
 } from "@/lib/templates";
 import type { Post } from "@/lib/posts";
 import { buildGoogleFontsUrl } from "@/lib/fonts";
@@ -11,6 +16,12 @@ import HeroBlock from "@/components/blocks/HeroBlock";
 import AboutBlock from "@/components/blocks/AboutBlock";
 import BlogListBlock from "@/components/blocks/BlogListBlock";
 import FooterBlock from "@/components/blocks/FooterBlock";
+import FeaturesBlock from "@/components/blocks/FeaturesBlock";
+import FaqBlock from "@/components/blocks/FaqBlock";
+import TestimonialsBlock from "@/components/blocks/TestimonialsBlock";
+import LogosBlock from "@/components/blocks/LogosBlock";
+import VideoBlock from "@/components/blocks/VideoBlock";
+import FormBlock from "@/components/blocks/FormBlock";
 
 /**
  * Maps a TemplateConfig's sections to rendered blocks. Server component — no
@@ -72,6 +83,45 @@ export default function SiteRenderer({
               );
             case "footer":
               return <FooterBlock key={section.id} siteName={siteName} />;
+            case "features":
+              return (
+                <FeaturesBlock
+                  key={section.id}
+                  content={section.content as FeatureItem[]}
+                />
+              );
+            case "faq":
+              return (
+                <FaqBlock
+                  key={section.id}
+                  content={section.content as FaqItem[]}
+                />
+              );
+            case "testimonials":
+              return (
+                <TestimonialsBlock
+                  key={section.id}
+                  content={section.content as TestimonialItem[]}
+                  theme={theme}
+                />
+              );
+            case "video":
+              return (
+                <VideoBlock
+                  key={section.id}
+                  content={section.content as VideoContent}
+                />
+              );
+            case "form":
+              return (
+                <FormBlock
+                  key={section.id}
+                  content={section.content as FormContent}
+                  theme={theme}
+                />
+              );
+            case "logos":
+              return <LogosBlock key={section.id} />;
             default:
               return null;
           }

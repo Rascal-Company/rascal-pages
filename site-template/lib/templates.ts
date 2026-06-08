@@ -61,6 +61,25 @@ export type VideoContent = {
   url: string;
 };
 
+export type FormFieldType = "email" | "text" | "textarea" | "checkbox";
+
+export type FormField = {
+  id: string;
+  type: FormFieldType;
+  label: string;
+  placeholder?: string;
+  required: boolean;
+  name: string;
+};
+
+export type FormContent = {
+  fields: FormField[];
+  formTitle?: string;
+  submitButtonText?: string;
+  webhookUrl?: string;
+  successMessage: { title: string; description: string };
+};
+
 export type LogosContent = null;
 export type FooterContent = null;
 
@@ -81,6 +100,7 @@ export type SectionContentMap = {
   testimonials: TestimonialItem[];
   about: AboutContent;
   video: VideoContent;
+  form: FormContent;
   logos: LogosContent;
   blog: BlogContent;
   footer: FooterContent;

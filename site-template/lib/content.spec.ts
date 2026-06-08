@@ -117,7 +117,13 @@ describe("loadSiteConfig", () => {
     expect(config.template.sections.map((s) => s.type)).toEqual([
       "hero",
       "about",
+      "features",
+      "logos",
+      "video",
+      "testimonials",
+      "faq",
       "blog",
+      "form",
       "footer",
     ]);
   });
