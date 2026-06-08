@@ -15,6 +15,7 @@ import {
   VideoBlockEditor,
   FormBlockEditor,
   LogosBlockEditor,
+  BlogBlockEditor,
   FooterBlockEditor,
 } from "./blocks";
 
@@ -84,6 +85,13 @@ export default function BlockEditor({ section, onUpdate }: BlockEditorProps) {
             return (
               <LogosBlockEditor
                 content={section.content as SectionContentMap["logos"]}
+                onUpdate={onUpdate}
+              />
+            );
+          case "blog":
+            return (
+              <BlogBlockEditor
+                content={section.content as SectionContentMap["blog"]}
                 onUpdate={onUpdate}
               />
             );

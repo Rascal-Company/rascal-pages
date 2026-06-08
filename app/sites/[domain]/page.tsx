@@ -1,14 +1,84 @@
+import type { Metadata } from "next";
 import { createClient } from "@/src/utils/supabase/server";
 import { notFound } from "next/navigation";
 import SiteRenderer from "@/app/components/renderer/SiteRenderer";
 import { createSiteId } from "@/src/lib/types";
 import ThirdPartyScripts from "@/app/components/analytics/ThirdPartyScripts";
+import {
+  getPublishedPosts,
+  getRequestBaseUrl,
+  getSiteByDomain,
+} from "@/src/lib/site-queries";
+import { migrateToSections } from "@/app/components/editor/utils/contentUtils";
+import { buildCanonicalUrl, buildPersonJsonLd } from "@/src/lib/seo";
+import JsonLd from "@/app/components/JsonLd";
+import type {
+  AboutContent,
+  HeroContent,
+  TemplateConfig,
+} from "@/src/lib/templates";
 
 // Estetään pre-rendering build-aikana, koska sivu vaatii runtime-tietokantakutsuja
 export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ domain: string }>;
+}
+
+/**
+ * Extract a display name and bio from page content for SEO / structured data,
+ * preferring the about section and falling back to the hero.
+ */
+function extractIdentity(content: TemplateConfig): {
+  name: string;
+  description: string;
+} {
+  const about = content.sections.find((s) => s.type === "about")?.content as
+    | AboutContent
+    | undefined;
+  const hero = content.sections.find((s) => s.type === "hero")?.content as
+    | HeroContent
+    | undefined;
+
+  return {
+    name: about?.name || hero?.title || "",
+    description: about?.bio || hero?.subtitle || "",
+  };
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { domain } = await params;
+  const site = await getSiteByDomain(domain);
+  if (!site) return {};
+
+  const supabase = await createClient();
+  const { data: page } = await supabase
+    .from("pages")
+    .select("content")
+    .eq("site_id", site.id)
+    .eq("slug", "home")
+    .maybeSingle();
+
+  const normalized = migrateToSections(
+    (page?.content as TemplateConfig | null) ?? undefined,
+  );
+  const { name, description } = extractIdentity(normalized);
+  const baseUrl = await getRequestBaseUrl();
+  const canonical = buildCanonicalUrl(baseUrl, "/");
+
+  return {
+    title: name || domain,
+    description: description || undefined,
+    alternates: { canonical },
+    openGraph: {
+      type: "website",
+      title: name || domain,
+      description: description || undefined,
+      url: canonical,
+    },
+  };
 }
 
 export default async function PublicSitePage({ params }: PageProps) {
@@ -70,6 +140,22 @@ export default async function PublicSitePage({ params }: PageProps) {
 
   const content = page?.content || defaultContent;
 
+  // Hae julkaistut blogikirjoitukset (henkilöbrändi-templaatin blogiosiolle)
+  const posts = await getPublishedPosts(site.id);
+
+  // Rakenna Person-strukturoitu data SEO:ta varten
+  const normalized = migrateToSections(content as TemplateConfig);
+  const { name, description } = extractIdentity(normalized);
+  const baseUrl = await getRequestBaseUrl();
+  const personJsonLd =
+    name.length > 0
+      ? buildPersonJsonLd({
+          name,
+          description: description || undefined,
+          url: buildCanonicalUrl(baseUrl, "/"),
+        })
+      : null;
+
   // Hae analytiikka-asetukset
   const settings = (site.settings as Record<string, unknown>) || {};
   const gtmId = settings.googleTagManagerId as string | undefined;
@@ -83,7 +169,12 @@ export default async function PublicSitePage({ params }: PageProps) {
         ga4Id={ga4Id}
         metaPixelId={metaPixelId}
       />
-      <SiteRenderer content={content} siteId={createSiteId(site.id)} />
+      {personJsonLd && <JsonLd data={personJsonLd} />}
+      <SiteRenderer
+        content={content}
+        siteId={createSiteId(site.id)}
+        posts={posts}
+      />
     </>
   );
 }

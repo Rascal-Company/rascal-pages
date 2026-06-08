@@ -263,6 +263,11 @@ export function getDefaultSectionContent<T extends SectionType>(
       },
     },
     logos: null,
+    blog: {
+      heading: "Uusimmat kirjoitukset",
+      subheading: "Ajatuksia, oppeja ja kuulumisia.",
+      postsToShow: 6,
+    },
     footer: null,
   };
 
