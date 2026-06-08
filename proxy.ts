@@ -63,6 +63,22 @@ export default async function middleware(req: NextRequest) {
     );
   }
 
+  // Vercel preview -deploymentit (esim. branch-aliakset *.vercel.app):
+  // näillä hosteilla ei ole tenanttia, joten kohtele kuten root domain ->
+  // markkinointisivu /home, ettei tule 404.
+  if (hostname.endsWith(".vercel.app")) {
+    if (path.startsWith("/app") || url.pathname.startsWith("/_next")) {
+      return updateSupabaseSession(req);
+    }
+    if (path.startsWith("/home")) {
+      return updateSupabaseSession(req);
+    }
+    return updateSupabaseSession(
+      req,
+      new URL(`/home${path === "/" ? "" : path}`, req.url),
+    );
+  }
+
   // 1. App Subdomain (Editori/Dashboard)
   // Jos osoite on app.rascalpages.fi, ohjaa dashboardiin
   if (hostname === `app.${rootDomain}`) {
