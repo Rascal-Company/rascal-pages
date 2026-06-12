@@ -123,6 +123,78 @@ html {
   );
 }
 
+/* Voice interview orb */
+.orb-core {
+  background: radial-gradient(
+    circle at 30% 30%,
+    #93c5fd,
+    #3b82f6 45%,
+    #1e3a8a 85%
+  );
+  box-shadow:
+    0 0 60px rgba(59, 130, 246, 0.45),
+    inset 0 0 40px rgba(255, 255, 255, 0.12);
+  animation: orbBreathe 3.2s ease-in-out infinite;
+}
+
+.orb-speaking {
+  animation: orbSpeak 1.1s ease-in-out infinite;
+}
+
+.orb-busy {
+  animation: orbBreathe 1.2s ease-in-out infinite;
+}
+
+.orb-ring {
+  animation: orbRing 2.4s ease-out infinite;
+}
+
+@keyframes orbBreathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes orbSpeak {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.09);
+  }
+  50% {
+    transform: scale(0.97);
+  }
+  75% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes orbRing {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-core,
+  .orb-speaking,
+  .orb-busy,
+  .orb-ring {
+    animation: none;
+  }
+}
+
 /* Text color classes */
 .text-heading {
   color: var(--color-text-heading);
