@@ -33,7 +33,10 @@ export default function PortfolioInterview({
     );
   }
 
-  const dynamicVariables = JSON.stringify({ user_id: userId ?? "" });
+  const dynamicVariables = JSON.stringify({
+    action: "portfolioSite",
+    user_id: userId ?? "",
+  });
 
   return (
     <div className="space-y-4">
