@@ -160,7 +160,9 @@ export default function CreateAiSiteModal({
           </div>
         )}
 
-        {mode === "portfolio" && <PortfolioInterview userId={userId} />}
+        {mode === "portfolio" && (
+          <PortfolioInterview userId={userId} onClose={handleClose} />
+        )}
 
         {mode === "landing" && (
           <>
