@@ -18,6 +18,7 @@ import {
   BlogBlockEditor,
   CasesBlockEditor,
   TechStackBlockEditor,
+  BentoBlockEditor,
   FooterBlockEditor,
 } from "./blocks";
 
@@ -108,6 +109,13 @@ export default function BlockEditor({ section, onUpdate }: BlockEditorProps) {
             return (
               <TechStackBlockEditor
                 content={section.content as SectionContentMap["techStack"]}
+                onUpdate={onUpdate}
+              />
+            );
+          case "bento":
+            return (
+              <BentoBlockEditor
+                content={section.content as SectionContentMap["bento"]}
                 onUpdate={onUpdate}
               />
             );

@@ -17,6 +17,7 @@ export type SectionType =
   | "blog"
   | "cases"
   | "techStack"
+  | "bento"
   | "footer";
 
 export type HeroContent = {
@@ -164,6 +165,36 @@ export type TechStackContent = {
   groups: TechStackGroup[];
 };
 
+/**
+ * One element placed on the bento grid. Free-form fields are interpreted per
+ * `type`: heading/text/button use `text`; image/button use `url`; stat uses
+ * `value` + `label`. Placement is on a 12-column grid.
+ */
+export type BentoElementType = "heading" | "text" | "image" | "button" | "stat";
+
+export type BentoItem = {
+  id: string;
+  type: BentoElementType;
+  text?: string;
+  url?: string;
+  value?: string;
+  label?: string;
+  /** Render the element on a raised card surface. Defaults per type. */
+  boxed?: boolean;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
+/**
+ * Squarespace-style bento grid: free-form draggable/resizable boxes on a
+ * 12-column snap grid, each holding a single element.
+ */
+export type BentoContent = {
+  items: BentoItem[];
+};
+
 export type SectionContentMap = {
   hero: HeroContent;
   features: FeatureItem[];
@@ -176,6 +207,7 @@ export type SectionContentMap = {
   blog: BlogContent;
   cases: CasesContent;
   techStack: TechStackContent;
+  bento: BentoContent;
   footer: FooterContent;
 };
 
@@ -696,6 +728,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   blog: "Blogi",
   cases: "Projektit",
   techStack: "Osaaminen",
+  bento: "Ruudukko",
   footer: "Alapalkki",
 };
 
@@ -714,5 +747,6 @@ export const ADDABLE_SECTION_TYPES: SectionType[] = [
   "blog",
   "cases",
   "techStack",
+  "bento",
   "footer",
 ];
