@@ -16,6 +16,7 @@ export const BENTO_DEFAULT_SIZE: Record<
   image: { w: 4, h: 3 },
   button: { w: 3, h: 1 },
   stat: { w: 3, h: 2 },
+  card: { w: 6, h: 3 },
 };
 
 /**
@@ -29,7 +30,7 @@ export function nextFreeY(items: BentoItem[]): number {
 
 /** Whether an element sits on a raised card surface by default. */
 export function defaultBoxed(type: BentoElementType): boolean {
-  return type === "stat";
+  return type === "stat" || type === "card";
 }
 
 /**

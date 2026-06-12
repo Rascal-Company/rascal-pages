@@ -12,6 +12,7 @@ import type {
   BentoElementType,
   BentoItem,
 } from "@/src/lib/templates";
+import { parseTagList, formatTagList } from "@/src/lib/templates";
 import {
   BENTO_COLUMNS,
   BENTO_DEFAULT_SIZE,
@@ -64,6 +65,19 @@ function BentoPreview({ item }: { item: BentoItem }) {
           </span>
         </span>
       );
+    case "card":
+      return (
+        <span className="flex flex-col items-start text-left">
+          <span className="text-sm font-semibold text-gray-900">
+            {item.text || "Kortin otsikko"}
+          </span>
+          {item.body && (
+            <span className="mt-0.5 line-clamp-2 text-[10px] text-gray-500">
+              {item.body}
+            </span>
+          )}
+        </span>
+      );
     default:
       return null;
   }
@@ -80,6 +94,7 @@ const inputClass =
 const PALETTE: { type: BentoElementType; label: string }[] = [
   { type: "heading", label: "+ Otsikko" },
   { type: "text", label: "+ Teksti" },
+  { type: "card", label: "+ Kortti" },
   { type: "image", label: "+ Kuva" },
   { type: "button", label: "+ Nappi" },
   { type: "stat", label: "+ Stat" },
@@ -91,21 +106,21 @@ const TYPE_LABELS: Record<BentoElementType, string> = {
   image: "Kuva",
   button: "Nappi",
   stat: "Stat",
+  card: "Kortti",
 };
 
 function defaultItem(type: BentoElementType, items: BentoItem[]): BentoItem {
   const { w, h } = BENTO_DEFAULT_SIZE[type];
-  return {
-    id: nanoid(),
-    type,
-    x: 0,
-    y: nextFreeY(items),
-    w,
-    h,
-    ...(type === "stat"
-      ? { value: "100+", label: "Kuvaus" }
-      : { text: TYPE_LABELS[type] }),
-  };
+  const base = { id: nanoid(), type, x: 0, y: nextFreeY(items), w, h };
+  if (type === "stat") return { ...base, value: "100+", label: "Kuvaus" };
+  if (type === "card")
+    return {
+      ...base,
+      text: "Kortin otsikko",
+      body: "Lyhyt kuvaus.",
+      tags: [],
+    };
+  return { ...base, text: TYPE_LABELS[type] };
 }
 
 export default function BentoBlockEditor({
@@ -245,6 +260,45 @@ export default function BentoBlockEditor({
                 }
                 className={inputClass}
               />
+            )}
+
+            {item.type === "card" && (
+              <>
+                <input
+                  type="text"
+                  value={item.text || ""}
+                  onChange={(e) =>
+                    updateItem(item.id, { text: e.target.value })
+                  }
+                  placeholder="Kortin otsikko"
+                  className={inputClass}
+                />
+                <textarea
+                  value={item.body || ""}
+                  onChange={(e) =>
+                    updateItem(item.id, { body: e.target.value })
+                  }
+                  placeholder="Kuvaus"
+                  rows={3}
+                  className={inputClass}
+                />
+                <input
+                  type="text"
+                  value={formatTagList(item.tags || [])}
+                  onChange={(e) =>
+                    updateItem(item.id, { tags: parseTagList(e.target.value) })
+                  }
+                  placeholder="Avainsanat (pilkulla eroteltuna)"
+                  className={inputClass}
+                />
+                <input
+                  type="url"
+                  value={item.url || ""}
+                  onChange={(e) => updateItem(item.id, { url: e.target.value })}
+                  placeholder="Linkki (valinnainen)"
+                  className={inputClass}
+                />
+              </>
             )}
 
             {item.type === "stat" && (

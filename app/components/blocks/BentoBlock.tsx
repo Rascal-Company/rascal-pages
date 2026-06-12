@@ -71,6 +71,48 @@ function BentoElement({
           <div className={`mt-1 text-sm ${tokens.muted}`}>{item.label}</div>
         </div>
       );
+    case "card":
+      return (
+        <div className="flex h-full flex-col">
+          {item.text && (
+            <h3
+              className={`text-xl font-semibold ${tokens.heading}`}
+              style={{ fontFamily: "var(--heading-font, inherit)" }}
+            >
+              {item.text}
+            </h3>
+          )}
+          {item.body && (
+            <p
+              className={`mt-2 flex-1 leading-relaxed ${tokens.body}`}
+              style={{ fontFamily: "var(--body-font, inherit)" }}
+            >
+              {item.body}
+            </p>
+          )}
+          {item.tags && item.tags.length > 0 && (
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {item.tags.map((tag, i) => (
+                <li
+                  key={i}
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${tokens.chip}`}
+                >
+                  {tag}
+                </li>
+              ))}
+            </ul>
+          )}
+          {item.url && (
+            <a
+              href={item.url}
+              className="mt-4 text-sm font-semibold hover:underline"
+              style={{ color: primaryColor }}
+            >
+              {item.label || "Lue lisää"} →
+            </a>
+          )}
+        </div>
+      );
     default:
       return null;
   }

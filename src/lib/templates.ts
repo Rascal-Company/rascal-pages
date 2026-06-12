@@ -170,9 +170,16 @@ export type TechStackContent = {
 /**
  * One element placed on the bento grid. Free-form fields are interpreted per
  * `type`: heading/text/button use `text`; image/button use `url`; stat uses
- * `value` + `label`. Placement is on a 12-column grid.
+ * `value` + `label`; card uses `text` (title) + `body` + `tags` (+ optional
+ * `url`/`label` link). Placement is on a 12-column grid.
  */
-export type BentoElementType = "heading" | "text" | "image" | "button" | "stat";
+export type BentoElementType =
+  | "heading"
+  | "text"
+  | "image"
+  | "button"
+  | "stat"
+  | "card";
 
 export type BentoItem = {
   id: string;
@@ -181,6 +188,10 @@ export type BentoItem = {
   url?: string;
   value?: string;
   label?: string;
+  /** Card body copy (rendered under the card title). */
+  body?: string;
+  /** Card keyword chips. */
+  tags?: string[];
   /** Render the element on a raised card surface. Defaults per type. */
   boxed?: boolean;
   x: number;

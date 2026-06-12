@@ -26,8 +26,9 @@ describe("nextFreeY", () => {
 });
 
 describe(defaultBoxed, () => {
-  test("only stats are boxed by default", () => {
+  test("stats and cards are boxed by default, plain elements are not", () => {
     expect(defaultBoxed("stat")).toBe(true);
+    expect(defaultBoxed("card")).toBe(true);
     expect(defaultBoxed("heading")).toBe(false);
     expect(defaultBoxed("text")).toBe(false);
     expect(defaultBoxed("button")).toBe(false);
