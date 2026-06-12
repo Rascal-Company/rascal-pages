@@ -179,6 +179,8 @@ export type BentoItem = {
   url?: string;
   value?: string;
   label?: string;
+  /** Render the element on a raised card surface. Defaults per type. */
+  boxed?: boolean;
   x: number;
   y: number;
   w: number;

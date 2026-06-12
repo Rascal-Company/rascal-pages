@@ -2,7 +2,7 @@
 
 import type { BentoContent, BentoItem } from "@/src/lib/templates";
 import type { SiteId } from "@/src/lib/types";
-import { BENTO_COLUMNS } from "@/src/lib/bento";
+import { BENTO_COLUMNS, isBoxed, itemsInReadingOrder } from "@/src/lib/bento";
 import { surfaceTokens } from "./appearance";
 
 type BentoBlockProps = {
@@ -105,12 +105,12 @@ export default function BentoBlock({ content, theme }: BentoBlockProps) {
           }
         `}</style>
         <div className="bento-grid">
-          {content.items.map((item) => (
+          {itemsInReadingOrder(content.items).map((item) => (
             <div
               key={item.id}
-              className={`bento-item flex flex-col justify-center overflow-hidden rounded-2xl p-6 ${
-                item.type === "image" ? "" : t.card
-              }`}
+              className={`bento-item flex flex-col justify-center overflow-hidden rounded-2xl ${
+                item.type === "image" ? "" : "p-6"
+              } ${isBoxed(item) ? t.card : ""}`}
               style={
                 {
                   ["--bento-col" as string]: `${item.x + 1} / span ${item.w}`,

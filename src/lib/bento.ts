@@ -26,3 +26,22 @@ export const BENTO_DEFAULT_SIZE: Record<
 export function nextFreeY(items: BentoItem[]): number {
   return items.reduce((maxY, item) => Math.max(maxY, item.y + item.h), 0);
 }
+
+/** Whether an element sits on a raised card surface by default. */
+export function defaultBoxed(type: BentoElementType): boolean {
+  return type === "stat";
+}
+
+/**
+ * Resolve whether an item renders boxed: explicit `boxed` wins, otherwise the
+ * per-type default. Images never get a card (they fill their cell).
+ */
+export function isBoxed(item: BentoItem): boolean {
+  if (item.type === "image") return false;
+  return item.boxed ?? defaultBoxed(item.type);
+}
+
+/** Items ordered for a single-column mobile stack: top-to-bottom, then left-to-right. */
+export function itemsInReadingOrder(items: BentoItem[]): BentoItem[] {
+  return [...items].sort((a, b) => a.y - b.y || a.x - b.x);
+}

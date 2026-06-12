@@ -12,9 +12,62 @@ import type {
   BentoElementType,
   BentoItem,
 } from "@/src/lib/templates";
-import { BENTO_COLUMNS, BENTO_DEFAULT_SIZE, nextFreeY } from "@/src/lib/bento";
+import {
+  BENTO_COLUMNS,
+  BENTO_DEFAULT_SIZE,
+  nextFreeY,
+  isBoxed,
+} from "@/src/lib/bento";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
+
+/** Neutral WYSIWYG preview of an element, shown inside the draggable grid box. */
+function BentoPreview({ item }: { item: BentoItem }) {
+  switch (item.type) {
+    case "heading":
+      return (
+        <span className="text-lg font-bold leading-tight text-gray-900">
+          {item.text || "Otsikko"}
+        </span>
+      );
+    case "text":
+      return (
+        <span className="text-xs leading-snug text-gray-600">
+          {item.text || "Tekstisisältö"}
+        </span>
+      );
+    case "image":
+      return item.url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={item.url}
+          alt=""
+          className="h-full w-full rounded object-cover"
+        />
+      ) : (
+        <span className="text-xs text-gray-400">Kuva</span>
+      );
+    case "button":
+      return (
+        <span className="rounded-md bg-brand-accent px-3 py-1 text-xs font-semibold text-white">
+          {item.text || "Nappi"}
+        </span>
+      );
+    case "stat":
+      return (
+        <span className="flex flex-col items-center">
+          <span className="text-xl font-bold text-gray-900">
+            {item.value || "100+"}
+          </span>
+          <span className="text-[10px] text-gray-500">
+            {item.label || "Kuvaus"}
+          </span>
+        </span>
+      );
+    default:
+      return null;
+  }
+}
 
 type BentoBlockEditorProps = {
   content: BentoContent;
@@ -131,12 +184,16 @@ export default function BentoBlockEditor({
             {items.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-center overflow-hidden rounded-md border border-gray-300 bg-white text-center text-xs text-gray-600"
+                className={`flex items-center justify-center overflow-hidden rounded-md p-2 text-center ${
+                  item.type === "image"
+                    ? "p-0"
+                    : isBoxed(item)
+                      ? "border border-gray-300 bg-white shadow-sm"
+                      : "border border-dashed border-gray-200"
+                }`}
               >
-                <span className="pointer-events-none px-1">
-                  {TYPE_LABELS[item.type]}
-                  {item.text ? `: ${item.text}` : ""}
-                  {item.type === "stat" ? `: ${item.value}` : ""}
+                <span className="pointer-events-none flex max-h-full items-center justify-center overflow-hidden">
+                  <BentoPreview item={item} />
                 </span>
               </div>
             ))}
@@ -211,6 +268,20 @@ export default function BentoBlockEditor({
                   className={inputClass}
                 />
               </div>
+            )}
+
+            {item.type !== "image" && (
+              <label className="flex items-center gap-2 text-sm text-gray-600">
+                <input
+                  type="checkbox"
+                  checked={isBoxed(item)}
+                  onChange={(e) =>
+                    updateItem(item.id, { boxed: e.target.checked })
+                  }
+                  className="h-4 w-4 rounded border-gray-300 text-brand-accent focus:ring-brand-accent"
+                />
+                Korosta laatikkona
+              </label>
             )}
           </div>
         ))}
