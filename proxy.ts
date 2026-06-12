@@ -109,6 +109,13 @@ export default async function middleware(req: NextRequest) {
     );
   }
 
+  // Idempotenssi: jos pyyntö osoittaa jo sisäiseen /sites-polkuun (esim.
+  // uudelleenkirjoitettu URL ladataan uudelleen tai RSC-haku), ei prefixata
+  // uudestaan — muuten syntyy /sites/host/sites/host eikä reitti vastaa (404).
+  if (url.pathname.startsWith("/sites/")) {
+    return updateSupabaseSession(req);
+  }
+
   // 3. Tenant Subdomain (Asiakkaan sivu)
   // Jos osoite on kalle.rascalpages.fi, erota subdomain
   if (hostname.endsWith(`.${rootDomain}`)) {
