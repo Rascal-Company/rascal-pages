@@ -47,6 +47,7 @@ type EditorProps = {
   siteId: SiteId;
   pageId: string | null;
   siteSubdomain: string;
+  siteCustomDomain?: string | null;
   initialContent: TemplateConfig | Record<string, unknown>;
   initialPublished?: boolean;
   initialSettings?: {
@@ -60,6 +61,7 @@ export default function Editor({
   siteId,
   pageId: _pageId,
   siteSubdomain,
+  siteCustomDomain = null,
   initialContent,
   initialPublished = false,
   initialSettings = {},
@@ -360,6 +362,7 @@ export default function Editor({
         siteId={siteId}
         subdomain={siteSubdomain}
         rootDomain={rootDomain}
+        customDomain={siteCustomDomain}
         initialSettings={initialSettings}
       />
     </div>
