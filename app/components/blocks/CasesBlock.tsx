@@ -9,13 +9,18 @@ type CasesBlockProps = {
   theme: { primaryColor: string; appearance?: "light" | "dark" };
   siteId: SiteId;
   isPreview?: boolean;
+  templateId?: string;
 };
 
-export default function CasesBlock({ content, theme }: CasesBlockProps) {
+export default function CasesBlock({
+  content,
+  theme,
+  templateId,
+}: CasesBlockProps) {
   if (!content || content.items.length === 0) return null;
 
   const primaryColor = theme.primaryColor || "#3B82F6";
-  const t = surfaceTokens(theme);
+  const t = surfaceTokens(theme, templateId);
 
   return (
     <section id="projektit" className="py-24 sm:py-32">
@@ -41,7 +46,7 @@ export default function CasesBlock({ content, theme }: CasesBlockProps) {
           {content.items.map((item, index) => (
             <article
               key={index}
-              className={`flex flex-col overflow-hidden rounded-2xl shadow-sm transition-transform duration-200 hover:-translate-y-1 ${t.card}`}
+              className={`flex flex-col overflow-hidden rounded-2xl shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg ${t.card}`}
             >
               {item.image && (
                 // eslint-disable-next-line @next/next/no-img-element

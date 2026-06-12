@@ -12,6 +12,7 @@ type HeroBlockProps = {
   theme: { primaryColor: string; appearance?: "light" | "dark" };
   siteId: SiteId;
   isPreview?: boolean;
+  templateId?: string;
 };
 
 const DEFAULT_HERO_FIELDS: FormField[] = [
@@ -45,9 +46,11 @@ export default function HeroBlock({
   theme,
   siteId,
   isPreview = false,
+  templateId,
 }: HeroBlockProps) {
   const primaryColor = theme.primaryColor || "#3B82F6";
   const isDark = theme.appearance === "dark";
+  const isLightPortfolio = !isDark && templateId === "portfolio";
   const [isPending, startTransition] = useTransition();
   const [formStatus, setFormStatus] = useState<"idle" | "success" | "error">(
     "idle",
@@ -107,36 +110,67 @@ export default function HeroBlock({
   const defaultOrder = ["title", "subtitle", "cta", "image"];
   const order = content.fieldOrder || defaultOrder;
 
+  const isPortfolioHero = isDark || isLightPortfolio;
+
   const renderHeroField = (fieldKey: string): ReactNode => {
     switch (fieldKey) {
       case "title":
         return (
-          <h1
-            className={
-              isDark
-                ? "portfolio-fade text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl"
-                : "text-4xl font-bold tracking-tight sm:text-6xl"
-            }
-            style={{
-              fontFamily: "var(--heading-font, inherit)",
-              ...(isDark && {
-                backgroundImage: `linear-gradient(120deg, #f5f5f7 30%, ${primaryColor})`,
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                color: "transparent",
-              }),
-            }}
-          >
-            {content.title}
-          </h1>
+          <div>
+            {isPortfolioHero && (
+              <div className="portfolio-fade mb-6 flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className="h-px w-8"
+                  style={{
+                    backgroundImage: `linear-gradient(90deg, ${primaryColor}, transparent)`,
+                  }}
+                />
+                <span
+                  className={`text-xs font-medium uppercase tracking-[0.2em] ${
+                    isDark ? "text-[#a1a1aa]" : "text-[#52525b]"
+                  }`}
+                  style={{ fontFamily: "var(--body-font, inherit)" }}
+                >
+                  {content.eyebrow || "Portfolio"}
+                </span>
+              </div>
+            )}
+            <h1
+              className={
+                isPortfolioHero
+                  ? "portfolio-fade text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
+                  : "text-4xl font-bold tracking-tight sm:text-6xl"
+              }
+              style={{
+                fontFamily: "var(--heading-font, inherit)",
+                ...(isDark && {
+                  backgroundImage: `linear-gradient(180deg, #f5f5f7 0%, #f5f5f7 55%, ${primaryColor} 130%)`,
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                }),
+                ...(isLightPortfolio && {
+                  backgroundImage: `linear-gradient(180deg, #18181b 0%, #18181b 55%, ${primaryColor} 135%)`,
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                }),
+              }}
+            >
+              {content.title}
+            </h1>
+          </div>
         );
       case "subtitle":
         return (
           <p
             className={
               isDark
-                ? "portfolio-fade portfolio-fade-delay-1 mt-6 max-w-2xl text-lg leading-8 text-[#a1a1aa] sm:text-xl"
-                : "mt-6 text-lg leading-8 text-white/90"
+                ? "portfolio-fade portfolio-fade-delay-1 mt-7 max-w-2xl text-lg leading-8 text-[#a1a1aa] sm:text-xl"
+                : isLightPortfolio
+                  ? "portfolio-fade portfolio-fade-delay-1 mt-7 max-w-2xl text-lg leading-8 text-[#52525b] sm:text-xl"
+                  : "mt-6 text-lg leading-8 text-white/90"
             }
             style={{ fontFamily: "var(--body-font, inherit)" }}
           >
@@ -148,7 +182,7 @@ export default function HeroBlock({
         return (
           <div
             className={`mt-10 flex items-center gap-x-6 ${
-              isDark
+              isPortfolioHero
                 ? "portfolio-fade portfolio-fade-delay-2 justify-start"
                 : "justify-center"
             }`}
@@ -157,11 +191,13 @@ export default function HeroBlock({
               siteId={siteId}
               href={content.ctaLink}
               className={
-                isDark
+                isPortfolioHero
                   ? "rounded-lg px-6 py-3 text-base font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
                   : "rounded-md bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors"
               }
-              style={isDark ? { backgroundColor: primaryColor } : undefined}
+              style={
+                isPortfolioHero ? { backgroundColor: primaryColor } : undefined
+              }
               eventMetadata={{ location: "hero_cta" }}
             >
               {content.ctaText}
@@ -183,35 +219,45 @@ export default function HeroBlock({
           backgroundPosition: "center",
         }
       : {}
-    : {
-        backgroundImage: content.image
-          ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${content.image})`
-          : `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      };
+    : isLightPortfolio
+      ? content.image
+        ? {
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.78), rgba(255,255,255,0.78)), url(${content.image})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }
+        : {}
+      : {
+          backgroundImage: content.image
+            ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${content.image})`
+            : `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        };
 
   return (
     <section
       className={
-        isDark
+        isPortfolioHero
           ? "relative flex min-h-[88vh] items-center overflow-hidden"
           : "relative overflow-hidden text-white"
       }
       style={sectionStyle}
     >
-      {isDark && !content.image && (
+      {isPortfolioHero && !content.image && (
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
           style={{
-            background: `radial-gradient(60% 55% at 20% 20%, ${primaryColor}1f, transparent 70%)`,
+            background: isDark
+              ? `radial-gradient(60% 55% at 20% 20%, ${primaryColor}1f, transparent 70%)`
+              : `radial-gradient(55% 50% at 18% 18%, ${primaryColor}14, transparent 70%)`,
           }}
         />
       )}
       <div
         className={
-          isDark
+          isPortfolioHero
             ? "relative mx-auto w-full max-w-7xl px-6 py-28 sm:py-36 lg:px-8"
             : "mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8"
         }
@@ -220,7 +266,7 @@ export default function HeroBlock({
           className={`mx-auto ${
             hasForm
               ? "grid lg:grid-cols-2 gap-12 items-center"
-              : isDark
+              : isPortfolioHero
                 ? "max-w-3xl text-left"
                 : "max-w-2xl text-center"
           }`}

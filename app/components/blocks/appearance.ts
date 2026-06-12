@@ -50,8 +50,29 @@ const LIGHT_TOKENS: SurfaceTokens = {
   divider: "border-gray-200",
 };
 
+/**
+ * Light tokens tuned specifically for the Portfolio template so the light
+ * appearance matches the editorial polish of the dark variant: near-white
+ * surfaces, a cooler near-black text scale, and hairline rings instead of
+ * heavier borders. Kept separate from LIGHT_TOKENS so other templates
+ * (saas-modern, lead-magnet, etc.) are not affected.
+ */
+const PORTFOLIO_LIGHT_TOKENS: SurfaceTokens = {
+  section: "bg-transparent",
+  sectionAlt: "bg-[#fafafa]",
+  heading: "text-[#18181b]",
+  body: "text-[#52525b]",
+  muted: "text-[#71717a]",
+  card: "bg-white ring-1 ring-[#e4e4e7]",
+  chip: "bg-[#f4f4f5] text-[#3f3f46] ring-1 ring-[#e4e4e7]",
+  divider: "border-[#e4e4e7]",
+};
+
 export function surfaceTokens(
   theme: Pick<ThemeConfig, "appearance">,
+  templateId?: string,
 ): SurfaceTokens {
-  return isDarkAppearance(theme) ? DARK_TOKENS : LIGHT_TOKENS;
+  if (isDarkAppearance(theme)) return DARK_TOKENS;
+  if (templateId === "portfolio") return PORTFOLIO_LIGHT_TOKENS;
+  return LIGHT_TOKENS;
 }
