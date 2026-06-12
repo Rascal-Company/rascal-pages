@@ -3,10 +3,11 @@
 import type { ReactNode } from "react";
 import type { TestimonialItem } from "@/src/lib/templates";
 import type { SiteId } from "@/src/lib/types";
+import { surfaceTokens, type SurfaceTokens } from "./appearance";
 
 type TestimonialsBlockProps = {
   content: TestimonialItem[];
-  theme: { primaryColor: string };
+  theme: { primaryColor: string; appearance?: "light" | "dark" };
   siteId: SiteId;
   isPreview?: boolean;
 };
@@ -17,10 +18,12 @@ function renderTestimonialField(
   testimonial: TestimonialItem,
   fieldKey: string,
   primaryColor: string,
+  t: SurfaceTokens,
 ): ReactNode {
   switch (fieldKey) {
     case "avatar":
       return testimonial.avatar ? (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={testimonial.avatar}
           alt={testimonial.name}
@@ -37,7 +40,7 @@ function renderTestimonialField(
     case "text":
       return (
         <p
-          className="text-gray-600 leading-relaxed"
+          className={`leading-relaxed ${t.body}`}
           style={{ fontFamily: "var(--body-font, inherit)" }}
         >
           &ldquo;{testimonial.text}&rdquo;
@@ -46,7 +49,7 @@ function renderTestimonialField(
     case "name":
       return (
         <p
-          className="font-semibold text-gray-900"
+          className={`font-semibold ${t.heading}`}
           style={{ fontFamily: "var(--heading-font, inherit)" }}
         >
           {testimonial.name}
@@ -54,7 +57,7 @@ function renderTestimonialField(
       );
     case "company":
       return testimonial.company ? (
-        <p className="text-sm text-gray-500">{testimonial.company}</p>
+        <p className={`text-sm ${t.muted}`}>{testimonial.company}</p>
       ) : null;
     default:
       return null;
@@ -68,19 +71,20 @@ export default function TestimonialsBlock({
   if (!content || content.length === 0) return null;
 
   const primaryColor = theme.primaryColor || "#10B981";
+  const t = surfaceTokens(theme);
 
   return (
-    <section className="bg-gray-50 py-24 sm:py-32">
+    <section className={`py-24 sm:py-32 ${t.sectionAlt}`}>
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2
-            className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
+            className={`text-3xl font-bold tracking-tight sm:text-4xl ${t.heading}`}
             style={{ fontFamily: "var(--heading-font, inherit)" }}
           >
             Suosittelut
           </h2>
           <p
-            className="mt-2 text-lg leading-8 text-gray-600"
+            className={`mt-2 text-lg leading-8 ${t.body}`}
             style={{ fontFamily: "var(--body-font, inherit)" }}
           >
             Mitä asiakkaat sanovat
@@ -92,7 +96,7 @@ export default function TestimonialsBlock({
             return (
               <div
                 key={index}
-                className="flex flex-col gap-4 rounded-2xl bg-white p-8 shadow-sm"
+                className={`flex flex-col gap-4 rounded-2xl p-8 shadow-sm ${t.card}`}
               >
                 <div className="flex items-center gap-x-1 text-yellow-400">
                   {[...Array(5)].map((_, i) => (
@@ -110,10 +114,9 @@ export default function TestimonialsBlock({
                     testimonial,
                     fieldKey,
                     primaryColor,
+                    t,
                   );
-                  return rendered ? (
-                    <div key={fieldKey}>{rendered}</div>
-                  ) : null;
+                  return rendered ? <div key={fieldKey}>{rendered}</div> : null;
                 })}
               </div>
             );

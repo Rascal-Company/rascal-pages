@@ -7,4 +7,6 @@ export { default as VideoBlock } from "./VideoBlock";
 export { default as FormBlock } from "./FormBlock";
 export { default as LogosBlock } from "./LogosBlock";
 export { default as BlogListBlock } from "./BlogListBlock";
+export { default as CasesBlock } from "./CasesBlock";
+export { default as TechStackBlock } from "./TechStackBlock";
 export { default as FooterBlock } from "./FooterBlock";

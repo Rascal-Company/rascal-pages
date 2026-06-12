@@ -16,6 +16,8 @@ import {
   FormBlockEditor,
   LogosBlockEditor,
   BlogBlockEditor,
+  CasesBlockEditor,
+  TechStackBlockEditor,
   FooterBlockEditor,
 } from "./blocks";
 
@@ -92,6 +94,20 @@ export default function BlockEditor({ section, onUpdate }: BlockEditorProps) {
             return (
               <BlogBlockEditor
                 content={section.content as SectionContentMap["blog"]}
+                onUpdate={onUpdate}
+              />
+            );
+          case "cases":
+            return (
+              <CasesBlockEditor
+                content={section.content as SectionContentMap["cases"]}
+                onUpdate={onUpdate}
+              />
+            );
+          case "techStack":
+            return (
+              <TechStackBlockEditor
+                content={section.content as SectionContentMap["techStack"]}
                 onUpdate={onUpdate}
               />
             );

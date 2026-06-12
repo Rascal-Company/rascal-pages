@@ -268,6 +268,30 @@ export function getDefaultSectionContent<T extends SectionType>(
       subheading: "Ajatuksia, oppeja ja kuulumisia.",
       postsToShow: 6,
     },
+    cases: {
+      heading: "Projektit",
+      subheading: "Valikoima työtä, jonka olen rakentanut.",
+      items: [
+        {
+          title: "Projektin nimi",
+          tagline: "Lyhyt iskulause projektista",
+          summary:
+            "Kuvaa muutamalla lauseella mitä rakensit, kenelle ja minkä ongelman se ratkaisee.",
+          tags: ["React", "Supabase"],
+          outcomes: [{ value: "50+", label: "Aktiivista käyttäjää" }],
+          linkLabel: "Katso live",
+          linkUrl: "#",
+        },
+      ],
+    },
+    techStack: {
+      heading: "Teknologiat",
+      subheading: "Työkalut ja teknologiat, joilla rakennan.",
+      groups: [
+        { group: "Frontend", items: ["React", "TypeScript", "Tailwind"] },
+        { group: "Backend", items: ["Node", "Supabase", "PostgreSQL"] },
+      ],
+    },
     footer: null,
   };
 
