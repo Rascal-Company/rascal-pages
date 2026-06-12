@@ -2,6 +2,11 @@
 
 import { useState, useRef, useEffect } from "react";
 import { updateSiteSettings } from "@/app/actions/update-site-settings";
+import {
+  updateSiteDomain,
+  getSiteDomainStatus,
+} from "@/app/actions/update-domain";
+import type { DnsRecommendation } from "@/src/lib/vercel-domains";
 import { useToast } from "@/app/components/ui/ToastContainer";
 import type { SiteId } from "@/src/lib/types";
 
@@ -11,6 +16,7 @@ interface SettingsModalProps {
   siteId: SiteId;
   subdomain: string;
   rootDomain: string;
+  customDomain?: string | null;
   initialSettings: {
     googleTagManagerId?: string;
     googleAnalyticsId?: string;
@@ -24,6 +30,7 @@ export default function SettingsModal({
   siteId,
   subdomain,
   rootDomain,
+  customDomain = null,
   initialSettings,
 }: SettingsModalProps) {
   const { showToast } = useToast();
@@ -33,6 +40,60 @@ export default function SettingsModal({
   const [isSaving, setIsSaving] = useState(false);
   const lastSaveRef = useRef<Date | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const [domainInput, setDomainInput] = useState(customDomain || "");
+  const [savedDomain, setSavedDomain] = useState<string | null>(customDomain);
+  const [dnsRecord, setDnsRecord] = useState<DnsRecommendation | null>(null);
+  const [domainVerified, setDomainVerified] = useState<boolean | null>(null);
+  const [isDomainBusy, setIsDomainBusy] = useState(false);
+
+  const handleSaveDomain = async (clear = false) => {
+    setIsDomainBusy(true);
+    setDomainVerified(null);
+    try {
+      const result = await updateSiteDomain(siteId, clear ? "" : domainInput);
+      if (result.error && !result.domain) {
+        showToast(result.error, "error");
+        return;
+      }
+      if (result.error) showToast(result.error, "error");
+      setSavedDomain(result.domain ?? null);
+      setDnsRecord(result.record ?? null);
+      if (result.domain) {
+        showToast("Verkkotunnus tallennettu. Lisää DNS-tietue.", "success");
+      } else {
+        showToast("Verkkotunnus poistettu.", "success");
+        setDomainInput("");
+      }
+    } catch {
+      showToast("Odottamaton virhe. Yritä uudelleen.", "error");
+    } finally {
+      setIsDomainBusy(false);
+    }
+  };
+
+  const handleCheckDomain = async () => {
+    setIsDomainBusy(true);
+    try {
+      const status = await getSiteDomainStatus(siteId);
+      if (status.error) {
+        showToast(status.error, "error");
+        return;
+      }
+      setDomainVerified(status.verified ?? false);
+      if (status.record) setDnsRecord(status.record);
+      showToast(
+        status.verified
+          ? "Verkkotunnus on aktiivinen!"
+          : "Odottaa vielä DNS:ää.",
+        status.verified ? "success" : "error",
+      );
+    } catch {
+      showToast("Tarkistus epäonnistui.", "error");
+    } finally {
+      setIsDomainBusy(false);
+    }
+  };
 
   // Reset form when modal opens with new initial values
   useEffect(() => {
@@ -152,6 +213,92 @@ export default function SettingsModal({
                 Avaa sivusto →
               </a>
             </div>
+          </div>
+
+          {/* Custom Domain Section */}
+          <div className="mb-6">
+            <h3 className="mb-1 text-base font-medium text-gray-900">
+              Oma verkkotunnus
+            </h3>
+            <p className="mb-3 text-sm text-gray-500">
+              Liitä oma domainisi (esim. oma-firma.fi). HTTPS luodaan
+              automaattisesti, kun DNS osoittaa oikein.
+            </p>
+
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input
+                type="text"
+                value={domainInput}
+                onChange={(e) => setDomainInput(e.target.value)}
+                placeholder="oma-firma.fi"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+              <button
+                onClick={() => handleSaveDomain(false)}
+                disabled={isDomainBusy}
+                className="shrink-0 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isDomainBusy ? "..." : savedDomain ? "Päivitä" : "Tallenna"}
+              </button>
+            </div>
+
+            {savedDomain && (
+              <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                <div className="flex items-center justify-between">
+                  <code className="text-sm text-gray-700">{savedDomain}</code>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      domainVerified
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }`}
+                  >
+                    {domainVerified ? "Aktiivinen" : "Odottaa DNS:ää"}
+                  </span>
+                </div>
+
+                {dnsRecord && !domainVerified && (
+                  <div className="mt-3 text-sm text-gray-600">
+                    <p className="mb-2">
+                      Lisää tämä tietue verkkotunnuksesi DNS-asetuksiin:
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 rounded-md bg-white p-3 font-mono text-xs">
+                      <div>
+                        <div className="text-gray-400">Tyyppi</div>
+                        <div className="text-gray-800">{dnsRecord.type}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400">Nimi</div>
+                        <div className="text-gray-800">{dnsRecord.name}</div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400">Arvo</div>
+                        <div className="break-all text-gray-800">
+                          {dnsRecord.value}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-3 flex gap-4">
+                  <button
+                    onClick={handleCheckDomain}
+                    disabled={isDomainBusy}
+                    className="text-sm font-medium text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                  >
+                    Tarkista tila
+                  </button>
+                  <button
+                    onClick={() => handleSaveDomain(true)}
+                    disabled={isDomainBusy}
+                    className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                  >
+                    Poista
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Analytics Section */}
