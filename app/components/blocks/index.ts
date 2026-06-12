@@ -9,4 +9,5 @@ export { default as LogosBlock } from "./LogosBlock";
 export { default as BlogListBlock } from "./BlogListBlock";
 export { default as CasesBlock } from "./CasesBlock";
 export { default as TechStackBlock } from "./TechStackBlock";
+export { default as PortfolioNav } from "./PortfolioNav";
 export { default as FooterBlock } from "./FooterBlock";

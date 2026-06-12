@@ -70,7 +70,7 @@ export default function AboutBlock({ content, theme }: AboutBlockProps) {
   const order = content.fieldOrder || DEFAULT_ABOUT_ORDER;
 
   return (
-    <section className="py-24 sm:py-32">
+    <section id="tarina" className="py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
           {order.map((fieldKey) => {
