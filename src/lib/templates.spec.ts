@@ -74,4 +74,8 @@ describe("section type registration", () => {
     expect(ADDABLE_SECTION_TYPES).toContain("cases");
     expect(ADDABLE_SECTION_TYPES).toContain("techStack");
   });
+
+  test("labels the expertise section with a profession-neutral name", () => {
+    expect(SECTION_TYPE_LABELS.techStack).toBe("Osaaminen");
+  });
 });

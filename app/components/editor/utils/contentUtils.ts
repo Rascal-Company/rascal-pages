@@ -37,10 +37,7 @@ type LegacyContent = {
 function hasSections(
   content: LegacyContent | TemplateConfig,
 ): content is TemplateConfig {
-  return (
-    Array.isArray(content.sections) &&
-    content.sections.length > 0
-  );
+  return Array.isArray(content.sections) && content.sections.length > 0;
 }
 
 /**
@@ -61,7 +58,8 @@ function migrateHeroForm(hero: HeroContent): HeroContent {
       {
         id: "field-consent-1",
         type: "checkbox",
-        label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+        label:
+          "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
         required: false,
         name: "marketingConsent",
       },
@@ -170,7 +168,8 @@ export function migrateToSections(
           {
             id: "field-consent-1",
             type: "checkbox" as const,
-            label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+            label:
+              "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
             required: false,
             name: "marketingConsent",
           },
@@ -251,7 +250,8 @@ export function getDefaultSectionContent<T extends SectionType>(
         {
           id: "field-consent-1",
           type: "checkbox" as const,
-          label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+          label:
+            "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
           required: false,
           name: "marketingConsent",
         },
@@ -269,27 +269,30 @@ export function getDefaultSectionContent<T extends SectionType>(
       postsToShow: 6,
     },
     cases: {
-      heading: "Projektit",
-      subheading: "Valikoima työtä, jonka olen rakentanut.",
+      heading: "Työt",
+      subheading: "Valikoima työtä, josta olen ylpeä.",
       items: [
         {
-          title: "Projektin nimi",
-          tagline: "Lyhyt iskulause projektista",
+          title: "Työn nimi",
+          tagline: "Lyhyt iskulause työstä",
           summary:
-            "Kuvaa muutamalla lauseella mitä rakensit, kenelle ja minkä ongelman se ratkaisee.",
-          tags: ["React", "Supabase"],
-          outcomes: [{ value: "50+", label: "Aktiivista käyttäjää" }],
-          linkLabel: "Katso live",
+            "Kuvaa muutamalla lauseella mitä teit, kenelle ja minkä tuloksen se tuotti.",
+          tags: ["Avainsana", "Avainsana"],
+          outcomes: [{ value: "+40 %", label: "Kasvua tuloksissa" }],
+          linkLabel: "Katso lisää",
           linkUrl: "#",
         },
       ],
     },
     techStack: {
-      heading: "Teknologiat",
-      subheading: "Työkalut ja teknologiat, joilla rakennan.",
+      heading: "Osaaminen",
+      subheading: "Mitä teen ja missä olen vahvimmillani.",
       groups: [
-        { group: "Frontend", items: ["React", "TypeScript", "Tailwind"] },
-        { group: "Backend", items: ["Node", "Supabase", "PostgreSQL"] },
+        {
+          group: "Palvelut",
+          items: ["Konsultointi", "Suunnittelu", "Toteutus"],
+        },
+        { group: "Erikoisalat", items: ["Strategia", "Sisältö"] },
       ],
     },
     footer: null,
@@ -326,9 +329,7 @@ export function normalizeContent(
         ...defaultHero,
         ...legacy.hero,
         ctaText:
-          legacy.hero?.cta ||
-          legacy.hero?.ctaText ||
-          defaultHero?.ctaText,
+          legacy.hero?.cta || legacy.hero?.ctaText || defaultHero?.ctaText,
       },
       features: legacy.features || defaultFeatures || [],
       theme: legacy.theme || defaultTemplate.defaultContent.theme,

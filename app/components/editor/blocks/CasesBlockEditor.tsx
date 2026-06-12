@@ -133,7 +133,7 @@ export default function CasesBlockEditor({
             />
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                Teknologiat (pilkulla eroteltuna)
+                Avainsanat (pilkulla eroteltuna)
               </label>
               <input
                 type="text"
@@ -141,7 +141,7 @@ export default function CasesBlockEditor({
                 onChange={(e) =>
                   updateItem(index, { tags: parseTagList(e.target.value) })
                 }
-                placeholder="React, Supabase, TypeScript"
+                placeholder="esim. Suunnittelu, Valokuvaus, Strategia"
                 className={inputClass}
               />
             </div>

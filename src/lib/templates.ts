@@ -117,16 +117,16 @@ export type CaseOutcome = {
 };
 
 /**
- * One portfolio case / project shown as a card in the `cases` section.
- * Mirrors the showcase fields of a personal portfolio without requiring
- * separate detail routes — everything renders inline on the page.
+ * One portfolio work / project shown as a card in the `cases` section.
+ * Profession-agnostic: works for any portfolio (design, photography,
+ * consulting, development, …). Renders inline; no separate detail routes.
  */
 export type CaseItem = {
   title: string;
   tagline: string;
   summary: string;
   image?: string;
-  /** Tech/stack chips rendered under the summary. */
+  /** Keyword chips (skills, tools, tags) rendered under the summary. */
   tags: string[];
   /** Headline metrics rendered as a small stat row. */
   outcomes: CaseOutcome[];
@@ -145,7 +145,8 @@ export type CasesContent = {
 };
 
 /**
- * A named group of technologies, e.g. { group: "Product", items: ["React", "Supabase"] }.
+ * A named group of skills/services/items, e.g.
+ * { group: "Palvelut", items: ["Konsultointi", "Suunnittelu"] }.
  */
 export type TechStackGroup = {
   group: string;
@@ -153,7 +154,9 @@ export type TechStackGroup = {
 };
 
 /**
- * Tech stack / tooling section grouped by area.
+ * General "expertise" section grouped by area — services, skills, tools or
+ * specialties. Profession-agnostic; the heading (e.g. "Osaaminen",
+ * "Palvelut", "Teknologiat") is set per site.
  */
 export type TechStackContent = {
   heading: string;
@@ -545,8 +548,8 @@ export const TEMPLATES: Template[] = [
         createSection("pf-hero-1", "hero", {
           title: "Hei, olen [Nimesi]",
           subtitle:
-            "Rakennan tuotteita ja kirjoitan tekemisestäni. Tältä sivulta näet projektini, työkaluni ja uusimmat kirjoitukseni.",
-          ctaText: "Katso projektit",
+            "Esittelen työtäni ja kerron kuka olen. Tältä sivulta näet projektini, osaamiseni ja uusimmat kuulumiseni.",
+          ctaText: "Katso työni",
           ctaLink: "#projektit",
         }),
         createSection("pf-about-1", "about", {
@@ -555,40 +558,42 @@ export const TEMPLATES: Template[] = [
           image: "",
         }),
         createSection("pf-techstack-1", "techStack", {
-          heading: "Teknologiat",
-          subheading: "Työkalut ja teknologiat, joilla rakennan.",
+          heading: "Osaaminen",
+          subheading: "Mitä teen ja missä olen vahvimmillani.",
           groups: [
-            { group: "Frontend", items: ["React", "TypeScript", "Tailwind"] },
-            { group: "Backend", items: ["Node", "Supabase", "PostgreSQL"] },
-            { group: "Muut", items: ["n8n", "Vercel"] },
+            {
+              group: "Palvelut",
+              items: ["Konsultointi", "Suunnittelu", "Toteutus"],
+            },
+            { group: "Erikoisalat", items: ["Strategia", "Sisältö"] },
           ],
         }),
         createSection("pf-cases-1", "cases", {
-          heading: "Projektit",
-          subheading: "Valikoima työtä, jonka olen rakentanut.",
+          heading: "Työt",
+          subheading: "Valikoima työtä, josta olen ylpeä.",
           items: [
             {
-              title: "Projektin nimi",
-              tagline: "Lyhyt iskulause projektista",
+              title: "Työn nimi",
+              tagline: "Lyhyt iskulause työstä",
               summary:
-                "Kuvaa muutamalla lauseella mitä rakensit, kenelle ja minkä ongelman se ratkaisee.",
+                "Kuvaa muutamalla lauseella mitä teit, kenelle ja minkä tuloksen se tuotti.",
               image: "",
-              tags: ["React", "Supabase", "TypeScript"],
+              tags: ["Avainsana", "Avainsana"],
               outcomes: [
-                { value: "50+", label: "Aktiivista käyttäjää" },
-                { value: "8–10h", label: "Aikasäästö / viikko" },
+                { value: "+40 %", label: "Kasvua tuloksissa" },
+                { value: "12", label: "Tyytyväistä asiakasta" },
               ],
-              linkLabel: "Katso live",
+              linkLabel: "Katso lisää",
               linkUrl: "#",
             },
             {
-              title: "Toinen projekti",
-              tagline: "Mitä tämä projekti tekee",
+              title: "Toinen työ",
+              tagline: "Mitä tämä työ piti sisällään",
               summary:
-                "Toinen esimerkki työstäsi. Korvaa omilla projekteillasi ja lisää tarvittaessa kuvat ja linkit.",
+                "Toinen esimerkki työstäsi. Korvaa omilla töilläsi ja lisää tarvittaessa kuvat ja linkit.",
               image: "",
-              tags: ["Next.js", "PostgreSQL"],
-              outcomes: [{ value: "Live", label: "Julkaistu tuotanto" }],
+              tags: ["Avainsana"],
+              outcomes: [{ value: "Valmis", label: "Julkaistu lopputulos" }],
               linkLabel: "Lue lisää",
               linkUrl: "#",
             },
@@ -690,7 +695,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   logos: "Logot",
   blog: "Blogi",
   cases: "Projektit",
-  techStack: "Teknologiat",
+  techStack: "Osaaminen",
   footer: "Alapalkki",
 };
 

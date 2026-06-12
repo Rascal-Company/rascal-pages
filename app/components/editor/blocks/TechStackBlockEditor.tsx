@@ -97,12 +97,12 @@ export default function TechStackBlockEditor({
               type="text"
               value={group.group}
               onChange={(e) => updateGroup(index, { group: e.target.value })}
-              placeholder="Ryhmän nimi (esim. Frontend)"
+              placeholder="Ryhmän nimi (esim. Palvelut)"
               className={inputClass}
             />
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                Teknologiat (pilkulla eroteltuna)
+                Avainsanat (pilkulla eroteltuna)
               </label>
               <input
                 type="text"
@@ -110,7 +110,7 @@ export default function TechStackBlockEditor({
                 onChange={(e) =>
                   updateGroup(index, { items: parseTagList(e.target.value) })
                 }
-                placeholder="React, TypeScript, Tailwind"
+                placeholder="esim. Konsultointi, Suunnittelu, Toteutus"
                 className={inputClass}
               />
             </div>
