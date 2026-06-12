@@ -3,10 +3,20 @@
 import { createClient } from "@/src/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { SiteId } from "@/src/lib/types";
+import {
+  addDomainToProject,
+  removeDomainFromProject,
+  getDomainStatus,
+  isVercelConfigured,
+  recommendedDnsRecord,
+  type DnsRecommendation,
+} from "@/src/lib/vercel-domains";
 
 interface UpdateDomainResult {
   success?: boolean;
   domain?: string | null;
+  /** DNS record the customer must add at their registrar (set on success). */
+  record?: DnsRecommendation;
   error?: string;
 }
 
@@ -82,14 +92,23 @@ export async function updateSiteDomain(
 
   // Jos tyhjä, poistetaan domain (asetetaan NULL)
   if (!cleanedDomain) {
-    // Varmista että käyttäjä omistaa sivuston
-    const ownershipCheck = await verifySiteOwnership(
-      supabase,
-      siteId,
-      orgMember.org_id,
-    );
-    if (ownershipCheck.error) {
-      return ownershipCheck;
+    // Varmista että käyttäjä omistaa sivuston ja hae nykyinen domain
+    const { data: site, error: siteError } = await supabase
+      .from("sites")
+      .select("id, custom_domain")
+      .eq("id", siteId)
+      .eq("user_id", orgMember.org_id)
+      .single();
+
+    if (siteError || !site) {
+      return {
+        error: "Sivustoa ei löydy tai sinulla ei ole oikeuksia muokata sitä.",
+      };
+    }
+
+    // Poista domain Vercel-projektista (best-effort)
+    if (site.custom_domain && isVercelConfigured()) {
+      await removeDomainFromProject(site.custom_domain);
     }
 
     // Poista custom domain
@@ -178,16 +197,86 @@ export async function updateSiteDomain(
     };
   }
 
-  console.log(
-    `[updateSiteDomain] Custom domain päivitetty onnistuneesti: "${cleanedDomain}"`,
-  );
+  // 8. Rekisteröi domain Vercel-projektiin (TLS + reititys hoituvat siellä)
+  if (isVercelConfigured()) {
+    const added = await addDomainToProject(cleanedDomain);
+    if (!added.ok) {
+      console.error(
+        "[updateSiteDomain] Vercel-rekisteröinti epäonnistui:",
+        added.error,
+      );
+      return {
+        error: `Domain tallennettiin, mutta sen rekisteröinti epäonnistui: ${added.error}`,
+        domain: cleanedDomain,
+        record: recommendedDnsRecord(cleanedDomain),
+      };
+    }
+  }
 
-  // 8. Revalidate paths
+  // 9. Revalidate paths
   revalidatePath("/app/dashboard");
   revalidatePath(`/app/dashboard/${siteId}`);
 
   return {
     success: true,
     domain: cleanedDomain,
+    record: recommendedDnsRecord(cleanedDomain),
   };
+}
+
+interface DomainStatusResult {
+  verified?: boolean;
+  record?: DnsRecommendation;
+  error?: string;
+}
+
+/**
+ * Check whether a site's custom domain is verified and serving on Vercel.
+ * Used by the settings UI to show "Odottaa DNS:ää" vs "Aktiivinen".
+ */
+export async function getSiteDomainStatus(
+  siteId: SiteId,
+): Promise<DomainStatusResult> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return { error: "Sinun täytyy olla kirjautunut sisään." };
+  }
+
+  const { data: orgMember } = await supabase
+    .from("org_members")
+    .select("org_id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  if (!orgMember) {
+    return { error: "Käyttäjätiliä ei löydy." };
+  }
+
+  const { data: site, error: siteError } = await supabase
+    .from("sites")
+    .select("custom_domain")
+    .eq("id", siteId)
+    .eq("user_id", orgMember.org_id)
+    .single();
+
+  if (siteError || !site || !site.custom_domain) {
+    return { error: "Sivustolla ei ole custom domainia." };
+  }
+
+  if (!isVercelConfigured()) {
+    return {
+      verified: false,
+      record: recommendedDnsRecord(site.custom_domain),
+    };
+  }
+
+  const status = await getDomainStatus(site.custom_domain);
+  if (!status.ok) {
+    return { error: status.error };
+  }
+  return { verified: status.data.verified, record: status.data.record };
 }
