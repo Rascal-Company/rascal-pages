@@ -445,6 +445,7 @@ export default function DashboardClient({
       <CreateAiSiteModal
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
+        userId={userId}
       />
     </>
   );
