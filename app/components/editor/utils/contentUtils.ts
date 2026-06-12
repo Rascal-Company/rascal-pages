@@ -295,6 +295,38 @@ export function getDefaultSectionContent<T extends SectionType>(
         { group: "Erikoisalat", items: ["Strategia", "Sisältö"] },
       ],
     },
+    bento: {
+      items: [
+        {
+          id: nanoid(),
+          type: "heading",
+          text: "Otsikko",
+          x: 0,
+          y: 0,
+          w: 8,
+          h: 1,
+        },
+        {
+          id: nanoid(),
+          type: "text",
+          text: "Lyhyt kuvaus, jonka voit raahata ja muuttaa kokoa.",
+          x: 0,
+          y: 1,
+          w: 6,
+          h: 2,
+        },
+        {
+          id: nanoid(),
+          type: "stat",
+          value: "100+",
+          label: "Tyytyväistä asiakasta",
+          x: 6,
+          y: 1,
+          w: 3,
+          h: 2,
+        },
+      ],
+    },
     footer: null,
   };
 
