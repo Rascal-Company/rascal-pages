@@ -1,115 +1,35 @@
 import { describe, expect, test } from "vitest";
 import {
   buildPortfolioConfig,
-  buildPortfolioBento,
   suggestSubdomain,
   type PortfolioInterviewAnswers,
 } from "./portfolio-interview";
-import type { BentoContent, BentoItem } from "./templates";
+import type {
+  HeroContent,
+  AboutContent,
+  TechStackContent,
+  CasesContent,
+} from "./templates";
 
 const minimalAnswers: PortfolioInterviewAnswers = {
   name: "Aino Virtanen",
   story: "Olen valokuvaaja Helsingistä.",
 };
 
-function bentoItems(
+function sectionContent<T>(
   config: ReturnType<typeof buildPortfolioConfig>,
-): BentoItem[] {
-  const bento = config.sections.find((s) => s.type === "bento")?.content as
-    | BentoContent
-    | undefined;
-  return bento?.items ?? [];
+  type: string,
+): T | undefined {
+  return config.sections.find((s) => s.type === type)?.content as T | undefined;
 }
 
-describe(buildPortfolioBento, () => {
-  test("opens with the name as a heading and the tagline as text", () => {
-    const items = buildPortfolioBento({
-      ...minimalAnswers,
-      tagline: "Häät ja muotokuvat",
-    });
-    expect(items[0]).toMatchObject({ type: "heading", text: "Aino Virtanen" });
-    expect(
-      items.some((i) => i.type === "text" && i.text === "Häät ja muotokuvat"),
-    ).toBe(true);
-  });
-
-  test("places the story as a text element", () => {
-    const items = buildPortfolioBento(minimalAnswers);
-    expect(
-      items.some(
-        (i) => i.type === "text" && i.text === "Olen valokuvaaja Helsingistä.",
-      ),
-    ).toBe(true);
-  });
-
-  test("renders each skill group as a card with its items joined", () => {
-    const items = buildPortfolioBento({
-      ...minimalAnswers,
-      skills: [{ group: "Kuvaus", items: ["Häät", "Muotokuvat"] }],
-    });
-    const card = items.find((i) => i.type === "card" && i.text === "Kuvaus");
-    expect(card?.body).toBe("Häät · Muotokuvat");
-  });
-
-  test("renders each work as a card with title, summary and tags", () => {
-    const items = buildPortfolioBento({
-      ...minimalAnswers,
-      works: [
-        {
-          title: "Hääkuvaus",
-          summary: "Kokopäivän hääkuvaus.",
-          tags: ["Häät", "  ", "Muotokuva"],
-          linkUrl: "https://example.com",
-        },
-      ],
-    });
-    const card = items.find((i) => i.type === "card" && i.text === "Hääkuvaus");
-    expect(card).toMatchObject({
-      type: "card",
-      text: "Hääkuvaus",
-      body: "Kokopäivän hääkuvaus.",
-      tags: ["Häät", "Muotokuva"],
-      url: "https://example.com",
-    });
-  });
-
-  test("promotes the first work outcome into a headline stat", () => {
-    const items = buildPortfolioBento({
-      ...minimalAnswers,
-      works: [
-        {
-          title: "Hääkuvaus",
-          summary: "Iso projekti.",
-          outcomes: [{ value: "200", label: "Kuvaa" }],
-        },
-      ],
-    });
-    const stat = items.find((i) => i.type === "stat");
-    expect(stat).toMatchObject({ value: "200", label: "Kuvaa" });
-  });
-
-  test("falls back to template default works when none are provided", () => {
-    const items = buildPortfolioBento(minimalAnswers);
-    expect(items.some((i) => i.type === "card")).toBe(true);
-  });
-
-  test("every item has a unique id and non-negative placement", () => {
-    const items = buildPortfolioBento(minimalAnswers);
-    const ids = items.map((i) => i.id);
-    expect(new Set(ids).size).toBe(ids.length);
-    expect(items.every((i) => i.x >= 0 && i.y >= 0 && i.w > 0 && i.h > 0)).toBe(
-      true,
-    );
-  });
-});
-
 describe(buildPortfolioConfig, () => {
-  test("fills the bento hero from the core answers", () => {
+  test("fills hero and about from the core answers", () => {
     const config = buildPortfolioConfig(minimalAnswers);
-    expect(bentoItems(config)[0]).toMatchObject({
-      type: "heading",
-      text: "Aino Virtanen",
-    });
+    const hero = sectionContent<HeroContent>(config, "hero");
+    const about = sectionContent<AboutContent>(config, "about");
+    expect(hero?.title).toBe("Aino Virtanen");
+    expect(about?.bio).toBe("Olen valokuvaaja Helsingistä.");
   });
 
   test("uses the portfolio template id and dark appearance by default", () => {
@@ -118,10 +38,13 @@ describe(buildPortfolioConfig, () => {
     expect(config.theme.appearance).toBe("dark");
   });
 
-  test("lays the portfolio out as a single bento plus blog, form and footer", () => {
+  test("produces the full section order including blog by default", () => {
     const config = buildPortfolioConfig(minimalAnswers);
     expect(config.sections.map((s) => s.type)).toEqual([
-      "bento",
+      "hero",
+      "about",
+      "techStack",
+      "cases",
       "blog",
       "form",
       "footer",
@@ -134,10 +57,64 @@ describe(buildPortfolioConfig, () => {
       includeBlog: false,
     });
     expect(config.sections.map((s) => s.type)).toEqual([
-      "bento",
+      "hero",
+      "about",
+      "techStack",
+      "cases",
       "form",
       "footer",
     ]);
+  });
+
+  test("applies a profession-specific expertise heading and skills", () => {
+    const config = buildPortfolioConfig({
+      ...minimalAnswers,
+      expertiseHeading: "Palvelut",
+      skills: [{ group: "Kuvaus", items: ["Häät", "Muotokuvat"] }],
+    });
+    const techStack = sectionContent<TechStackContent>(config, "techStack");
+    expect(techStack).toEqual({
+      heading: "Palvelut",
+      subheading: "Mitä teen ja missä olen vahvimmillani.",
+      groups: [{ group: "Kuvaus", items: ["Häät", "Muotokuvat"] }],
+    });
+  });
+
+  test("maps works into case items, trimming empty tags and outcomes", () => {
+    const config = buildPortfolioConfig({
+      ...minimalAnswers,
+      works: [
+        {
+          title: "Hääkuvaus",
+          summary: "Kokopäivän hääkuvaus parille.",
+          tags: ["Häät", "  ", "Muotokuva"],
+          outcomes: [
+            { value: "200", label: "Kuvaa" },
+            { value: "", label: "" },
+          ],
+          linkUrl: "https://example.com",
+        },
+      ],
+    });
+    const cases = sectionContent<CasesContent>(config, "cases");
+    expect(cases?.items).toEqual([
+      {
+        title: "Hääkuvaus",
+        tagline: "",
+        summary: "Kokopäivän hääkuvaus parille.",
+        image: "",
+        tags: ["Häät", "Muotokuva"],
+        outcomes: [{ value: "200", label: "Kuvaa" }],
+        linkLabel: "",
+        linkUrl: "https://example.com",
+      },
+    ]);
+  });
+
+  test("falls back to template default works when none are provided", () => {
+    const config = buildPortfolioConfig(minimalAnswers);
+    const cases = sectionContent<CasesContent>(config, "cases");
+    expect(cases?.items.length).toBeGreaterThan(0);
   });
 
   test("honours an explicit appearance and primary color", () => {

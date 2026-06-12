@@ -14,13 +14,16 @@ import type {
   Section,
   SectionType,
   SectionContentMap,
+  HeroContent,
+  AboutContent,
   CasesContent,
+  CaseItem,
+  CaseOutcome,
+  TechStackContent,
   TechStackGroup,
   BlogContent,
   FormContent,
   ThemeConfig,
-  BentoItem,
-  BentoElementType,
 } from "./templates";
 import { getTemplateById } from "./templates";
 import { createSectionId } from "./types";
@@ -89,6 +92,26 @@ function getPortfolioDefault<T extends SectionType>(
   return section.content as SectionContentMap[T];
 }
 
+function mapOutcomes(outcomes: InterviewOutcome[] | undefined): CaseOutcome[] {
+  if (!outcomes) return [];
+  return outcomes
+    .filter((o) => o.value.trim() !== "" || o.label.trim() !== "")
+    .map((o) => ({ value: o.value, label: o.label }));
+}
+
+function mapWork(work: InterviewWork): CaseItem {
+  return {
+    title: work.title,
+    tagline: work.tagline ?? "",
+    summary: work.summary,
+    image: "",
+    tags: (work.tags ?? []).map((t) => t.trim()).filter((t) => t !== ""),
+    outcomes: mapOutcomes(work.outcomes),
+    linkLabel: work.linkLabel ?? "",
+    linkUrl: work.linkUrl ?? "",
+  };
+}
+
 function mapSkillGroups(
   groups: InterviewSkillGroup[] | undefined,
 ): TechStackGroup[] | null {
@@ -102,129 +125,45 @@ function mapSkillGroups(
   return cleaned.length > 0 ? cleaned : null;
 }
 
-function bentoItem(
-  type: BentoElementType,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  extra: Partial<BentoItem> = {},
-): BentoItem {
-  return { id: createSectionId(nanoid()), type, x, y, w, h, ...extra };
-}
-
-type BentoWork = {
-  title: string;
-  summary: string;
-  tags: string[];
-  linkUrl?: string;
-  linkLabel?: string;
-};
-
-/**
- * Lay the interview answers out as a curated 12-column bento grid: a hero band
- * (name + tagline, optional headline stat), the story, an expertise row of
- * cards, and a works showcase of cards. A fixed, designer-chosen layout keeps
- * every generated portfolio at a consistent 5/5 regardless of content length.
- */
-export function buildPortfolioBento(
-  answers: PortfolioInterviewAnswers,
-): BentoItem[] {
-  const items: BentoItem[] = [];
-  let y = 0;
-
-  const firstOutcome = answers.works?.[0]?.outcomes?.[0];
-  const hasHeroStat = Boolean(firstOutcome && firstOutcome.value.trim() !== "");
-  const nameWidth = hasHeroStat ? 8 : 12;
-
-  // Hero band
-  items.push(bentoItem("heading", 0, y, nameWidth, 2, { text: answers.name }));
-  if (answers.tagline) {
-    items.push(
-      bentoItem("text", 0, y + 2, nameWidth, 1, { text: answers.tagline }),
-    );
-  }
-  if (hasHeroStat && firstOutcome) {
-    items.push(
-      bentoItem("stat", 8, y, 4, 3, {
-        value: firstOutcome.value,
-        label: firstOutcome.label,
-      }),
-    );
-  }
-  y += 3;
-
-  // Story
-  items.push(bentoItem("text", 0, y, 12, 2, { text: answers.story }));
-  y += 2;
-
-  // Expertise cards
-  const groups = mapSkillGroups(answers.skills);
-  if (groups && groups.length > 0) {
-    items.push(
-      bentoItem("heading", 0, y, 12, 1, {
-        text: answers.expertiseHeading ?? "Osaaminen",
-      }),
-    );
-    y += 1;
-    const shown = groups.slice(0, 6);
-    shown.forEach((g, i) => {
-      items.push(
-        bentoItem("card", (i % 3) * 4, y + Math.floor(i / 3) * 2, 4, 2, {
-          text: g.group,
-          body: g.items.join(" · "),
-        }),
-      );
-    });
-    y += Math.ceil(shown.length / 3) * 2;
-  }
-
-  // Works showcase
-  const casesDefault = getPortfolioDefault<"cases">("cases") as CasesContent;
-  const works: BentoWork[] =
-    answers.works && answers.works.length > 0
-      ? answers.works.map((w) => ({
-          title: w.title,
-          summary: w.summary,
-          tags: (w.tags ?? []).map((t) => t.trim()).filter((t) => t !== ""),
-          linkUrl: w.linkUrl,
-          linkLabel: w.linkLabel,
-        }))
-      : casesDefault.items.map((c) => ({
-          title: c.title,
-          summary: c.summary,
-          tags: c.tags,
-          linkUrl: c.linkUrl,
-          linkLabel: c.linkLabel,
-        }));
-
-  items.push(
-    bentoItem("heading", 0, y, 12, 1, {
-      text: answers.worksHeading ?? "Työt",
-    }),
-  );
-  y += 1;
-  const shownWorks = works.slice(0, 6);
-  shownWorks.forEach((w, i) => {
-    items.push(
-      bentoItem("card", (i % 2) * 6, y + Math.floor(i / 2) * 3, 6, 3, {
-        text: w.title,
-        body: w.summary,
-        tags: w.tags,
-        url: w.linkUrl || undefined,
-        label: w.linkLabel || undefined,
-      }),
-    );
-  });
-
-  return items;
-}
-
 export function buildPortfolioConfig(
   answers: PortfolioInterviewAnswers,
 ): TemplateConfig {
+  const heroDefault = getPortfolioDefault<"hero">("hero") as HeroContent;
+  const aboutDefault = getPortfolioDefault<"about">("about") as AboutContent;
+  const techStackDefault = getPortfolioDefault<"techStack">(
+    "techStack",
+  ) as TechStackContent;
+  const casesDefault = getPortfolioDefault<"cases">("cases") as CasesContent;
   const blogDefault = getPortfolioDefault<"blog">("blog") as BlogContent;
   const formDefault = getPortfolioDefault<"form">("form") as FormContent;
+
+  const hero: HeroContent = {
+    ...heroDefault,
+    title: answers.name,
+    subtitle: answers.tagline ?? heroDefault.subtitle,
+  };
+
+  const about: AboutContent = {
+    ...aboutDefault,
+    bio: answers.story,
+  };
+
+  const skillGroups = mapSkillGroups(answers.skills);
+  const techStack: TechStackContent = {
+    ...techStackDefault,
+    heading: answers.expertiseHeading ?? techStackDefault.heading,
+    groups: skillGroups ?? techStackDefault.groups,
+  };
+
+  const works =
+    answers.works && answers.works.length > 0
+      ? answers.works.map(mapWork)
+      : casesDefault.items;
+  const cases: CasesContent = {
+    ...casesDefault,
+    heading: answers.worksHeading ?? casesDefault.heading,
+    items: works,
+  };
 
   const theme: ThemeConfig = {
     primaryColor: answers.primaryColor ?? "#3b82f6",
@@ -234,7 +173,10 @@ export function buildPortfolioConfig(
   };
 
   const sections: Section[] = [
-    newSection("bento", { items: buildPortfolioBento(answers) }),
+    newSection("hero", hero),
+    newSection("about", about),
+    newSection("techStack", techStack),
+    newSection("cases", cases),
   ];
 
   if (answers.includeBlog !== false) {
