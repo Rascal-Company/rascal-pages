@@ -20,7 +20,7 @@ export default function TechStackBlock({
   const t = surfaceTokens(theme);
 
   return (
-    <section className={`py-24 sm:py-32 ${t.sectionAlt}`}>
+    <section id="osaaminen" className={`py-24 sm:py-32 ${t.sectionAlt}`}>
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2

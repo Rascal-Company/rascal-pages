@@ -23,6 +23,11 @@ export default function BlogListBlock({
   const t = surfaceTokens(theme);
   const visiblePosts = (posts ?? []).slice(0, content.postsToShow);
 
+  // Hide the section entirely on the published site when there are no posts yet,
+  // so a freshly generated portfolio doesn't show an empty placeholder. In the
+  // editor preview we keep it visible with a hint.
+  if (!isPreview && visiblePosts.length === 0) return null;
+
   return (
     <section id="blogi" className={t.sectionAlt}>
       <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
