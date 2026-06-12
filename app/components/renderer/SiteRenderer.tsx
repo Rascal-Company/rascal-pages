@@ -24,6 +24,7 @@ import {
   BlogListBlock,
   CasesBlock,
   TechStackBlock,
+  BentoBlock,
   PortfolioNav,
   FooterBlock,
 } from "@/app/components/blocks";
@@ -222,6 +223,14 @@ export default function SiteRenderer({
                     key={section.id}
                     {...baseProps}
                     content={section.content as SectionContentMap["techStack"]}
+                  />
+                );
+              case "bento":
+                return (
+                  <BentoBlock
+                    key={section.id}
+                    {...baseProps}
+                    content={section.content as SectionContentMap["bento"]}
                   />
                 );
               case "footer":

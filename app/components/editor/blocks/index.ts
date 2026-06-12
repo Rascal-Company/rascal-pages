@@ -9,4 +9,5 @@ export { default as LogosBlockEditor } from "./LogosBlockEditor";
 export { default as BlogBlockEditor } from "./BlogBlockEditor";
 export { default as CasesBlockEditor } from "./CasesBlockEditor";
 export { default as TechStackBlockEditor } from "./TechStackBlockEditor";
+export { default as BentoBlockEditor } from "./BentoBlockEditor";
 export { default as FooterBlockEditor } from "./FooterBlockEditor";
