@@ -9,7 +9,7 @@ import type { SiteId } from "@/src/lib/types";
 
 type HeroBlockProps = {
   content: HeroContent;
-  theme: { primaryColor: string };
+  theme: { primaryColor: string; appearance?: "light" | "dark" };
   siteId: SiteId;
   isPreview?: boolean;
 };
@@ -47,6 +47,7 @@ export default function HeroBlock({
   isPreview = false,
 }: HeroBlockProps) {
   const primaryColor = theme.primaryColor || "#3B82F6";
+  const isDark = theme.appearance === "dark";
   const [isPending, startTransition] = useTransition();
   const [formStatus, setFormStatus] = useState<"idle" | "success" | "error">(
     "idle",
@@ -111,8 +112,20 @@ export default function HeroBlock({
       case "title":
         return (
           <h1
-            className="text-4xl font-bold tracking-tight sm:text-6xl"
-            style={{ fontFamily: "var(--heading-font, inherit)" }}
+            className={
+              isDark
+                ? "portfolio-fade text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl"
+                : "text-4xl font-bold tracking-tight sm:text-6xl"
+            }
+            style={{
+              fontFamily: "var(--heading-font, inherit)",
+              ...(isDark && {
+                backgroundImage: `linear-gradient(120deg, #f5f5f7 30%, ${primaryColor})`,
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+              }),
+            }}
           >
             {content.title}
           </h1>
@@ -120,7 +133,11 @@ export default function HeroBlock({
       case "subtitle":
         return (
           <p
-            className="mt-6 text-lg leading-8 text-white/90"
+            className={
+              isDark
+                ? "portfolio-fade portfolio-fade-delay-1 mt-6 max-w-2xl text-lg leading-8 text-[#a1a1aa] sm:text-xl"
+                : "mt-6 text-lg leading-8 text-white/90"
+            }
             style={{ fontFamily: "var(--body-font, inherit)" }}
           >
             {content.subtitle}
@@ -129,11 +146,22 @@ export default function HeroBlock({
       case "cta":
         if (hasForm || !content.ctaText) return null;
         return (
-          <div className="mt-10 flex items-center gap-x-6 justify-center">
+          <div
+            className={`mt-10 flex items-center gap-x-6 ${
+              isDark
+                ? "portfolio-fade portfolio-fade-delay-2 justify-start"
+                : "justify-center"
+            }`}
+          >
             <AnalyticsLink
               siteId={siteId}
               href={content.ctaLink}
-              className="rounded-md bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors"
+              className={
+                isDark
+                  ? "rounded-lg px-6 py-3 text-base font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  : "rounded-md bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors"
+              }
+              style={isDark ? { backgroundColor: primaryColor } : undefined}
               eventMetadata={{ location: "hero_cta" }}
             >
               {content.ctaText}
@@ -147,27 +175,60 @@ export default function HeroBlock({
     }
   };
 
-  return (
-    <section
-      className="relative overflow-hidden text-white"
-      style={{
+  const sectionStyle: React.CSSProperties = isDark
+    ? content.image
+      ? {
+          backgroundImage: `linear-gradient(rgba(10,10,11,0.72), rgba(10,10,11,0.72)), url(${content.image})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }
+      : {}
+    : {
         backgroundImage: content.image
           ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${content.image})`
           : `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
         backgroundSize: "cover",
         backgroundPosition: "center",
-      }}
+      };
+
+  return (
+    <section
+      className={
+        isDark
+          ? "relative flex min-h-[88vh] items-center overflow-hidden"
+          : "relative overflow-hidden text-white"
+      }
+      style={sectionStyle}
     >
-      <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+      {isDark && !content.image && (
         <div
-          className={`mx-auto ${hasForm ? "grid lg:grid-cols-2 gap-12 items-center" : "max-w-2xl text-center"}`}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: `radial-gradient(60% 55% at 20% 20%, ${primaryColor}1f, transparent 70%)`,
+          }}
+        />
+      )}
+      <div
+        className={
+          isDark
+            ? "relative mx-auto w-full max-w-7xl px-6 py-28 sm:py-36 lg:px-8"
+            : "mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8"
+        }
+      >
+        <div
+          className={`mx-auto ${
+            hasForm
+              ? "grid lg:grid-cols-2 gap-12 items-center"
+              : isDark
+                ? "max-w-3xl text-left"
+                : "max-w-2xl text-center"
+          }`}
         >
           <div>
             {order.map((fieldKey) => {
               const rendered = renderHeroField(fieldKey);
-              return rendered ? (
-                <div key={fieldKey}>{rendered}</div>
-              ) : null;
+              return rendered ? <div key={fieldKey}>{rendered}</div> : null;
             })}
           </div>
 

@@ -37,10 +37,7 @@ type LegacyContent = {
 function hasSections(
   content: LegacyContent | TemplateConfig,
 ): content is TemplateConfig {
-  return (
-    Array.isArray(content.sections) &&
-    content.sections.length > 0
-  );
+  return Array.isArray(content.sections) && content.sections.length > 0;
 }
 
 /**
@@ -61,7 +58,8 @@ function migrateHeroForm(hero: HeroContent): HeroContent {
       {
         id: "field-consent-1",
         type: "checkbox",
-        label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+        label:
+          "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
         required: false,
         name: "marketingConsent",
       },
@@ -170,7 +168,8 @@ export function migrateToSections(
           {
             id: "field-consent-1",
             type: "checkbox" as const,
-            label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+            label:
+              "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
             required: false,
             name: "marketingConsent",
           },
@@ -251,7 +250,8 @@ export function getDefaultSectionContent<T extends SectionType>(
         {
           id: "field-consent-1",
           type: "checkbox" as const,
-          label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+          label:
+            "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
           required: false,
           name: "marketingConsent",
         },
@@ -267,6 +267,33 @@ export function getDefaultSectionContent<T extends SectionType>(
       heading: "Uusimmat kirjoitukset",
       subheading: "Ajatuksia, oppeja ja kuulumisia.",
       postsToShow: 6,
+    },
+    cases: {
+      heading: "Työt",
+      subheading: "Valikoima työtä, josta olen ylpeä.",
+      items: [
+        {
+          title: "Työn nimi",
+          tagline: "Lyhyt iskulause työstä",
+          summary:
+            "Kuvaa muutamalla lauseella mitä teit, kenelle ja minkä tuloksen se tuotti.",
+          tags: ["Avainsana", "Avainsana"],
+          outcomes: [{ value: "+40 %", label: "Kasvua tuloksissa" }],
+          linkLabel: "Katso lisää",
+          linkUrl: "#",
+        },
+      ],
+    },
+    techStack: {
+      heading: "Osaaminen",
+      subheading: "Mitä teen ja missä olen vahvimmillani.",
+      groups: [
+        {
+          group: "Palvelut",
+          items: ["Konsultointi", "Suunnittelu", "Toteutus"],
+        },
+        { group: "Erikoisalat", items: ["Strategia", "Sisältö"] },
+      ],
     },
     footer: null,
   };
@@ -302,9 +329,7 @@ export function normalizeContent(
         ...defaultHero,
         ...legacy.hero,
         ctaText:
-          legacy.hero?.cta ||
-          legacy.hero?.ctaText ||
-          defaultHero?.ctaText,
+          legacy.hero?.cta || legacy.hero?.ctaText || defaultHero?.ctaText,
       },
       features: legacy.features || defaultFeatures || [],
       theme: legacy.theme || defaultTemplate.defaultContent.theme,

@@ -6,20 +6,51 @@ type ThemeFieldsProps = {
   primaryColor?: string;
   headingFont?: string;
   bodyFont?: string;
+  appearance?: "light" | "dark";
   onColorUpdate: (value: string) => void;
   onFontUpdate: (field: "headingFont" | "bodyFont", fontName: string) => void;
+  onAppearanceUpdate: (appearance: "light" | "dark") => void;
 };
+
+const APPEARANCE_OPTIONS: { value: "light" | "dark"; label: string }[] = [
+  { value: "light", label: "Vaalea" },
+  { value: "dark", label: "Tumma" },
+];
 
 export default function ThemeFields({
   primaryColor,
   headingFont,
   bodyFont,
+  appearance = "light",
   onColorUpdate,
   onFontUpdate,
+  onAppearanceUpdate,
 }: ThemeFieldsProps) {
   return (
     <div className="rounded-lg border border-gray-200 p-4">
       <h2 className="mb-4 text-lg font-semibold text-gray-900">Teema</h2>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700">
+          Ulkoasu
+        </label>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          {APPEARANCE_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onAppearanceUpdate(option.value)}
+              className={`rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                appearance === option.value
+                  ? "border-brand-accent bg-brand-accent/10 text-brand-accent"
+                  : "border-gray-300 text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">

@@ -46,6 +46,7 @@ export async function createAiSite(
 
   try {
     const payload = {
+      action: "landingPage",
       title: input.title,
       description: input.description,
       link: input.link,

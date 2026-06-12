@@ -6,19 +6,25 @@ import type { SiteId } from "@/src/lib/types";
 
 type AboutBlockProps = {
   content: AboutContent;
-  theme: { primaryColor: string };
+  theme: { primaryColor: string; appearance?: "light" | "dark" };
   siteId: SiteId;
   isPreview?: boolean;
 };
 
 const DEFAULT_ABOUT_ORDER = ["name", "bio", "image"];
 
-function renderAboutField(content: AboutContent, fieldKey: string): ReactNode {
+function renderAboutField(
+  content: AboutContent,
+  fieldKey: string,
+  isDark: boolean,
+): ReactNode {
   switch (fieldKey) {
     case "name":
       return (
         <h2
-          className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl mb-8"
+          className={`text-3xl font-bold tracking-tight sm:text-4xl mb-6 ${
+            isDark ? "text-[#f5f5f7]" : "text-gray-900"
+          }`}
           style={{ fontFamily: "var(--heading-font, inherit)" }}
         >
           {content.name || "Tarina"}
@@ -26,9 +32,15 @@ function renderAboutField(content: AboutContent, fieldKey: string): ReactNode {
       );
     case "bio":
       return (
-        <div className="prose prose-lg prose-gray max-w-none">
+        <div
+          className={`prose prose-lg max-w-none ${
+            isDark ? "prose-invert" : "prose-gray"
+          }`}
+        >
           <p
-            className="text-lg leading-8 text-gray-600 whitespace-pre-line"
+            className={`text-lg leading-8 whitespace-pre-line ${
+              isDark ? "text-[#a1a1aa]" : "text-gray-600"
+            }`}
             style={{ fontFamily: "var(--body-font, inherit)" }}
           >
             {content.bio}
@@ -37,10 +49,13 @@ function renderAboutField(content: AboutContent, fieldKey: string): ReactNode {
       );
     case "image":
       return content.image ? (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={content.image}
           alt={content.name}
-          className="h-32 w-32 rounded-full object-cover"
+          className={`mb-8 h-28 w-28 rounded-full object-cover ${
+            isDark ? "ring-1 ring-[#232327]" : ""
+          }`}
         />
       ) : null;
     default:
@@ -48,9 +63,10 @@ function renderAboutField(content: AboutContent, fieldKey: string): ReactNode {
   }
 }
 
-export default function AboutBlock({ content }: AboutBlockProps) {
+export default function AboutBlock({ content, theme }: AboutBlockProps) {
   if (!content) return null;
 
+  const isDark = theme.appearance === "dark";
   const order = content.fieldOrder || DEFAULT_ABOUT_ORDER;
 
   return (
@@ -58,10 +74,8 @@ export default function AboutBlock({ content }: AboutBlockProps) {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
           {order.map((fieldKey) => {
-            const rendered = renderAboutField(content, fieldKey);
-            return rendered ? (
-              <div key={fieldKey}>{rendered}</div>
-            ) : null;
+            const rendered = renderAboutField(content, fieldKey, isDark);
+            return rendered ? <div key={fieldKey}>{rendered}</div> : null;
           })}
         </div>
       </div>

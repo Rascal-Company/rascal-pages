@@ -15,6 +15,8 @@ export type SectionType =
   | "form"
   | "logos"
   | "blog"
+  | "cases"
+  | "techStack"
   | "footer";
 
 export type HeroContent = {
@@ -105,6 +107,63 @@ export type BlogContent = {
   postsToShow: number;
 };
 
+/**
+ * A single measurable outcome shown as a stat on a case card,
+ * e.g. { value: "8–10h", label: "Aikasäästö / viikko" }.
+ */
+export type CaseOutcome = {
+  value: string;
+  label: string;
+};
+
+/**
+ * One portfolio work / project shown as a card in the `cases` section.
+ * Profession-agnostic: works for any portfolio (design, photography,
+ * consulting, development, …). Renders inline; no separate detail routes.
+ */
+export type CaseItem = {
+  title: string;
+  tagline: string;
+  summary: string;
+  image?: string;
+  /** Keyword chips (skills, tools, tags) rendered under the summary. */
+  tags: string[];
+  /** Headline metrics rendered as a small stat row. */
+  outcomes: CaseOutcome[];
+  linkLabel?: string;
+  linkUrl?: string;
+  fieldOrder?: string[];
+};
+
+/**
+ * Projects / case studies showcase section.
+ */
+export type CasesContent = {
+  heading: string;
+  subheading?: string;
+  items: CaseItem[];
+};
+
+/**
+ * A named group of skills/services/items, e.g.
+ * { group: "Palvelut", items: ["Konsultointi", "Suunnittelu"] }.
+ */
+export type TechStackGroup = {
+  group: string;
+  items: string[];
+};
+
+/**
+ * General "expertise" section grouped by area — services, skills, tools or
+ * specialties. Profession-agnostic; the heading (e.g. "Osaaminen",
+ * "Palvelut", "Teknologiat") is set per site.
+ */
+export type TechStackContent = {
+  heading: string;
+  subheading?: string;
+  groups: TechStackGroup[];
+};
+
 export type SectionContentMap = {
   hero: HeroContent;
   features: FeatureItem[];
@@ -115,6 +174,8 @@ export type SectionContentMap = {
   form: FormContent;
   logos: LogosContent;
   blog: BlogContent;
+  cases: CasesContent;
+  techStack: TechStackContent;
   footer: FooterContent;
 };
 
@@ -129,6 +190,11 @@ export type ThemeConfig = {
   primaryColor: string;
   headingFont?: string;
   bodyFont?: string;
+  /**
+   * Visual appearance of the rendered site. "dark" switches blocks to the
+   * polished dark portfolio look; templates that omit this stay light.
+   */
+  appearance?: "light" | "dark";
 };
 
 export type TemplateConfig = {
@@ -227,7 +293,8 @@ export const TEMPLATES: Template[] = [
             {
               id: "field-consent-1",
               type: "checkbox" as const,
-              label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+              label:
+                "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
               required: false,
               name: "marketingConsent",
             },
@@ -278,7 +345,8 @@ export const TEMPLATES: Template[] = [
             {
               id: "field-consent-1",
               type: "checkbox" as const,
-              label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+              label:
+                "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
               required: false,
               name: "marketingConsent",
             },
@@ -463,7 +531,141 @@ export const TEMPLATES: Template[] = [
       ],
     },
   },
+  {
+    id: "portfolio",
+    name: "Portfolio",
+    description:
+      "Henkilökohtainen portfolio: hero, tarina, teknologiat, projektit (caset), blogi ja yhteydenotto.",
+    defaultContent: {
+      templateId: "portfolio",
+      theme: {
+        primaryColor: "#3b82f6",
+        appearance: "dark",
+        headingFont: "Inter",
+        bodyFont: "Inter",
+      },
+      sections: [
+        createSection("pf-hero-1", "hero", {
+          title: "Hei, olen [Nimesi]",
+          subtitle:
+            "Esittelen työtäni ja kerron kuka olen. Tältä sivulta näet projektini, osaamiseni ja uusimmat kuulumiseni.",
+          ctaText: "Katso työni",
+          ctaLink: "#projektit",
+        }),
+        createSection("pf-about-1", "about", {
+          name: "Tarina",
+          bio: "Lyhyt kuvaus siitä kuka olet, mitä teet ja mikä sinua ajaa. Kerro taustasi ja missä olet juuri nyt — pidä teksti henkilökohtaisena ja tuoreena.",
+          image: "",
+        }),
+        createSection("pf-techstack-1", "techStack", {
+          heading: "Osaaminen",
+          subheading: "Mitä teen ja missä olen vahvimmillani.",
+          groups: [
+            {
+              group: "Palvelut",
+              items: ["Konsultointi", "Suunnittelu", "Toteutus"],
+            },
+            { group: "Erikoisalat", items: ["Strategia", "Sisältö"] },
+          ],
+        }),
+        createSection("pf-cases-1", "cases", {
+          heading: "Työt",
+          subheading: "Valikoima työtä, josta olen ylpeä.",
+          items: [
+            {
+              title: "Työn nimi",
+              tagline: "Lyhyt iskulause työstä",
+              summary:
+                "Kuvaa muutamalla lauseella mitä teit, kenelle ja minkä tuloksen se tuotti.",
+              image: "",
+              tags: ["Avainsana", "Avainsana"],
+              outcomes: [
+                { value: "+40 %", label: "Kasvua tuloksissa" },
+                { value: "12", label: "Tyytyväistä asiakasta" },
+              ],
+              linkLabel: "Katso lisää",
+              linkUrl: "#",
+            },
+            {
+              title: "Toinen työ",
+              tagline: "Mitä tämä työ piti sisällään",
+              summary:
+                "Toinen esimerkki työstäsi. Korvaa omilla töilläsi ja lisää tarvittaessa kuvat ja linkit.",
+              image: "",
+              tags: ["Avainsana"],
+              outcomes: [{ value: "Valmis", label: "Julkaistu lopputulos" }],
+              linkLabel: "Lue lisää",
+              linkUrl: "#",
+            },
+          ],
+        }),
+        createSection("pf-blog-1", "blog", {
+          heading: "Uusimmat kirjoitukset",
+          subheading: "Ajatuksia, oppeja ja kuulumisia.",
+          postsToShow: 6,
+        }),
+        createSection("pf-form-1", "form", {
+          fields: [
+            {
+              id: "field-name-1",
+              type: "text" as const,
+              label: "Nimi",
+              placeholder: "Nimesi",
+              required: true,
+              name: "name",
+            },
+            {
+              id: "field-email-1",
+              type: "email" as const,
+              label: "Sähköpostiosoite",
+              placeholder: "nimi@esimerkki.fi",
+              required: true,
+              name: "email",
+            },
+            {
+              id: "field-message-1",
+              type: "textarea" as const,
+              label: "Viesti",
+              placeholder: "Kerro lyhyesti mistä on kyse",
+              required: false,
+              name: "message",
+            },
+          ],
+          formTitle: "Ota yhteyttä",
+          submitButtonText: "Lähetä viesti",
+          successMessage: {
+            title: "Kiitos viestistäsi!",
+            description: "Palaan sinulle pian.",
+          },
+        }),
+        createSection("pf-footer-1", "footer", null),
+      ],
+    },
+  },
 ];
+
+/**
+ * Parse a comma-separated chip input ("React, Supabase, ") into a clean,
+ * de-duplicated list, dropping blanks. Used by the cases/tech-stack editors.
+ */
+export function parseTagList(input: string): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const raw of input.split(",")) {
+    const tag = raw.trim();
+    if (tag.length === 0 || seen.has(tag)) continue;
+    seen.add(tag);
+    result.push(tag);
+  }
+  return result;
+}
+
+/**
+ * Render a tag list back into the comma-separated form shown in the editor.
+ */
+export function formatTagList(tags: string[]): string {
+  return tags.join(", ");
+}
 
 /**
  * Gets template by ID
@@ -492,6 +694,8 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   form: "Lomake",
   logos: "Logot",
   blog: "Blogi",
+  cases: "Projektit",
+  techStack: "Osaaminen",
   footer: "Alapalkki",
 };
 
@@ -508,5 +712,7 @@ export const ADDABLE_SECTION_TYPES: SectionType[] = [
   "form",
   "logos",
   "blog",
+  "cases",
+  "techStack",
   "footer",
 ];

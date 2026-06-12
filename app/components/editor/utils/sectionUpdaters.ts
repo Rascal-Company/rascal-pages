@@ -141,3 +141,15 @@ export function updateThemeFont(
     theme: { ...prev.theme, [field]: fontName || undefined },
   });
 }
+
+/**
+ * Update theme appearance (light or dark)
+ */
+export function updateThemeAppearance(
+  appearance: "light" | "dark",
+): ContentUpdater {
+  return (prev) => ({
+    ...prev,
+    theme: { ...prev.theme, appearance },
+  });
+}
