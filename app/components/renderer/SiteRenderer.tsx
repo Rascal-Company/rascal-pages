@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import type {
   TemplateConfig,
   HeroContent,
@@ -76,117 +77,136 @@ export default function SiteRenderer({
         {!isPreview && <PageViewTracker siteId={siteId} />}
         {sections
           .filter((section) => section.isVisible)
-          .map((section) => {
+          .map((section, index) => {
             const baseProps = {
               theme,
               siteId,
               isPreview,
             };
 
-            switch (section.type) {
-              case "hero":
-                return (
-                  <HeroBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["hero"]}
-                  />
-                );
-              case "features":
-                return (
-                  <FeaturesBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["features"]}
-                  />
-                );
-              case "faq":
-                return (
-                  <FaqBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["faq"]}
-                  />
-                );
-              case "testimonials":
-                return (
-                  <TestimonialsBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={
-                      section.content as SectionContentMap["testimonials"]
-                    }
-                  />
-                );
-              case "about":
-                return (
-                  <AboutBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["about"]}
-                  />
-                );
-              case "video":
-                return (
-                  <VideoBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["video"]}
-                  />
-                );
-              case "form":
-                return (
-                  <FormBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["form"]}
-                    hero={heroContent}
-                  />
-                );
-              case "logos":
-                return (
-                  <LogosBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["logos"]}
-                  />
-                );
-              case "blog":
-                return (
-                  <BlogListBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["blog"]}
-                    posts={posts}
-                  />
-                );
-              case "cases":
-                return (
-                  <CasesBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["cases"]}
-                  />
-                );
-              case "techStack":
-                return (
-                  <TechStackBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["techStack"]}
-                  />
-                );
-              case "footer":
-                return (
-                  <FooterBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["footer"]}
-                  />
-                );
-              default:
-                return null;
-            }
+            const block = (() => {
+              switch (section.type) {
+                case "hero":
+                  return (
+                    <HeroBlock
+                      key={section.id}
+                      {...baseProps}
+                      content={section.content as SectionContentMap["hero"]}
+                    />
+                  );
+                case "features":
+                  return (
+                    <FeaturesBlock
+                      key={section.id}
+                      {...baseProps}
+                      content={section.content as SectionContentMap["features"]}
+                    />
+                  );
+                case "faq":
+                  return (
+                    <FaqBlock
+                      key={section.id}
+                      {...baseProps}
+                      content={section.content as SectionContentMap["faq"]}
+                    />
+                  );
+                case "testimonials":
+                  return (
+                    <TestimonialsBlock
+                      key={section.id}
+                      {...baseProps}
+                      content={
+                        section.content as SectionContentMap["testimonials"]
+                      }
+                    />
+                  );
+                case "about":
+                  return (
+                    <AboutBlock
+                      key={section.id}
+                      {...baseProps}
+                      content={section.content as SectionContentMap["about"]}
+                    />
+                  );
+                case "video":
+                  return (
+                    <VideoBlock
+                      key={section.id}
+                      {...baseProps}
+                      content={section.content as SectionContentMap["video"]}
+                    />
+                  );
+                case "form":
+                  return (
+                    <FormBlock
+                      key={section.id}
+                      {...baseProps}
+                      content={section.content as SectionContentMap["form"]}
+                      hero={heroContent}
+                    />
+                  );
+                case "logos":
+                  return (
+                    <LogosBlock
+                      key={section.id}
+                      {...baseProps}
+                      content={section.content as SectionContentMap["logos"]}
+                    />
+                  );
+                case "blog":
+                  return (
+                    <BlogListBlock
+                      key={section.id}
+                      {...baseProps}
+                      content={section.content as SectionContentMap["blog"]}
+                      posts={posts}
+                    />
+                  );
+                case "cases":
+                  return (
+                    <CasesBlock
+                      key={section.id}
+                      {...baseProps}
+                      content={section.content as SectionContentMap["cases"]}
+                    />
+                  );
+                case "techStack":
+                  return (
+                    <TechStackBlock
+                      key={section.id}
+                      {...baseProps}
+                      content={
+                        section.content as SectionContentMap["techStack"]
+                      }
+                    />
+                  );
+                case "footer":
+                  return (
+                    <FooterBlock
+                      key={section.id}
+                      {...baseProps}
+                      content={section.content as SectionContentMap["footer"]}
+                    />
+                  );
+                default:
+                  return null;
+              }
+            })();
+
+            if (!block) return null;
+
+            const showRule = isDark && index > 0 && section.type !== "footer";
+
+            return (
+              <Fragment key={section.id}>
+                {showRule && (
+                  <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                    <div className="portfolio-rule" />
+                  </div>
+                )}
+                {block}
+              </Fragment>
+            );
           })}
       </div>
     </div>

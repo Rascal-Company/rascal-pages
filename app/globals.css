@@ -2,28 +2,28 @@
 
 @theme {
   /* Rascal AI Brand Palette */
-  --color-brand-primary: #E87B4E;
-  --color-brand-primary-hover: #D66A3D;
-  --color-brand-highlight: #F5E6DC;
-  --color-brand-beige: #F5E6DC;
-  --color-brand-light: #FDF9F6;
-  --color-brand-dark: #1A1A1A;
-  --color-brand-dark-alt: #2C2C2C;
+  --color-brand-primary: #e87b4e;
+  --color-brand-primary-hover: #d66a3d;
+  --color-brand-highlight: #f5e6dc;
+  --color-brand-beige: #f5e6dc;
+  --color-brand-light: #fdf9f6;
+  --color-brand-dark: #1a1a1a;
+  --color-brand-dark-alt: #2c2c2c;
   --color-brand-black: #000;
-  --color-brand-accent: #E87B4E;
-  --color-brand-accent-hover: #D66A3D;
+  --color-brand-accent: #e87b4e;
+  --color-brand-accent-hover: #d66a3d;
 
   /* Additional App Colors */
-  --color-app-bg-primary: #F5E6DC;
-  --color-app-bg-secondary: #FDF9F6;
-  --color-sidebar-bg: #1A1A1A;
+  --color-app-bg-primary: #f5e6dc;
+  --color-app-bg-secondary: #fdf9f6;
+  --color-sidebar-bg: #1a1a1a;
 
   /* Accent Colors */
-  --color-accent-orange: #E87B4E;
+  --color-accent-orange: #e87b4e;
   --color-accent-green: #22c55e;
   --color-accent-blue: #2563eb;
   --color-accent-yellow: #fbbf24;
-  
+
   /* Text Colors */
   --color-text-body: #1f2937;
   --color-text-heading: #2d3748;
@@ -31,7 +31,7 @@
   --color-text-muted-light: #718096;
   --color-text-muted-dark: #4a5568;
   --color-text-sidebar: #cbd5e1;
-  
+
   /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -78,6 +78,49 @@ html {
 
 .accent-yellow {
   color: var(--color-accent-yellow);
+}
+
+/* Portfolio template: above-the-fold entrance animation.
+   Scoped to the dark Portfolio hero; final state is fully visible so
+   content stays readable for crawlers and reduced-motion users. */
+@keyframes portfolioFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.portfolio-fade {
+  animation: portfolioFadeUp 0.6s ease both;
+}
+
+.portfolio-fade-delay-1 {
+  animation-delay: 0.08s;
+}
+
+.portfolio-fade-delay-2 {
+  animation-delay: 0.16s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-fade {
+    animation: none;
+  }
+}
+
+/* Hairline divider between major Portfolio sections */
+.portfolio-rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
 }
 
 /* Text color classes */

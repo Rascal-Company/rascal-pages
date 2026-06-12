@@ -114,13 +114,13 @@ export default function HeroBlock({
           <h1
             className={
               isDark
-                ? "text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl"
+                ? "portfolio-fade text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl"
                 : "text-4xl font-bold tracking-tight sm:text-6xl"
             }
             style={{
               fontFamily: "var(--heading-font, inherit)",
               ...(isDark && {
-                backgroundImage: `linear-gradient(120deg, ${primaryColor}, #f5f5f7)`,
+                backgroundImage: `linear-gradient(120deg, #f5f5f7 30%, ${primaryColor})`,
                 WebkitBackgroundClip: "text",
                 backgroundClip: "text",
                 color: "transparent",
@@ -135,7 +135,7 @@ export default function HeroBlock({
           <p
             className={
               isDark
-                ? "mt-6 text-lg leading-8 text-[#a1a1aa] sm:text-xl"
+                ? "portfolio-fade portfolio-fade-delay-1 mt-6 max-w-2xl text-lg leading-8 text-[#a1a1aa] sm:text-xl"
                 : "mt-6 text-lg leading-8 text-white/90"
             }
             style={{ fontFamily: "var(--body-font, inherit)" }}
@@ -148,7 +148,9 @@ export default function HeroBlock({
         return (
           <div
             className={`mt-10 flex items-center gap-x-6 ${
-              isDark ? "justify-start" : "justify-center"
+              isDark
+                ? "portfolio-fade portfolio-fade-delay-2 justify-start"
+                : "justify-center"
             }`}
           >
             <AnalyticsLink
@@ -193,15 +195,24 @@ export default function HeroBlock({
     <section
       className={
         isDark
-          ? "relative overflow-hidden"
+          ? "relative flex min-h-[88vh] items-center overflow-hidden"
           : "relative overflow-hidden text-white"
       }
       style={sectionStyle}
     >
+      {isDark && !content.image && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: `radial-gradient(60% 55% at 20% 20%, ${primaryColor}1f, transparent 70%)`,
+          }}
+        />
+      )}
       <div
         className={
           isDark
-            ? "mx-auto max-w-7xl px-6 py-28 sm:py-36 lg:px-8"
+            ? "relative mx-auto w-full max-w-7xl px-6 py-28 sm:py-36 lg:px-8"
             : "mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8"
         }
       >
