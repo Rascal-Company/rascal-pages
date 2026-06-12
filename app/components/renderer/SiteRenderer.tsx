@@ -86,10 +86,16 @@ export default function SiteRenderer({
     }),
   };
 
+  const isLightPortfolio = isPortfolio && !isDark;
+
   return (
     <div
       className={`relative min-h-screen ${
-        isDark ? "bg-[#0a0a0b] text-[#f5f5f7]" : "bg-white"
+        isDark
+          ? "bg-[#0a0a0b] text-[#f5f5f7]"
+          : isLightPortfolio
+            ? "bg-white text-[#18181b]"
+            : "bg-white"
       }`}
       style={fontStyles}
     >
@@ -98,6 +104,12 @@ export default function SiteRenderer({
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]"
+        />
+      )}
+      {isLightPortfolio && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.025)_1px,transparent_1px)] bg-[size:64px_64px]"
         />
       )}
       <div className="relative">
@@ -115,6 +127,7 @@ export default function SiteRenderer({
             theme,
             siteId,
             isPreview,
+            templateId: normalizedContent.templateId,
           };
 
           const block = (() => {
@@ -226,13 +239,22 @@ export default function SiteRenderer({
 
           if (!block) return null;
 
-          const showRule = isDark && index > 0 && section.type !== "footer";
+          const showRule =
+            (isDark || isLightPortfolio) &&
+            index > 0 &&
+            section.type !== "footer";
 
           return (
             <Fragment key={section.id}>
               {showRule && (
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                  <div className="portfolio-rule" />
+                  <div
+                    className={
+                      isLightPortfolio
+                        ? "portfolio-rule-light"
+                        : "portfolio-rule"
+                    }
+                  />
                 </div>
               )}
               {block}

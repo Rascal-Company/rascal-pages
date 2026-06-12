@@ -25,6 +25,8 @@ export type HeroContent = {
   ctaText: string;
   ctaLink: string;
   image?: string;
+  /** Optional small label shown above the headline (portfolio hero). */
+  eyebrow?: string;
   fieldOrder?: string[];
   // Embedded form options
   showForm?: boolean;

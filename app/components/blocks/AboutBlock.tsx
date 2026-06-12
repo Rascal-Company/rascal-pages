@@ -9,6 +9,7 @@ type AboutBlockProps = {
   theme: { primaryColor: string; appearance?: "light" | "dark" };
   siteId: SiteId;
   isPreview?: boolean;
+  templateId?: string;
 };
 
 const DEFAULT_ABOUT_ORDER = ["name", "bio", "image"];
@@ -17,13 +18,18 @@ function renderAboutField(
   content: AboutContent,
   fieldKey: string,
   isDark: boolean,
+  isLightPortfolio: boolean,
 ): ReactNode {
   switch (fieldKey) {
     case "name":
       return (
         <h2
           className={`text-3xl font-bold tracking-tight sm:text-4xl mb-6 ${
-            isDark ? "text-[#f5f5f7]" : "text-gray-900"
+            isDark
+              ? "text-[#f5f5f7]"
+              : isLightPortfolio
+                ? "text-[#18181b]"
+                : "text-gray-900"
           }`}
           style={{ fontFamily: "var(--heading-font, inherit)" }}
         >
@@ -39,7 +45,11 @@ function renderAboutField(
         >
           <p
             className={`text-lg leading-8 whitespace-pre-line ${
-              isDark ? "text-[#a1a1aa]" : "text-gray-600"
+              isDark
+                ? "text-[#a1a1aa]"
+                : isLightPortfolio
+                  ? "text-[#52525b]"
+                  : "text-gray-600"
             }`}
             style={{ fontFamily: "var(--body-font, inherit)" }}
           >
@@ -54,7 +64,11 @@ function renderAboutField(
           src={content.image}
           alt={content.name}
           className={`mb-8 h-28 w-28 rounded-full object-cover ${
-            isDark ? "ring-1 ring-[#232327]" : ""
+            isDark
+              ? "ring-1 ring-[#232327]"
+              : isLightPortfolio
+                ? "ring-1 ring-[#e4e4e7]"
+                : ""
           }`}
         />
       ) : null;
@@ -63,10 +77,15 @@ function renderAboutField(
   }
 }
 
-export default function AboutBlock({ content, theme }: AboutBlockProps) {
+export default function AboutBlock({
+  content,
+  theme,
+  templateId,
+}: AboutBlockProps) {
   if (!content) return null;
 
   const isDark = theme.appearance === "dark";
+  const isLightPortfolio = !isDark && templateId === "portfolio";
   const order = content.fieldOrder || DEFAULT_ABOUT_ORDER;
 
   return (
@@ -74,7 +93,12 @@ export default function AboutBlock({ content, theme }: AboutBlockProps) {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
           {order.map((fieldKey) => {
-            const rendered = renderAboutField(content, fieldKey, isDark);
+            const rendered = renderAboutField(
+              content,
+              fieldKey,
+              isDark,
+              isLightPortfolio,
+            );
             return rendered ? <div key={fieldKey}>{rendered}</div> : null;
           })}
         </div>

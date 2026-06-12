@@ -9,15 +9,17 @@ type TechStackBlockProps = {
   theme: { primaryColor: string; appearance?: "light" | "dark" };
   siteId: SiteId;
   isPreview?: boolean;
+  templateId?: string;
 };
 
 export default function TechStackBlock({
   content,
   theme,
+  templateId,
 }: TechStackBlockProps) {
   if (!content || content.groups.length === 0) return null;
 
-  const t = surfaceTokens(theme);
+  const t = surfaceTokens(theme, templateId);
 
   return (
     <section id="osaaminen" className={`py-24 sm:py-32 ${t.sectionAlt}`}>
