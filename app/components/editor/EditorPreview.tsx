@@ -10,6 +10,10 @@ interface EditorPreviewProps {
   previewMode?: "desktop" | "mobile";
   activeSectionId?: SectionId | null;
   onSelectSection?: (sectionId: SectionId) => void;
+  onMoveSection?: (sectionId: SectionId, direction: "up" | "down") => void;
+  onDuplicateSection?: (sectionId: SectionId) => void;
+  onRemoveSection?: (sectionId: SectionId) => void;
+  onRequestInsert?: (afterSectionId: SectionId) => void;
 }
 
 export default function EditorPreview({
@@ -18,6 +22,10 @@ export default function EditorPreview({
   previewMode = "desktop",
   activeSectionId = null,
   onSelectSection,
+  onMoveSection,
+  onDuplicateSection,
+  onRemoveSection,
+  onRequestInsert,
 }: EditorPreviewProps) {
   const isMobile = previewMode === "mobile";
 
@@ -45,6 +53,10 @@ export default function EditorPreview({
             editable={true}
             activeSectionId={activeSectionId}
             onSelectSection={onSelectSection}
+            onMoveSection={onMoveSection}
+            onDuplicateSection={onDuplicateSection}
+            onRemoveSection={onRemoveSection}
+            onRequestInsert={onRequestInsert}
           />
           {isMobile && (
             <div className="bg-gray-800 px-4 py-3 flex items-center justify-center">

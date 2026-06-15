@@ -42,6 +42,11 @@ type SiteRendererProps = {
   editable?: boolean;
   activeSectionId?: SectionId | null;
   onSelectSection?: (sectionId: SectionId) => void;
+  onMoveSection?: (sectionId: SectionId, direction: "up" | "down") => void;
+  onDuplicateSection?: (sectionId: SectionId) => void;
+  onRemoveSection?: (sectionId: SectionId) => void;
+  /** Open the section picker to insert after the given section. */
+  onRequestInsert?: (afterSectionId: SectionId) => void;
 };
 
 export default function SiteRenderer({
@@ -52,6 +57,10 @@ export default function SiteRenderer({
   editable = false,
   activeSectionId = null,
   onSelectSection,
+  onMoveSection,
+  onDuplicateSection,
+  onRemoveSection,
+  onRequestInsert,
 }: SiteRendererProps) {
   const normalizedContent = migrateToSections(content);
   const { sections, theme } = normalizedContent;
@@ -286,7 +295,66 @@ export default function SiteRenderer({
                   <span className="pointer-events-none absolute left-3 top-3 z-20 rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground opacity-0 shadow transition-opacity group-hover:opacity-100">
                     {SECTION_TYPE_LABELS[section.type]}
                   </span>
+                  {section.id === activeSectionId && (
+                    <div className="absolute right-3 top-3 z-30 flex items-center gap-1 rounded-md border border-border bg-background/95 p-1 text-foreground shadow">
+                      <button
+                        type="button"
+                        title="Siirrä ylös"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onMoveSection?.(section.id, "up");
+                        }}
+                        className="rounded px-1.5 py-0.5 text-sm hover:bg-accent"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        title="Siirrä alas"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onMoveSection?.(section.id, "down");
+                        }}
+                        className="rounded px-1.5 py-0.5 text-sm hover:bg-accent"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        title="Monista"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDuplicateSection?.(section.id);
+                        }}
+                        className="rounded px-1.5 py-0.5 text-sm hover:bg-accent"
+                      >
+                        ⧉
+                      </button>
+                      <button
+                        type="button"
+                        title="Poista"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveSection?.(section.id);
+                        }}
+                        className="rounded px-1.5 py-0.5 text-sm text-destructive hover:bg-accent"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
                   {block}
+                  <button
+                    type="button"
+                    title="Lisää osio tähän"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRequestInsert?.(section.id);
+                    }}
+                    className="absolute -bottom-3 left-1/2 z-30 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground opacity-0 shadow transition-opacity hover:bg-primary-hover group-hover:opacity-100"
+                  >
+                    +
+                  </button>
                 </div>
               ) : (
                 block
