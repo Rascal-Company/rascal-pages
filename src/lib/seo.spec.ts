@@ -4,7 +4,73 @@ import {
   buildBreadcrumbJsonLd,
   buildCanonicalUrl,
   buildPersonJsonLd,
+  resolvePageSeo,
 } from "./seo";
+
+describe(resolvePageSeo, () => {
+  const fallback = {
+    title: "Sami Kiias",
+    description: "Markkinoinnin asiantuntija",
+  };
+
+  test("prefers explicit per-page SEO over the content fallback", () => {
+    expect(
+      resolvePageSeo(
+        {
+          metaTitle: "Oma otsikko",
+          metaDescription: "Oma kuvaus hakukoneille",
+          ogImage: "https://example.fi/og.png",
+        },
+        fallback,
+      ),
+    ).toEqual({
+      title: "Oma otsikko",
+      description: "Oma kuvaus hakukoneille",
+      ogImage: "https://example.fi/og.png",
+    });
+  });
+
+  test("falls back to content-derived values when SEO is unset", () => {
+    expect(resolvePageSeo(undefined, fallback)).toEqual({
+      title: "Sami Kiias",
+      description: "Markkinoinnin asiantuntija",
+      ogImage: undefined,
+    });
+  });
+
+  test("treats whitespace-only overrides as empty and falls back", () => {
+    expect(
+      resolvePageSeo(
+        { metaTitle: "   ", metaDescription: "  ", ogImage: " " },
+        fallback,
+      ),
+    ).toEqual({
+      title: "Sami Kiias",
+      description: "Markkinoinnin asiantuntija",
+      ogImage: undefined,
+    });
+  });
+
+  test("returns undefined description when both override and fallback are blank", () => {
+    expect(
+      resolvePageSeo(undefined, { title: "esimerkki.fi", description: "" }),
+    ).toEqual({
+      title: "esimerkki.fi",
+      description: undefined,
+      ogImage: undefined,
+    });
+  });
+
+  test("allows description override while title falls back", () => {
+    expect(
+      resolvePageSeo({ metaDescription: "Vain kuvaus" }, fallback),
+    ).toEqual({
+      title: "Sami Kiias",
+      description: "Vain kuvaus",
+      ogImage: undefined,
+    });
+  });
+});
 
 describe(buildCanonicalUrl, () => {
   test("joins base and path with a single slash", () => {

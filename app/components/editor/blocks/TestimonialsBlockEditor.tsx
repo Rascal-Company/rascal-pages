@@ -2,6 +2,7 @@
 
 import type { TestimonialItem } from "@/src/lib/templates";
 import SortableFieldList from "../fields/SortableFieldList";
+import ImageUploadField from "../fields/ImageUploadField";
 
 type TestimonialsBlockEditorProps = {
   content: TestimonialItem[];
@@ -91,24 +92,11 @@ export default function TestimonialsBlockEditor({
         );
       case "avatar":
         return (
-          <div>
-            <input
-              type="url"
-              value={testimonial.avatar || ""}
-              onChange={(e) =>
-                handleFieldUpdate(index, "avatar", e.target.value)
-              }
-              placeholder="https://example.com/avatar.jpg"
-              className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
-            />
-            {testimonial.avatar && (
-              <img
-                src={testimonial.avatar}
-                alt={testimonial.name}
-                className="mt-2 h-10 w-10 rounded-full object-cover"
-              />
-            )}
-          </div>
+          <ImageUploadField
+            value={testimonial.avatar}
+            shape="round"
+            onChange={(url) => handleFieldUpdate(index, "avatar", url)}
+          />
         );
       default:
         return null;

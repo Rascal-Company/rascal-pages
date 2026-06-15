@@ -2,6 +2,35 @@
  * Pure SEO helpers: canonical URLs and JSON-LD structured data builders.
  */
 
+import type { SeoConfig } from "./templates";
+
+export type ResolvedPageSeo = {
+  title: string;
+  description: string | undefined;
+  ogImage: string | undefined;
+};
+
+/**
+ * Resolve the final SEO metadata for a published page. Explicit per-page SEO
+ * overrides win; blank or whitespace-only values fall back to the title and
+ * description derived from the page content.
+ */
+export function resolvePageSeo(
+  seo: SeoConfig | undefined,
+  fallback: { title: string; description: string },
+): ResolvedPageSeo {
+  const metaTitle = seo?.metaTitle?.trim();
+  const metaDescription = seo?.metaDescription?.trim();
+  const ogImage = seo?.ogImage?.trim();
+  const description = metaDescription || fallback.description.trim();
+
+  return {
+    title: metaTitle || fallback.title,
+    description: description || undefined,
+    ogImage: ogImage || undefined,
+  };
+}
+
 export function buildCanonicalUrl(baseUrl: string, path: string): string {
   const cleanBase = baseUrl.replace(/\/+$/, "");
   const cleanPath = path === "/" || path === "" ? "" : `/${path.replace(/^\/+/, "")}`;

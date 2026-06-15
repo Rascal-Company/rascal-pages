@@ -2,6 +2,7 @@
 
 import type { CasesContent, CaseItem, CaseOutcome } from "@/src/lib/templates";
 import { parseTagList, formatTagList } from "@/src/lib/templates";
+import ImageUploadField from "../fields/ImageUploadField";
 
 type CasesBlockEditorProps = {
   content: CasesContent;
@@ -124,12 +125,9 @@ export default function CasesBlockEditor({
               rows={3}
               className={inputClass}
             />
-            <input
-              type="url"
-              value={item.image || ""}
-              onChange={(e) => updateItem(index, { image: e.target.value })}
-              placeholder="Kuvan URL (valinnainen)"
-              className={inputClass}
+            <ImageUploadField
+              value={item.image}
+              onChange={(url) => updateItem(index, { image: url })}
             />
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">

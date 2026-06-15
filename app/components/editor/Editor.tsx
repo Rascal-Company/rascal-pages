@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -28,6 +28,7 @@ import {
   updateThemeColor,
   updateThemeFont,
   updateThemeAppearance,
+  updateSeoField,
 } from "./utils/sectionUpdaters";
 import type { SiteId, SectionId } from "@/src/lib/types";
 import { useToast } from "@/app/components/ui/ToastContainer";
@@ -35,6 +36,7 @@ import EditorHeader from "./EditorHeader";
 import StatusMessages from "./StatusMessages";
 import TemplateSelector from "./TemplateSelector";
 import ThemeFields from "./fields/ThemeFields";
+import SeoFields from "./fields/SeoFields";
 import SaveButton from "./SaveButton";
 import EditorPreview from "./EditorPreview";
 import PublishedToggle from "./PublishedToggle";
@@ -42,6 +44,10 @@ import SortableSectionItem from "./SortableSectionItem";
 import BlockEditor from "./BlockEditor";
 import AddSectionButton from "./AddSectionButton";
 import SettingsModal from "./SettingsModal";
+import SaveStatusIndicator from "./SaveStatusIndicator";
+import { EditorSiteProvider } from "./EditorSiteContext";
+import { useHistoryState } from "./hooks/useHistoryState";
+import { useAutosave } from "./hooks/useAutosave";
 
 type EditorProps = {
   siteId: SiteId;
@@ -67,9 +73,14 @@ export default function Editor({
   initialSettings = {},
 }: EditorProps) {
   const { showToast, showConfirm } = useToast();
-  const [content, setContent] = useState<TemplateConfig>(
-    normalizeContent(initialContent),
-  );
+  const {
+    state: content,
+    set: setContent,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = useHistoryState<TemplateConfig>(normalizeContent(initialContent));
   const [published, setPublished] = useState<boolean>(initialPublished);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -92,18 +103,36 @@ export default function Editor({
     }),
   );
 
+  const pageState = useMemo(
+    () => ({ content, published }),
+    [content, published],
+  );
+
+  const persist = useCallback(
+    (data: { content: TemplateConfig; published: boolean }) =>
+      updatePageContent(siteId, data.content, data.published),
+    [siteId],
+  );
+
+  const {
+    status: saveStatus,
+    lastSavedAt,
+    markSaved,
+  } = useAutosave({ data: pageState, onSave: persist });
+
   const handleSave = async () => {
     setIsSaving(true);
     setError(null);
     setSuccess(false);
 
     try {
-      const result = await updatePageContent(siteId, content, published);
+      const result = await persist(pageState);
       if (result?.error) {
         setError(result.error);
         showToast(result.error, "error");
       } else {
         setSuccess(true);
+        markSaved(pageState);
         showToast("Muutokset tallennettu onnistuneesti!", "success");
         setTimeout(() => setSuccess(false), 3000);
       }
@@ -115,6 +144,24 @@ export default function Editor({
       setIsSaving(false);
     }
   };
+
+  // Undo/redo keyboard shortcuts (Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z, Ctrl+Y)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+      const key = e.key.toLowerCase();
+      if (key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if ((key === "z" && e.shiftKey) || key === "y") {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [undo, redo]);
 
   const handleTemplateChange = async (newTemplateId: string) => {
     if (newTemplateId === content.templateId) return;
@@ -161,7 +208,8 @@ export default function Editor({
   const activeSection = content.sections.find((s) => s.id === activeSectionId);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <EditorSiteProvider siteId={siteId}>
+      <div className="flex h-screen bg-gray-50">
       {/* Left Sidebar - Section List (25%) */}
       {!isFullPreview && (
         <div className="w-1/4 min-w-[250px] max-w-[350px] overflow-y-auto border-r border-gray-200 bg-white p-4">
@@ -184,7 +232,55 @@ export default function Editor({
             />
 
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-700">Osiot</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-gray-700">Osiot</h3>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={undo}
+                    disabled={!canUndo}
+                    title="Kumoa (Ctrl/Cmd+Z)"
+                    aria-label="Kumoa"
+                    className="rounded-md border border-gray-200 p-1.5 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 14L4 9l5-5M4 9h11a5 5 0 015 5v0a5 5 0 01-5 5h-1"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={redo}
+                    disabled={!canRedo}
+                    title="Tee uudelleen (Ctrl/Cmd+Shift+Z)"
+                    aria-label="Tee uudelleen"
+                    className="rounded-md border border-gray-200 p-1.5 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 14l5-5-5-5m5 5H9a5 5 0 00-5 5v0a5 5 0 005 5h1"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -229,6 +325,22 @@ export default function Editor({
                 setContent(updateThemeAppearance(appearance))
               }
             />
+
+            <SeoFields
+              metaTitle={content.seo?.metaTitle}
+              metaDescription={content.seo?.metaDescription}
+              ogImage={content.seo?.ogImage}
+              onUpdate={(field, value) =>
+                setContent(updateSeoField(field, value))
+              }
+            />
+
+            <div className="flex justify-end">
+              <SaveStatusIndicator
+                status={saveStatus}
+                lastSavedAt={lastSavedAt}
+              />
+            </div>
 
             <SaveButton isSaving={isSaving} onSave={handleSave} />
           </div>
@@ -365,6 +477,7 @@ export default function Editor({
         customDomain={siteCustomDomain}
         initialSettings={initialSettings}
       />
-    </div>
+      </div>
+    </EditorSiteProvider>
   );
 }

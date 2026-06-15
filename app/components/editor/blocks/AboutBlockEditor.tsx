@@ -2,6 +2,7 @@
 
 import type { AboutContent } from "@/src/lib/templates";
 import SortableFieldList from "../fields/SortableFieldList";
+import ImageUploadField from "../fields/ImageUploadField";
 
 type AboutBlockEditorProps = {
   content: AboutContent;
@@ -50,22 +51,11 @@ export default function AboutBlockEditor({
         );
       case "image":
         return (
-          <div>
-            <input
-              type="url"
-              value={content?.image || ""}
-              onChange={(e) => handleFieldUpdate("image", e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
-            />
-            {content?.image && (
-              <img
-                src={content.image}
-                alt={content.name}
-                className="mt-2 h-16 w-16 rounded-full object-cover"
-              />
-            )}
-          </div>
+          <ImageUploadField
+            value={content?.image}
+            shape="round"
+            onChange={(url) => handleFieldUpdate("image", url)}
+          />
         );
       default:
         return null;

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { nanoid } from "nanoid";
 import type { HeroContent, FormField, FormFieldType } from "@/src/lib/templates";
 import SortableFieldList from "../fields/SortableFieldList";
+import ImageUploadField from "../fields/ImageUploadField";
 
 type HeroBlockEditorProps = {
   content: HeroContent;
@@ -537,22 +538,10 @@ export default function HeroBlockEditor({
         );
       case "image":
         return (
-          <div>
-            <input
-              type="url"
-              value={content?.image || ""}
-              onChange={(e) => handleFieldUpdate("image", e.target.value)}
-              placeholder="https://example.com/kuva.jpg"
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
-            />
-            {content?.image && (
-              <img
-                src={content.image}
-                alt="Kuvan esikatselu"
-                className="mt-2 h-24 w-auto rounded-md object-cover"
-              />
-            )}
-          </div>
+          <ImageUploadField
+            value={content?.image}
+            onChange={(url) => handleFieldUpdate("image", url)}
+          />
         );
       default:
         return null;

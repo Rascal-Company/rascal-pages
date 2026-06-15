@@ -424,5 +424,6 @@ export function mergeTemplateContent(
     templateId: newTemplateId,
     theme: currentContent.theme || newTemplate.defaultContent.theme,
     sections: newSections as Section[],
+    ...(currentContent.seo ? { seo: currentContent.seo } : {}),
   };
 }

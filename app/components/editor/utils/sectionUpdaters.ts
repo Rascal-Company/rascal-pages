@@ -2,6 +2,7 @@ import type {
   TemplateConfig,
   SectionType,
   SectionContentMap,
+  SeoConfig,
 } from "@/src/lib/templates";
 import type { SectionId } from "@/src/lib/types";
 import { createSection, getDefaultSectionContent } from "./contentUtils";
@@ -151,5 +152,19 @@ export function updateThemeAppearance(
   return (prev) => ({
     ...prev,
     theme: { ...prev.theme, appearance },
+  });
+}
+
+/**
+ * Update a single per-page SEO field. An empty value clears the override so
+ * metadata falls back to the content-derived value.
+ */
+export function updateSeoField(
+  field: keyof SeoConfig,
+  value: string,
+): ContentUpdater {
+  return (prev) => ({
+    ...prev,
+    seo: { ...prev.seo, [field]: value || undefined },
   });
 }
