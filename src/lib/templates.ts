@@ -240,6 +240,31 @@ export type ThemeConfig = {
    * polished dark portfolio look; templates that omit this stay light.
    */
   appearance?: "light" | "dark";
+  /**
+   * Per-site color palette. Any field left unset is derived from
+   * `primaryColor` + `appearance` defaults by the site theme engine
+   * (`src/lib/site-theme.ts`), so existing sites keep their look.
+   */
+  palette?: SitePalette;
+  /** Corner radius for the site (CSS length, e.g. "0.5rem"). */
+  radius?: string;
+};
+
+/**
+ * Per-site design tokens mirroring the @rascal/theme contract, but with values
+ * chosen by the end customer (not the Rascal brand). Injected as CSS variables
+ * on the rendered site root by the site theme engine.
+ */
+export type SitePalette = {
+  primary?: string;
+  primaryForeground?: string;
+  background?: string;
+  foreground?: string;
+  muted?: string;
+  mutedForeground?: string;
+  card?: string;
+  cardForeground?: string;
+  border?: string;
 };
 
 /**
