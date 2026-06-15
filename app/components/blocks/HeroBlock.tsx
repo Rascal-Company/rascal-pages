@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import type { HeroContent, FormField } from "@/src/lib/templates";
 import { AnalyticsLink } from "@/app/components/AnalyticsLink";
+import EditableText from "./EditableText";
 import { submitLead } from "@/app/actions/submit-lead";
 import type { SiteId } from "@/src/lib/types";
 
@@ -134,7 +135,10 @@ export default function HeroBlock({
                 </span>
               </div>
             )}
-            <h1
+            <EditableText
+              as="h1"
+              field="title"
+              value={content.title}
               className={
                 isPortfolioHero
                   ? "portfolio-fade text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
@@ -155,23 +159,22 @@ export default function HeroBlock({
                   color: "transparent",
                 }),
               }}
-            >
-              {content.title}
-            </h1>
+            />
           </div>
         );
       case "subtitle":
         return (
-          <p
+          <EditableText
+            as="p"
+            field="subtitle"
+            value={content.subtitle}
             className={
               isPortfolioHero
                 ? "portfolio-fade portfolio-fade-delay-1 mt-7 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl"
                 : "mt-6 text-lg leading-8 text-white/90"
             }
             style={{ fontFamily: "var(--body-font, inherit)" }}
-          >
-            {content.subtitle}
-          </p>
+          />
         );
       case "cta":
         if (hasForm || !content.ctaText) return null;

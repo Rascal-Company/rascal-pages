@@ -7,6 +7,7 @@ import type {
   SectionContentMap,
 } from "@/src/lib/templates";
 import { SECTION_TYPE_LABELS } from "@/src/lib/templates";
+import { SectionEditProvider } from "@/app/components/blocks/SectionEditContext";
 import { PageViewTracker } from "@/app/components/PageViewTracker";
 import type { SiteId, SectionId } from "@/src/lib/types";
 import type { Post } from "@/src/lib/posts";
@@ -48,6 +49,11 @@ type SiteRendererProps = {
   /** Open the section picker to insert after the given section. */
   onRequestInsert?: (afterSectionId: SectionId) => void;
   onReorderSections?: (draggedId: SectionId, targetId: SectionId) => void;
+  onUpdateSectionField?: (
+    sectionId: SectionId,
+    field: string,
+    value: string,
+  ) => void;
 };
 
 export default function SiteRenderer({
@@ -63,6 +69,7 @@ export default function SiteRenderer({
   onRemoveSection,
   onRequestInsert,
   onReorderSections,
+  onUpdateSectionField,
 }: SiteRendererProps) {
   const [dragOverId, setDragOverId] = useState<SectionId | null>(null);
   const normalizedContent = migrateToSections(content);
@@ -285,14 +292,9 @@ export default function SiteRenderer({
               {editable ? (
                 <div
                   data-section-id={section.id}
-                  draggable
                   onClick={(e) => {
                     e.stopPropagation();
                     onSelectSection?.(section.id);
-                  }}
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData("text/section-id", section.id);
-                    e.dataTransfer.effectAllowed = "move";
                   }}
                   onDragOver={(e) => {
                     e.preventDefault();
@@ -320,9 +322,23 @@ export default function SiteRenderer({
                         : "hover:outline hover:outline-2 hover:outline-primary/40"
                   }`}
                 >
-                  <span className="pointer-events-none absolute left-3 top-3 z-20 rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground opacity-0 shadow transition-opacity group-hover:opacity-100">
-                    {SECTION_TYPE_LABELS[section.type]}
-                  </span>
+                  <div className="absolute left-3 top-3 z-20 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <span
+                      draggable
+                      onDragStart={(e) => {
+                        e.stopPropagation();
+                        e.dataTransfer.setData("text/section-id", section.id);
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      title="Raahaa järjestääksesi"
+                      className="cursor-grab select-none rounded bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground shadow active:cursor-grabbing"
+                    >
+                      ⠿
+                    </span>
+                    <span className="pointer-events-none rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground shadow">
+                      {SECTION_TYPE_LABELS[section.type]}
+                    </span>
+                  </div>
                   {section.id === activeSectionId && (
                     <div className="absolute right-3 top-3 z-30 flex items-center gap-1 rounded-md border border-border bg-background/95 p-1 text-foreground shadow">
                       <button
@@ -371,7 +387,14 @@ export default function SiteRenderer({
                       </button>
                     </div>
                   )}
-                  {block}
+                  <SectionEditProvider
+                    editable
+                    updateField={(field, value) =>
+                      onUpdateSectionField?.(section.id, field, value)
+                    }
+                  >
+                    {block}
+                  </SectionEditProvider>
                   <button
                     type="button"
                     title="Lisää osio tähän"

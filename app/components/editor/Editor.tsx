@@ -210,6 +210,20 @@ export default function Editor({
     setInsertAfterId(null);
   };
 
+  const handleInlineFieldUpdate = (
+    sectionId: SectionId,
+    field: string,
+    value: string,
+  ) => {
+    const section = content.sections.find((s) => s.id === sectionId);
+    if (!section) return;
+    const nextContent = {
+      ...(section.content as Record<string, unknown>),
+      [field]: value,
+    } as Section["content"];
+    setContent(updateSectionContent(sectionId, nextContent));
+  };
+
   const handleRemoveSection = (sectionId: SectionId) => {
     setContent(removeSection(sectionId));
     if (activeSectionId === sectionId) {
@@ -492,6 +506,7 @@ export default function Editor({
           onReorderSections={(draggedId, targetId) =>
             setContent(reorderSections(draggedId, targetId))
           }
+          onUpdateSectionField={handleInlineFieldUpdate}
         />
       </div>
 

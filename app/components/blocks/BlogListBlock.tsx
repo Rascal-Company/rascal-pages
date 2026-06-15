@@ -4,6 +4,7 @@ import type { BlogContent } from "@/src/lib/templates";
 import type { Post } from "@/src/lib/posts";
 import { deriveExcerpt, formatPostDate } from "@/src/lib/posts";
 import { surfaceTokens } from "./appearance";
+import EditableText from "./EditableText";
 
 type BlogListBlockProps = {
   content: BlogContent;
@@ -33,19 +34,21 @@ export default function BlogListBlock({
     <section id="blogi" className={t.sectionAlt}>
       <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2
+          <EditableText
+            as="h2"
+            field="heading"
+            value={content.heading}
             className={`text-3xl font-bold tracking-tight sm:text-4xl ${t.heading}`}
             style={{ fontFamily: "var(--heading-font, inherit)" }}
-          >
-            {content.heading}
-          </h2>
+          />
           {content.subheading && (
-            <p
+            <EditableText
+              as="p"
+              field="subheading"
+              value={content.subheading}
               className={`mt-4 text-lg ${t.body}`}
               style={{ fontFamily: "var(--body-font, inherit)" }}
-            >
-              {content.subheading}
-            </p>
+            />
           )}
         </div>
 
