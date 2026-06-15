@@ -127,9 +127,7 @@ export default function HeroBlock({
                   }}
                 />
                 <span
-                  className={`text-xs font-medium uppercase tracking-[0.2em] ${
-                    isDark ? "text-[#a1a1aa]" : "text-[#52525b]"
-                  }`}
+                  className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground"
                   style={{ fontFamily: "var(--body-font, inherit)" }}
                 >
                   {content.eyebrow || "Portfolio"}
@@ -166,11 +164,9 @@ export default function HeroBlock({
         return (
           <p
             className={
-              isDark
-                ? "portfolio-fade portfolio-fade-delay-1 mt-7 max-w-2xl text-lg leading-8 text-[#a1a1aa] sm:text-xl"
-                : isLightPortfolio
-                  ? "portfolio-fade portfolio-fade-delay-1 mt-7 max-w-2xl text-lg leading-8 text-[#52525b] sm:text-xl"
-                  : "mt-6 text-lg leading-8 text-white/90"
+              isPortfolioHero
+                ? "portfolio-fade portfolio-fade-delay-1 mt-7 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl"
+                : "mt-6 text-lg leading-8 text-white/90"
             }
             style={{ fontFamily: "var(--body-font, inherit)" }}
           >

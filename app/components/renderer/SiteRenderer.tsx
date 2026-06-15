@@ -11,6 +11,7 @@ import type { SiteId } from "@/src/lib/types";
 import type { Post } from "@/src/lib/posts";
 import { migrateToSections } from "@/app/components/editor/utils/contentUtils";
 import { buildGoogleFontsUrl } from "@/src/lib/fonts";
+import { buildSiteThemeVars } from "@/src/lib/site-theme";
 import { isDarkAppearance } from "@/app/components/blocks/appearance";
 import {
   HeroBlock,
@@ -79,6 +80,7 @@ export default function SiteRenderer({
 
   const fontStyles: React.CSSProperties = {
     scrollBehavior: "smooth",
+    ...buildSiteThemeVars(theme, normalizedContent.templateId),
     ...(theme.headingFont && {
       ["--heading-font" as string]: `'${theme.headingFont}', sans-serif`,
     }),
@@ -91,13 +93,7 @@ export default function SiteRenderer({
 
   return (
     <div
-      className={`relative min-h-screen ${
-        isDark
-          ? "bg-[#0a0a0b] text-[#f5f5f7]"
-          : isLightPortfolio
-            ? "bg-white text-[#18181b]"
-            : "bg-white"
-      }`}
+      className="relative min-h-screen bg-background text-foreground"
       style={fontStyles}
     >
       {fontsUrl && <link rel="stylesheet" href={fontsUrl} />}

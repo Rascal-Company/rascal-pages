@@ -29,6 +29,8 @@ import {
   updateThemeFont,
   updateThemeAppearance,
   updateSeoField,
+  applyThemePreset,
+  updateThemeRadius,
 } from "./utils/sectionUpdaters";
 import type { SiteId, SectionId } from "@/src/lib/types";
 import { useToast } from "@/app/components/ui/ToastContainer";
@@ -36,6 +38,7 @@ import EditorHeader from "./EditorHeader";
 import StatusMessages from "./StatusMessages";
 import TemplateSelector from "./TemplateSelector";
 import ThemeFields from "./fields/ThemeFields";
+import StyleFields from "./fields/StyleFields";
 import SeoFields from "./fields/SeoFields";
 import SaveButton from "./SaveButton";
 import EditorPreview from "./EditorPreview";
@@ -311,6 +314,12 @@ export default function Editor({
               </DndContext>
               <AddSectionButton onAdd={handleAddSection} />
             </div>
+
+            <StyleFields
+              radius={content.theme?.radius}
+              onPreset={(preset) => setContent(applyThemePreset(preset))}
+              onRadiusUpdate={(radius) => setContent(updateThemeRadius(radius))}
+            />
 
             <ThemeFields
               primaryColor={content.theme?.primaryColor}

@@ -71,7 +71,7 @@ export default function TestimonialsBlock({
   if (!content || content.length === 0) return null;
 
   const primaryColor = theme.primaryColor || "#10B981";
-  const t = surfaceTokens(theme);
+  const t = surfaceTokens();
 
   return (
     <section className={`py-24 sm:py-32 ${t.sectionAlt}`}>

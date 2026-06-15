@@ -122,7 +122,7 @@ export default function BentoBlock({ content, theme }: BentoBlockProps) {
   if (!content || content.items.length === 0) return null;
 
   const primaryColor = theme.primaryColor || "#3B82F6";
-  const t = surfaceTokens(theme);
+  const t = surfaceTokens();
 
   return (
     <section className="py-24 sm:py-32">

@@ -23,23 +23,14 @@ export default function PortfolioNav({
   cta,
   theme,
 }: PortfolioNavProps) {
-  const isDark = theme.appearance === "dark";
   const primaryColor = theme.primaryColor || "#3b82f6";
 
   return (
-    <header
-      className={`sticky top-0 z-40 backdrop-blur ${
-        isDark
-          ? "border-b border-[#232327] bg-[#0a0a0b]/70"
-          : "border-b border-[#e4e4e7] bg-white/75"
-      }`}
-    >
+    <header className="sticky top-0 z-40 border-b border-border bg-background/70 backdrop-blur">
       <nav className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4 lg:px-8">
         <a
           href="#"
-          className={`truncate text-lg font-semibold ${
-            isDark ? "text-[#f5f5f7]" : "text-[#18181b]"
-          }`}
+          className="truncate text-lg font-semibold text-foreground"
           style={{ fontFamily: "var(--heading-font, inherit)" }}
         >
           {name}
@@ -51,11 +42,7 @@ export default function PortfolioNav({
               <a
                 key={item.href}
                 href={item.href}
-                className={`text-sm font-medium transition-colors ${
-                  isDark
-                    ? "text-[#a1a1aa] hover:text-[#f5f5f7]"
-                    : "text-[#52525b] hover:text-[#18181b]"
-                }`}
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 {item.label}
               </a>

@@ -49,13 +49,13 @@ export default function FormBlock({
   const primaryColor = theme.primaryColor || "#3B82F6";
   const isDark = theme.appearance === "dark";
   const cardClass = isDark
-    ? "rounded-2xl bg-[#121214] p-8 shadow-xl ring-1 ring-[#232327]"
+    ? "rounded-2xl bg-card p-8 shadow-xl ring-1 ring-border"
     : "rounded-2xl bg-white p-8 shadow-xl ring-1 ring-gray-900/10";
   const labelClass = isDark
-    ? "block text-sm font-medium text-[#a1a1aa] mb-2"
+    ? "block text-sm font-medium text-muted-foreground mb-2"
     : "block text-sm font-medium text-gray-700 mb-2";
   const inputClass = isDark
-    ? "w-full rounded-md border border-[#232327] bg-[#0a0a0b] px-4 py-3 text-[#f5f5f7] placeholder:text-[#71717a] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+    ? "w-full rounded-md border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground/70 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
     : "w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed";
   const [isPending, startTransition] = useTransition();
   const [formStatus, setFormStatus] = useState<"idle" | "success" | "error">(
@@ -119,7 +119,7 @@ export default function FormBlock({
           {content.formTitle && (
             <h2
               className={`text-2xl font-bold mb-6 ${
-                isDark ? "text-[#f5f5f7]" : "text-gray-900"
+                isDark ? "text-foreground" : "text-gray-900"
               }`}
               style={{ fontFamily: "var(--heading-font, inherit)" }}
             >
@@ -170,7 +170,7 @@ export default function FormBlock({
                     />
                     <label
                       htmlFor={field.id}
-                      className={`text-sm ${isDark ? "text-[#a1a1aa]" : "text-gray-600"}`}
+                      className={`text-sm ${isDark ? "text-muted-foreground" : "text-gray-600"}`}
                     >
                       {field.label}
                     </label>
@@ -229,7 +229,7 @@ export default function FormBlock({
               {isPending ? "Lähetetään..." : submitButtonText}
             </button>
             <p
-              className={`text-xs text-center mt-2 ${isDark ? "text-[#71717a]" : "text-gray-500"}`}
+              className={`text-xs text-center mt-2 ${isDark ? "text-muted-foreground/70" : "text-gray-500"}`}
             >
               Emme koskaan jaa tietojasi kolmansien osapuolten kanssa.
             </p>

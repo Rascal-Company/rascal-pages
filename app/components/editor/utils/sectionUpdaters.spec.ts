@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest";
 import type { TemplateConfig } from "@/src/lib/templates";
-import { updateSeoField } from "./sectionUpdaters";
+import type { ThemePreset } from "@/src/lib/site-theme";
+import {
+  applyThemePreset,
+  updateSeoField,
+  updateThemeRadius,
+} from "./sectionUpdaters";
 
 const baseContent: TemplateConfig = {
   templateId: "saas-modern",
@@ -35,5 +40,51 @@ describe(updateSeoField, () => {
     updateSeoField("metaTitle", "Oma otsikko")(baseContent);
 
     expect(baseContent.seo).toBeUndefined();
+  });
+});
+
+describe(applyThemePreset, () => {
+  test("sets appearance, primary color and palette from the preset", () => {
+    const preset: ThemePreset = {
+      id: "midnight",
+      name: "Tumma",
+      appearance: "dark",
+      primaryColor: "#6366F1",
+    };
+
+    const result = applyThemePreset(preset)(baseContent);
+
+    expect(result.theme).toEqual({
+      primaryColor: "#6366F1",
+      appearance: "dark",
+      palette: undefined,
+    });
+  });
+
+  test("replaces a previously customized palette", () => {
+    const customized: TemplateConfig = {
+      ...baseContent,
+      theme: { primaryColor: "#000000", palette: { background: "#123456" } },
+    };
+    const preset: ThemePreset = {
+      id: "mono",
+      name: "Mono",
+      appearance: "light",
+      primaryColor: "#111827",
+      palette: { foreground: "#111827" },
+    };
+
+    expect(applyThemePreset(preset)(customized).theme.palette).toEqual({
+      foreground: "#111827",
+    });
+  });
+});
+
+describe(updateThemeRadius, () => {
+  test("sets the radius and clears it when empty", () => {
+    const withRadius = updateThemeRadius("0.75rem")(baseContent);
+    expect(withRadius.theme.radius).toBe("0.75rem");
+
+    expect(updateThemeRadius("")(withRadius).theme.radius).toBeUndefined();
   });
 });

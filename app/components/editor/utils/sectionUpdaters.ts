@@ -4,6 +4,7 @@ import type {
   SectionContentMap,
   SeoConfig,
 } from "@/src/lib/templates";
+import type { ThemePreset } from "@/src/lib/site-theme";
 import type { SectionId } from "@/src/lib/types";
 import { createSection, getDefaultSectionContent } from "./contentUtils";
 
@@ -152,6 +153,33 @@ export function updateThemeAppearance(
   return (prev) => ({
     ...prev,
     theme: { ...prev.theme, appearance },
+  });
+}
+
+/**
+ * Apply a curated theme preset: sets appearance, primary color and palette,
+ * replacing any previous custom palette.
+ */
+export function applyThemePreset(preset: ThemePreset): ContentUpdater {
+  return (prev) => ({
+    ...prev,
+    theme: {
+      ...prev.theme,
+      appearance: preset.appearance,
+      primaryColor: preset.primaryColor,
+      palette: preset.palette,
+    },
+  });
+}
+
+/**
+ * Update the site corner radius. An empty value clears it so the rendered site
+ * falls back to its default radius.
+ */
+export function updateThemeRadius(radius: string): ContentUpdater {
+  return (prev) => ({
+    ...prev,
+    theme: { ...prev.theme, radius: radius || undefined },
   });
 }
 
