@@ -229,6 +229,22 @@ export type Section<T extends SectionType = SectionType> = {
   type: T;
   content: SectionContentMap[T];
   isVisible: boolean;
+  /** Per-section layout/style overrides applied around the rendered block. */
+  style?: SectionStyle;
+};
+
+/**
+ * Per-section presentation overrides, applied by the renderer as a wrapper
+ * around the block. All fields are optional; unset means the block's own
+ * default styling is used.
+ */
+export type SectionStyle = {
+  /** Background color (CSS color) for the whole section band. */
+  background?: string;
+  /** Extra vertical padding around the section. */
+  paddingY?: "none" | "sm" | "md" | "lg";
+  /** Text alignment for the section content. */
+  align?: "left" | "center" | "right";
 };
 
 export type ThemeConfig = {

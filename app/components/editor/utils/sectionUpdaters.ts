@@ -3,6 +3,7 @@ import type {
   SectionType,
   SectionContentMap,
   SeoConfig,
+  SectionStyle,
 } from "@/src/lib/templates";
 import type { ThemePreset } from "@/src/lib/site-theme";
 import type { SectionId } from "@/src/lib/types";
@@ -62,6 +63,22 @@ export function moveSection(
     [sections[index], sections[target]] = [sections[target], sections[index]];
     return { ...prev, sections };
   };
+}
+
+/**
+ * Merge a partial style patch into a section's style. Fields set to undefined
+ * in the patch are removed so the block falls back to its default styling.
+ */
+export function updateSectionStyle(
+  sectionId: SectionId,
+  patch: Partial<SectionStyle>,
+): ContentUpdater {
+  return (prev) => ({
+    ...prev,
+    sections: prev.sections.map((s) =>
+      s.id === sectionId ? { ...s, style: { ...s.style, ...patch } } : s,
+    ),
+  });
 }
 
 /**

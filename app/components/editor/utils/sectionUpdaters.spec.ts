@@ -5,6 +5,7 @@ import type { ThemePreset } from "@/src/lib/site-theme";
 import {
   applyThemePreset,
   moveSection,
+  updateSectionStyle,
   updateSeoField,
   updateThemeRadius,
 } from "./sectionUpdaters";
@@ -109,6 +110,35 @@ describe(moveSection, () => {
 
   test("is a no-op at the boundary", () => {
     expect(moveSection("a" as SectionId, "up")(threeSections)).toBe(threeSections);
+  });
+});
+
+describe(updateSectionStyle, () => {
+  const oneSection: TemplateConfig = {
+    templateId: "saas-modern",
+    theme: { primaryColor: "#3B82F6" },
+    sections: [
+      { id: "a" as SectionId, type: "hero", content: {} as never, isVisible: true },
+    ],
+  };
+
+  test("merges a style patch into the target section", () => {
+    const withBg = updateSectionStyle("a" as SectionId, {
+      background: "#000000",
+    })(oneSection);
+    const result = updateSectionStyle("a" as SectionId, { paddingY: "lg" })(
+      withBg,
+    );
+
+    expect(result.sections[0].style).toEqual({
+      background: "#000000",
+      paddingY: "lg",
+    });
+  });
+
+  test("does not mutate the previous content", () => {
+    updateSectionStyle("a" as SectionId, { align: "center" })(oneSection);
+    expect(oneSection.sections[0].style).toBeUndefined();
   });
 });
 
