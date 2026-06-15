@@ -109,7 +109,7 @@ export default function SectionStyleInspector({
         </div>
       </div>
 
-      <div>
+      <div className="mb-4">
         <label className="block text-sm font-medium text-foreground">
           Leveys
         </label>
@@ -128,6 +128,36 @@ export default function SectionStyleInspector({
               {option.label}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-foreground">
+          Näkyvyys
+        </label>
+        <div className="mt-2 grid grid-cols-2 gap-1">
+          <button
+            type="button"
+            onClick={() => onChange({ hideOnMobile: !style?.hideOnMobile })}
+            className={`rounded-md border px-2 py-1.5 text-xs font-medium transition-colors ${
+              style?.hideOnMobile
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-foreground hover:bg-accent"
+            }`}
+          >
+            Piilota mobiilissa
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange({ hideOnDesktop: !style?.hideOnDesktop })}
+            className={`rounded-md border px-2 py-1.5 text-xs font-medium transition-colors ${
+              style?.hideOnDesktop
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-foreground hover:bg-accent"
+            }`}
+          >
+            Piilota työpöydällä
+          </button>
         </div>
       </div>
     </div>

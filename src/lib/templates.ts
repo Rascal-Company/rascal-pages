@@ -251,6 +251,10 @@ export type SectionStyle = {
   align?: "left" | "center" | "right";
   /** Content width: the block default, or a narrower centered column. */
   width?: "default" | "narrow";
+  /** Hide the section on small (mobile) viewports. */
+  hideOnMobile?: boolean;
+  /** Hide the section on large (desktop) viewports. */
+  hideOnDesktop?: boolean;
 };
 
 export type ThemeConfig = {

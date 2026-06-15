@@ -342,6 +342,7 @@ export default function SiteRenderer({
                         e.dataTransfer.effectAllowed = "move";
                       }}
                       title="Raahaa järjestääksesi"
+                      aria-label="Raahaa järjestääksesi"
                       className="cursor-grab select-none rounded bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground shadow active:cursor-grabbing"
                     >
                       ⠿
@@ -355,6 +356,7 @@ export default function SiteRenderer({
                       <button
                         type="button"
                         title="Siirrä ylös"
+                        aria-label="Siirrä ylös"
                         onClick={(e) => {
                           e.stopPropagation();
                           onMoveSection?.(section.id, "up");
@@ -366,6 +368,7 @@ export default function SiteRenderer({
                       <button
                         type="button"
                         title="Siirrä alas"
+                        aria-label="Siirrä alas"
                         onClick={(e) => {
                           e.stopPropagation();
                           onMoveSection?.(section.id, "down");
@@ -377,6 +380,7 @@ export default function SiteRenderer({
                       <button
                         type="button"
                         title="Monista"
+                        aria-label="Monista osio"
                         onClick={(e) => {
                           e.stopPropagation();
                           onDuplicateSection?.(section.id);
@@ -388,6 +392,7 @@ export default function SiteRenderer({
                       <button
                         type="button"
                         title="Poista"
+                        aria-label="Poista osio"
                         onClick={(e) => {
                           e.stopPropagation();
                           onRemoveSection?.(section.id);
@@ -409,6 +414,7 @@ export default function SiteRenderer({
                   <button
                     type="button"
                     title="Lisää osio tähän"
+                    aria-label="Lisää osio tähän"
                     onClick={(e) => {
                       e.stopPropagation();
                       onRequestInsert?.(section.id);
