@@ -550,6 +550,33 @@ export default function HeroBlockEditor({
 
   return (
     <div className="space-y-4">
+      <div>
+        <label className="mb-2 block text-sm font-medium text-foreground">
+          Asettelu
+        </label>
+        <div className="grid grid-cols-2 gap-1">
+          {(
+            [
+              { value: "centered", label: "Keskitetty" },
+              { value: "left", label: "Vasen" },
+            ] as const
+          ).map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onUpdate({ ...content, layout: option.value })}
+              className={`rounded-md border px-2 py-1.5 text-xs font-medium transition-colors ${
+                (content?.layout ?? "centered") === option.value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-foreground hover:bg-accent"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <SortableFieldList
         fields={HERO_FIELDS}
         fieldOrder={content?.fieldOrder || DEFAULT_HERO_ORDER}

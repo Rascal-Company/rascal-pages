@@ -3,10 +3,21 @@
 import { useRef, useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import type { HeroContent, FormField } from "@/src/lib/templates";
+import { cva } from "class-variance-authority";
 import { AnalyticsLink } from "@/app/components/AnalyticsLink";
 import EditableText from "./EditableText";
 import { submitLead } from "@/app/actions/submit-lead";
 import type { SiteId } from "@/src/lib/types";
+
+const heroContentVariants = cva("", {
+  variants: {
+    layout: {
+      centered: "mx-auto max-w-2xl text-center",
+      left: "max-w-2xl text-left",
+    },
+  },
+  defaultVariants: { layout: "centered" },
+});
 
 type HeroBlockProps = {
   content: HeroContent;
@@ -262,13 +273,13 @@ export default function HeroBlock({
         }
       >
         <div
-          className={`mx-auto ${
+          className={
             hasForm
-              ? "grid lg:grid-cols-2 gap-12 items-center"
+              ? "mx-auto grid lg:grid-cols-2 gap-12 items-center"
               : isPortfolioHero
-                ? "max-w-3xl text-left"
-                : "max-w-2xl text-center"
-          }`}
+                ? "mx-auto max-w-3xl text-left"
+                : heroContentVariants({ layout: content.layout })
+          }
         >
           <div>
             {order.map((fieldKey) => {

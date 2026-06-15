@@ -28,6 +28,8 @@ export type HeroContent = {
   image?: string;
   /** Optional small label shown above the headline (portfolio hero). */
   eyebrow?: string;
+  /** Content alignment variant for the standard (non-portfolio) hero. */
+  layout?: "centered" | "left";
   fieldOrder?: string[];
   // Embedded form options
   showForm?: boolean;
