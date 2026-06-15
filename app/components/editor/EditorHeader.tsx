@@ -1,6 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Button } from "@/app/components/ui/button";
+import ThemeToggle from "@/app/components/ThemeToggle";
 
 interface EditorHeaderProps {
   siteSubdomain: string;
@@ -16,23 +18,25 @@ export default function EditorHeader({
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between">
-        <button
+        <Button
+          variant="link"
+          size="sm"
           onClick={() => router.push("/app/dashboard")}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="h-auto px-0 text-muted-foreground hover:text-foreground"
         >
           ← Takaisin dashboardiin
-        </button>
-        <button
-          onClick={onSettingsClick}
-          className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-        >
-          Asetukset
-        </button>
+        </Button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Button variant="outline" size="sm" onClick={onSettingsClick}>
+            Asetukset
+          </Button>
+        </div>
       </div>
-      <h1 className="mt-4 text-2xl font-bold text-gray-900">
+      <h1 className="mt-4 text-2xl font-bold text-foreground">
         Muokkaa sivustoa
       </h1>
-      <p className="mt-1 text-sm text-gray-500">
+      <p className="mt-1 text-sm text-muted-foreground">
         {siteSubdomain}.rascalpages.fi
       </p>
     </div>

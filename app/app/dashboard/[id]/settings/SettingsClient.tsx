@@ -10,6 +10,7 @@ import type { DnsRecommendation } from "@/src/lib/vercel-domains";
 import { useToast } from "@/app/components/ui/ToastContainer";
 import Link from "next/link";
 import type { SiteId } from "@/src/lib/types";
+import { Button } from "@/app/components/ui/button";
 
 interface SettingsClientProps {
   siteId: SiteId;
@@ -157,7 +158,7 @@ export default function SettingsClient({
         </div>
 
         {/* Default Subdomain Info */}
-        <div className="mb-8 rounded-lg border border-brand-dark/10 bg-white p-4">
+        <div className="mb-8 rounded-lg border border-brand-dark/10 bg-card p-4">
           <h3 className="mb-2 text-sm font-medium text-brand-dark">
             Sivuston osoite
           </h3>
@@ -169,7 +170,7 @@ export default function SettingsClient({
               href={`https://${subdomain}.${rootDomain}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-medium text-brand-accent hover:text-brand-accent-hover"
+              className="text-sm font-medium text-primary hover:text-primary-hover"
             >
               Avaa sivusto →
             </a>
@@ -177,7 +178,7 @@ export default function SettingsClient({
         </div>
 
         {/* Oma verkkotunnus */}
-        <div className="mb-8 rounded-lg border border-brand-dark/10 bg-white p-6 shadow-sm">
+        <div className="mb-8 rounded-lg border border-brand-dark/10 bg-card p-6 shadow-sm">
           <h2 className="text-xl font-semibold text-brand-dark">
             Oma verkkotunnus
           </h2>
@@ -192,15 +193,16 @@ export default function SettingsClient({
               value={domainInput}
               onChange={(e) => setDomainInput(e.target.value)}
               placeholder="oma-firma.fi"
-              className="w-full rounded-md border border-brand-dark/20 bg-white px-4 py-2 text-sm text-brand-dark outline-none transition-colors focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
+              className="w-full rounded-md border border-brand-dark/20 bg-card px-4 py-2 text-sm text-brand-dark outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20"
             />
-            <button
+            <Button
               onClick={handleSaveDomain}
               disabled={isDomainBusy}
-              className="shrink-0 rounded-md bg-brand-accent px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+              size="lg"
+              className="shrink-0"
             >
               {isDomainBusy ? "..." : savedDomain ? "Päivitä" : "Tallenna"}
-            </button>
+            </Button>
           </div>
 
           {savedDomain && (
@@ -225,7 +227,7 @@ export default function SettingsClient({
                   <p className="mb-2">
                     Lisää tämä tietue verkkotunnuksesi DNS-asetuksiin:
                   </p>
-                  <div className="grid grid-cols-3 gap-2 rounded-md bg-white p-3 font-mono text-xs">
+                  <div className="grid grid-cols-3 gap-2 rounded-md bg-card p-3 font-mono text-xs">
                     <div>
                       <div className="text-brand-dark/40">Tyyppi</div>
                       <div className="text-brand-dark">{dnsRecord.type}</div>
@@ -248,7 +250,7 @@ export default function SettingsClient({
                 <button
                   onClick={handleCheckDomain}
                   disabled={isDomainBusy}
-                  className="text-sm font-medium text-brand-accent hover:text-brand-accent-hover disabled:opacity-50"
+                  className="text-sm font-medium text-primary hover:text-primary-hover disabled:opacity-50"
                 >
                   Tarkista tila
                 </button>
@@ -258,7 +260,7 @@ export default function SettingsClient({
                     void handleSaveDomain();
                   }}
                   disabled={isDomainBusy}
-                  className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                  className="text-sm font-medium text-destructive hover:text-destructive/90 disabled:opacity-50"
                 >
                   Poista verkkotunnus
                 </button>
@@ -293,7 +295,7 @@ export default function SettingsClient({
                 value={gtmId}
                 onChange={(e) => setGtmId(e.target.value)}
                 placeholder="GTM-XXXXXX"
-                className="w-full rounded-md border border-brand-dark/20 bg-white px-4 py-2 text-sm text-brand-dark outline-none transition-colors focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
+                className="w-full rounded-md border border-brand-dark/20 bg-card px-4 py-2 text-sm text-brand-dark outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20"
               />
               <p className="mt-1 text-xs text-brand-dark/60">
                 Löydät ID:n Google Tag Managerista (esim. GTM-ABCD123)
@@ -313,7 +315,7 @@ export default function SettingsClient({
                 value={ga4Id}
                 onChange={(e) => setGa4Id(e.target.value)}
                 placeholder="G-XXXXXXXXXX"
-                className="w-full rounded-md border border-brand-dark/20 bg-white px-4 py-2 text-sm text-brand-dark outline-none transition-colors focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
+                className="w-full rounded-md border border-brand-dark/20 bg-card px-4 py-2 text-sm text-brand-dark outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20"
               />
               <p className="mt-1 text-xs text-brand-dark/60">
                 Löydät ID:n Google Analyticsista (esim. G-1J3WFE74E4)
@@ -333,20 +335,21 @@ export default function SettingsClient({
                 value={pixelId}
                 onChange={(e) => setPixelId(e.target.value)}
                 placeholder="123456789012345"
-                className="w-full rounded-md border border-brand-dark/20 bg-white px-4 py-2 text-sm text-brand-dark outline-none transition-colors focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
+                className="w-full rounded-md border border-brand-dark/20 bg-card px-4 py-2 text-sm text-brand-dark outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20"
               />
               <p className="mt-1 text-xs text-brand-dark/60">
                 Löydät Pixel ID:n Meta Business Suitesta (15-numeroinen koodi)
               </p>
             </div>
 
-            <button
+            <Button
               onClick={handleSaveAnalytics}
               disabled={isSaving}
-              className="mt-2 rounded-md bg-brand-accent px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+              size="lg"
+              className="mt-2"
             >
               {isSaving ? "Tallennetaan..." : "Tallenna koodit"}
-            </button>
+            </Button>
           </div>
         </div>
       </div>

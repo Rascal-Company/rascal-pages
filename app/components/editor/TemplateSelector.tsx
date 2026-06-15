@@ -1,6 +1,13 @@
 "use client";
 
-import { TEMPLATES, getTemplateById, Template } from "@/src/lib/templates";
+import { TEMPLATES, getTemplateById } from "@/src/lib/templates";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/app/components/ui/select";
 
 interface TemplateSelectorProps {
   currentTemplateId: string;
@@ -14,21 +21,25 @@ export default function TemplateSelector({
   const currentTemplate = getTemplateById(currentTemplateId);
 
   return (
-    <div className="rounded-lg border border-gray-200 p-4 bg-gray-50">
-      <h2 className="mb-4 text-lg font-semibold text-gray-900">Template</h2>
-      <select
+    <div className="rounded-lg border border-border p-4 bg-muted">
+      <h2 className="mb-4 text-lg font-semibold text-foreground">Template</h2>
+      <Select
         value={currentTemplateId || "saas-modern"}
-        onChange={(e) => onTemplateChange(e.target.value)}
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+        onValueChange={onTemplateChange}
       >
-        {TEMPLATES.map((template) => (
-          <option key={template.id} value={template.id}>
-            {template.name}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger className="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {TEMPLATES.map((template) => (
+            <SelectItem key={template.id} value={template.id}>
+              {template.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       {currentTemplate && (
-        <p className="mt-2 text-xs text-gray-600">
+        <p className="mt-2 text-xs text-muted-foreground">
           {currentTemplate.description}
         </p>
       )}

@@ -53,7 +53,7 @@ export default function ImageUploadField({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={isUploading}
-          className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md border border-input bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isUploading ? "Ladataan…" : value ? "Vaihda kuva" : "Lataa kuva"}
         </button>
@@ -62,7 +62,7 @@ export default function ImageUploadField({
             type="button"
             onClick={() => onChange("")}
             disabled={isUploading}
-            className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+            className="text-sm font-medium text-destructive hover:text-destructive disabled:opacity-50"
           >
             Poista
           </button>
@@ -82,10 +82,10 @@ export default function ImageUploadField({
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+        className="block w-full rounded-md border border-input px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-ring"
       />
 
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
 
       {value && (
         // eslint-disable-next-line @next/next/no-img-element

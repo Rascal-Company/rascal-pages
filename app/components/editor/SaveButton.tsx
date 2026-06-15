@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/app/components/ui/button";
+
 interface SaveButtonProps {
   isSaving: boolean;
   onSave: () => void;
@@ -7,14 +9,15 @@ interface SaveButtonProps {
 
 export default function SaveButton({ isSaving, onSave }: SaveButtonProps) {
   return (
-    <div className="sticky bottom-0 bg-white pt-4">
-      <button
+    <div className="sticky bottom-0 bg-background pt-4">
+      <Button
         onClick={onSave}
         disabled={isSaving}
-        className="w-full rounded-md bg-brand-accent px-4 py-3 text-sm font-medium text-white hover:bg-brand-accent-hover focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 disabled:bg-brand-accent/60 disabled:cursor-not-allowed"
+        size="lg"
+        className="w-full"
       >
         {isSaving ? "Tallennetaan..." : "Tallenna muutokset"}
-      </button>
+      </Button>
     </div>
   );
 }

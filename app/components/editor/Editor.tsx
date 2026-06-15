@@ -209,10 +209,10 @@ export default function Editor({
 
   return (
     <EditorSiteProvider siteId={siteId}>
-      <div className="flex h-screen bg-gray-50">
+      <div className="flex h-screen bg-background">
       {/* Left Sidebar - Section List (25%) */}
       {!isFullPreview && (
-        <div className="w-1/4 min-w-[250px] max-w-[350px] overflow-y-auto border-r border-gray-200 bg-white p-4">
+        <div className="w-1/4 min-w-[250px] max-w-[350px] overflow-y-auto border-r border-border bg-card p-4">
           <EditorHeader
             siteSubdomain={siteSubdomain}
             onSettingsClick={() => setIsSettingsOpen(true)}
@@ -233,7 +233,7 @@ export default function Editor({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-700">Osiot</h3>
+                <h3 className="text-sm font-medium text-foreground">Osiot</h3>
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
@@ -241,7 +241,7 @@ export default function Editor({
                     disabled={!canUndo}
                     title="Kumoa (Ctrl/Cmd+Z)"
                     aria-label="Kumoa"
-                    className="rounded-md border border-gray-200 p-1.5 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <svg
                       className="h-4 w-4"
@@ -263,7 +263,7 @@ export default function Editor({
                     disabled={!canRedo}
                     title="Tee uudelleen (Ctrl/Cmd+Shift+Z)"
                     aria-label="Tee uudelleen"
-                    className="rounded-md border border-gray-200 p-1.5 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <svg
                       className="h-4 w-4"
@@ -349,14 +349,14 @@ export default function Editor({
 
       {/* Middle Panel - Section Editor (25%) */}
       {!isFullPreview && (
-        <div className="w-1/4 min-w-[300px] max-w-[400px] overflow-y-auto border-r border-gray-200 bg-white p-4">
+        <div className="w-1/4 min-w-[300px] max-w-[400px] overflow-y-auto border-r border-border bg-card p-4">
           {activeSection ? (
             <BlockEditor
               section={activeSection}
               onUpdate={handleSectionUpdate}
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-gray-500">
+            <div className="flex h-full items-center justify-center text-muted-foreground">
               Valitse osio vasemmalta muokataksesi sitä
             </div>
           )}
@@ -372,13 +372,13 @@ export default function Editor({
           }`}
         >
           {/* Device Toggle */}
-          <div className="flex rounded-lg border border-gray-200 bg-white shadow-sm">
+          <div className="flex rounded-lg border border-border bg-card shadow-sm">
             <button
               onClick={() => setPreviewMode("desktop")}
               className={`flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors ${
                 previewMode === "desktop"
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-accent text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               } rounded-l-lg`}
               title="Desktop"
             >
@@ -400,9 +400,9 @@ export default function Editor({
               onClick={() => setPreviewMode("mobile")}
               className={`flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors ${
                 previewMode === "mobile"
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-500 hover:text-gray-700"
-              } rounded-r-lg border-l border-gray-200`}
+                  ? "bg-accent text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              } rounded-r-lg border-l border-border`}
               title="Mobile"
             >
               <svg
@@ -424,7 +424,7 @@ export default function Editor({
           {/* Full Preview Toggle */}
           <button
             onClick={() => setIsFullPreview(!isFullPreview)}
-            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+            className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
             title={isFullPreview ? "Näytä editori" : "Koko näytön esikatselu"}
           >
             {isFullPreview ? (

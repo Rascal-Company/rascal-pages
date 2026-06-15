@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@rascal/theme/theme.css";
 
 @theme {
   /* Rascal AI Brand Palette */

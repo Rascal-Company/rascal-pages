@@ -8,11 +8,11 @@ type LogosBlockEditorProps = {
 export default function LogosBlockEditor({}: LogosBlockEditorProps) {
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted-foreground">
         Logo-osio näyttää kumppaneiden ja asiakkaiden logoja. Logot ovat tällä
         hetkellä placeholder-tilassa.
       </p>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-muted-foreground">
         Tulossa pian: Mahdollisuus lisätä omia logokuvia.
       </p>
     </div>
