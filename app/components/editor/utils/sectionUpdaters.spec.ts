@@ -1,8 +1,10 @@
 import { describe, expect, test } from "vitest";
 import type { TemplateConfig } from "@/src/lib/templates";
+import type { SectionId } from "@/src/lib/types";
 import type { ThemePreset } from "@/src/lib/site-theme";
 import {
   applyThemePreset,
+  moveSection,
   updateSeoField,
   updateThemeRadius,
 } from "./sectionUpdaters";
@@ -77,6 +79,36 @@ describe(applyThemePreset, () => {
     expect(applyThemePreset(preset)(customized).theme.palette).toEqual({
       foreground: "#111827",
     });
+  });
+});
+
+describe(moveSection, () => {
+  const threeSections: TemplateConfig = {
+    templateId: "saas-modern",
+    theme: { primaryColor: "#3B82F6" },
+    sections: [
+      { id: "a" as SectionId, type: "hero", content: {} as never, isVisible: true },
+      { id: "b" as SectionId, type: "features", content: {} as never, isVisible: true },
+      { id: "c" as SectionId, type: "footer", content: {} as never, isVisible: true },
+    ],
+  };
+
+  test("moves a section down by one position", () => {
+    const order = moveSection("a" as SectionId, "down")(threeSections).sections.map(
+      (s) => s.id,
+    );
+    expect(order).toEqual(["b", "a", "c"]);
+  });
+
+  test("moves a section up by one position", () => {
+    const order = moveSection("c" as SectionId, "up")(threeSections).sections.map(
+      (s) => s.id,
+    );
+    expect(order).toEqual(["a", "c", "b"]);
+  });
+
+  test("is a no-op at the boundary", () => {
+    expect(moveSection("a" as SectionId, "up")(threeSections)).toBe(threeSections);
   });
 });
 

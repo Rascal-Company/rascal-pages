@@ -3,6 +3,7 @@
 import type { TechStackContent } from "@/src/lib/templates";
 import type { SiteId } from "@/src/lib/types";
 import { surfaceTokens } from "./appearance";
+import EditableText from "./EditableText";
 
 type TechStackBlockProps = {
   content: TechStackContent;
@@ -21,19 +22,21 @@ export default function TechStackBlock({ content }: TechStackBlockProps) {
     <section id="osaaminen" className={`py-24 sm:py-32 ${t.sectionAlt}`}>
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
-          <h2
+          <EditableText
+            as="h2"
+            field="heading"
+            value={content.heading}
             className={`text-3xl font-bold tracking-tight sm:text-4xl ${t.heading}`}
             style={{ fontFamily: "var(--heading-font, inherit)" }}
-          >
-            {content.heading}
-          </h2>
+          />
           {content.subheading && (
-            <p
+            <EditableText
+              as="p"
+              field="subheading"
+              value={content.subheading}
               className={`mt-4 text-lg leading-8 ${t.body}`}
               style={{ fontFamily: "var(--body-font, inherit)" }}
-            >
-              {content.subheading}
-            </p>
+            />
           )}
         </div>
 

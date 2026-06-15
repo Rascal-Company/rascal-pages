@@ -2,18 +2,38 @@
 
 import { TemplateConfig } from "@/src/lib/templates";
 import SiteRenderer from "@/app/components/renderer/SiteRenderer";
-import type { SiteId } from "@/src/lib/types";
+import type { SiteId, SectionId } from "@/src/lib/types";
 
 interface EditorPreviewProps {
   content: TemplateConfig;
   siteId: SiteId;
   previewMode?: "desktop" | "mobile";
+  activeSectionId?: SectionId | null;
+  onSelectSection?: (sectionId: SectionId) => void;
+  onMoveSection?: (sectionId: SectionId, direction: "up" | "down") => void;
+  onDuplicateSection?: (sectionId: SectionId) => void;
+  onRemoveSection?: (sectionId: SectionId) => void;
+  onRequestInsert?: (afterSectionId: SectionId) => void;
+  onReorderSections?: (draggedId: SectionId, targetId: SectionId) => void;
+  onUpdateSectionField?: (
+    sectionId: SectionId,
+    field: string,
+    value: string,
+  ) => void;
 }
 
 export default function EditorPreview({
   content,
   siteId,
   previewMode = "desktop",
+  activeSectionId = null,
+  onSelectSection,
+  onMoveSection,
+  onDuplicateSection,
+  onRemoveSection,
+  onRequestInsert,
+  onReorderSections,
+  onUpdateSectionField,
 }: EditorPreviewProps) {
   const isMobile = previewMode === "mobile";
 
@@ -34,7 +54,20 @@ export default function EditorPreview({
               <div className="w-16 h-1 bg-gray-600 rounded-full" />
             </div>
           )}
-          <SiteRenderer content={content} siteId={siteId} isPreview={true} />
+          <SiteRenderer
+            content={content}
+            siteId={siteId}
+            isPreview={true}
+            editable={true}
+            activeSectionId={activeSectionId}
+            onSelectSection={onSelectSection}
+            onMoveSection={onMoveSection}
+            onDuplicateSection={onDuplicateSection}
+            onRemoveSection={onRemoveSection}
+            onRequestInsert={onRequestInsert}
+            onReorderSections={onReorderSections}
+            onUpdateSectionField={onUpdateSectionField}
+          />
           {isMobile && (
             <div className="bg-gray-800 px-4 py-3 flex items-center justify-center">
               <div className="w-10 h-10 border-2 border-gray-600 rounded-full" />

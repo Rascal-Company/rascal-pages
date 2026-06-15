@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import type { AboutContent } from "@/src/lib/templates";
 import type { SiteId } from "@/src/lib/types";
+import EditableText from "./EditableText";
 
 type AboutBlockProps = {
   content: AboutContent;
@@ -23,14 +24,15 @@ function renderAboutField(
   switch (fieldKey) {
     case "name":
       return (
-        <h2
+        <EditableText
+          as="h2"
+          field="name"
+          value={content.name || "Tarina"}
           className={`text-3xl font-bold tracking-tight sm:text-4xl mb-6 ${
             isPortfolio ? "text-foreground" : "text-gray-900"
           }`}
           style={{ fontFamily: "var(--heading-font, inherit)" }}
-        >
-          {content.name || "Tarina"}
-        </h2>
+        />
       );
     case "bio":
       return (
@@ -39,14 +41,15 @@ function renderAboutField(
             isDark ? "prose-invert" : "prose-gray"
           }`}
         >
-          <p
+          <EditableText
+            as="p"
+            field="bio"
+            value={content.bio}
             className={`text-lg leading-8 whitespace-pre-line ${
               isPortfolio ? "text-muted-foreground" : "text-gray-600"
             }`}
             style={{ fontFamily: "var(--body-font, inherit)" }}
-          >
-            {content.bio}
-          </p>
+          />
         </div>
       );
     case "image":

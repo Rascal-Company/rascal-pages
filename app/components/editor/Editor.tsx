@@ -25,6 +25,7 @@ import {
   addSection,
   removeSection,
   duplicateSection,
+  moveSection,
   updateThemeColor,
   updateThemeFont,
   updateThemeAppearance,
@@ -46,6 +47,7 @@ import PublishedToggle from "./PublishedToggle";
 import SortableSectionItem from "./SortableSectionItem";
 import BlockEditor from "./BlockEditor";
 import AddSectionButton from "./AddSectionButton";
+import SectionPicker from "./SectionPicker";
 import SettingsModal from "./SettingsModal";
 import SaveStatusIndicator from "./SaveStatusIndicator";
 import { EditorSiteProvider } from "./EditorSiteContext";
@@ -96,6 +98,7 @@ export default function Editor({
     "desktop",
   );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [insertAfterId, setInsertAfterId] = useState<SectionId | null>(null);
 
   const rootDomain = "rascalpages.fi";
 
@@ -199,6 +202,26 @@ export default function Editor({
 
   const handleAddSection = (type: SectionType) => {
     setContent(addSection(type, activeSectionId || undefined));
+  };
+
+  const handleInsertSection = (type: SectionType) => {
+    if (insertAfterId === null) return;
+    setContent(addSection(type, insertAfterId));
+    setInsertAfterId(null);
+  };
+
+  const handleInlineFieldUpdate = (
+    sectionId: SectionId,
+    field: string,
+    value: string,
+  ) => {
+    const section = content.sections.find((s) => s.id === sectionId);
+    if (!section) return;
+    const nextContent = {
+      ...(section.content as Record<string, unknown>),
+      [field]: value,
+    } as Section["content"];
+    setContent(updateSectionContent(sectionId, nextContent));
   };
 
   const handleRemoveSection = (sectionId: SectionId) => {
@@ -474,6 +497,16 @@ export default function Editor({
           content={content}
           siteId={siteId}
           previewMode={previewMode}
+          activeSectionId={activeSectionId}
+          onSelectSection={setActiveSectionId}
+          onMoveSection={(id, dir) => setContent(moveSection(id, dir))}
+          onDuplicateSection={(id) => setContent(duplicateSection(id))}
+          onRemoveSection={handleRemoveSection}
+          onRequestInsert={(afterId) => setInsertAfterId(afterId)}
+          onReorderSections={(draggedId, targetId) =>
+            setContent(reorderSections(draggedId, targetId))
+          }
+          onUpdateSectionField={handleInlineFieldUpdate}
         />
       </div>
 
@@ -485,6 +518,12 @@ export default function Editor({
         rootDomain={rootDomain}
         customDomain={siteCustomDomain}
         initialSettings={initialSettings}
+      />
+
+      <SectionPicker
+        open={insertAfterId !== null}
+        onClose={() => setInsertAfterId(null)}
+        onPick={handleInsertSection}
       />
       </div>
     </EditorSiteProvider>

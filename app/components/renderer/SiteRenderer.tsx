@@ -1,13 +1,15 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import type {
   TemplateConfig,
   HeroContent,
   SectionContentMap,
 } from "@/src/lib/templates";
+import { SECTION_TYPE_LABELS } from "@/src/lib/templates";
+import { SectionEditProvider } from "@/app/components/blocks/SectionEditContext";
 import { PageViewTracker } from "@/app/components/PageViewTracker";
-import type { SiteId } from "@/src/lib/types";
+import type { SiteId, SectionId } from "@/src/lib/types";
 import type { Post } from "@/src/lib/posts";
 import { migrateToSections } from "@/app/components/editor/utils/contentUtils";
 import { buildGoogleFontsUrl } from "@/src/lib/fonts";
@@ -37,6 +39,21 @@ type SiteRendererProps = {
   siteId: SiteId;
   isPreview?: boolean;
   posts?: Post[];
+  /** Enables on-canvas section selection affordances (editor only). */
+  editable?: boolean;
+  activeSectionId?: SectionId | null;
+  onSelectSection?: (sectionId: SectionId) => void;
+  onMoveSection?: (sectionId: SectionId, direction: "up" | "down") => void;
+  onDuplicateSection?: (sectionId: SectionId) => void;
+  onRemoveSection?: (sectionId: SectionId) => void;
+  /** Open the section picker to insert after the given section. */
+  onRequestInsert?: (afterSectionId: SectionId) => void;
+  onReorderSections?: (draggedId: SectionId, targetId: SectionId) => void;
+  onUpdateSectionField?: (
+    sectionId: SectionId,
+    field: string,
+    value: string,
+  ) => void;
 };
 
 export default function SiteRenderer({
@@ -44,7 +61,17 @@ export default function SiteRenderer({
   siteId,
   isPreview = false,
   posts,
+  editable = false,
+  activeSectionId = null,
+  onSelectSection,
+  onMoveSection,
+  onDuplicateSection,
+  onRemoveSection,
+  onRequestInsert,
+  onReorderSections,
+  onUpdateSectionField,
 }: SiteRendererProps) {
+  const [dragOverId, setDragOverId] = useState<SectionId | null>(null);
   const normalizedContent = migrateToSections(content);
   const { sections, theme } = normalizedContent;
 
@@ -262,7 +289,127 @@ export default function SiteRenderer({
                   />
                 </div>
               )}
-              {block}
+              {editable ? (
+                <div
+                  data-section-id={section.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectSection?.(section.id);
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (dragOverId !== section.id) setDragOverId(section.id);
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverId === section.id) setDragOverId(null);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const draggedId = e.dataTransfer.getData(
+                      "text/section-id",
+                    ) as SectionId;
+                    setDragOverId(null);
+                    if (draggedId && draggedId !== section.id) {
+                      onReorderSections?.(draggedId, section.id);
+                    }
+                  }}
+                  onDragEnd={() => setDragOverId(null)}
+                  className={`group relative cursor-pointer outline-offset-[-2px] transition-[outline] ${
+                    dragOverId === section.id
+                      ? "outline-dashed outline-2 outline-primary"
+                      : section.id === activeSectionId
+                        ? "outline outline-2 outline-primary"
+                        : "hover:outline hover:outline-2 hover:outline-primary/40"
+                  }`}
+                >
+                  <div className="absolute left-3 top-3 z-20 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <span
+                      draggable
+                      onDragStart={(e) => {
+                        e.stopPropagation();
+                        e.dataTransfer.setData("text/section-id", section.id);
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      title="Raahaa järjestääksesi"
+                      className="cursor-grab select-none rounded bg-primary px-1.5 py-0.5 text-xs font-bold text-primary-foreground shadow active:cursor-grabbing"
+                    >
+                      ⠿
+                    </span>
+                    <span className="pointer-events-none rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground shadow">
+                      {SECTION_TYPE_LABELS[section.type]}
+                    </span>
+                  </div>
+                  {section.id === activeSectionId && (
+                    <div className="absolute right-3 top-3 z-30 flex items-center gap-1 rounded-md border border-border bg-background/95 p-1 text-foreground shadow">
+                      <button
+                        type="button"
+                        title="Siirrä ylös"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onMoveSection?.(section.id, "up");
+                        }}
+                        className="rounded px-1.5 py-0.5 text-sm hover:bg-accent"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        title="Siirrä alas"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onMoveSection?.(section.id, "down");
+                        }}
+                        className="rounded px-1.5 py-0.5 text-sm hover:bg-accent"
+                      >
+                        ↓
+                      </button>
+                      <button
+                        type="button"
+                        title="Monista"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDuplicateSection?.(section.id);
+                        }}
+                        className="rounded px-1.5 py-0.5 text-sm hover:bg-accent"
+                      >
+                        ⧉
+                      </button>
+                      <button
+                        type="button"
+                        title="Poista"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveSection?.(section.id);
+                        }}
+                        className="rounded px-1.5 py-0.5 text-sm text-destructive hover:bg-accent"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                  <SectionEditProvider
+                    editable
+                    updateField={(field, value) =>
+                      onUpdateSectionField?.(section.id, field, value)
+                    }
+                  >
+                    {block}
+                  </SectionEditProvider>
+                  <button
+                    type="button"
+                    title="Lisää osio tähän"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRequestInsert?.(section.id);
+                    }}
+                    className="absolute -bottom-3 left-1/2 z-30 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground opacity-0 shadow transition-opacity hover:bg-primary-hover group-hover:opacity-100"
+                  >
+                    +
+                  </button>
+                </div>
+              ) : (
+                block
+              )}
             </Fragment>
           );
         })}

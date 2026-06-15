@@ -46,6 +46,25 @@ export function updateSectionContent<T extends SectionType>(
 }
 
 /**
+ * Move a section one step up or down in the section order.
+ */
+export function moveSection(
+  sectionId: SectionId,
+  direction: "up" | "down",
+): ContentUpdater {
+  return (prev) => {
+    const index = prev.sections.findIndex((s) => s.id === sectionId);
+    if (index === -1) return prev;
+    const target = direction === "up" ? index - 1 : index + 1;
+    if (target < 0 || target >= prev.sections.length) return prev;
+
+    const sections = [...prev.sections];
+    [sections[index], sections[target]] = [sections[target], sections[index]];
+    return { ...prev, sections };
+  };
+}
+
+/**
  * Toggle a section's visibility
  */
 export function toggleSectionVisibility(sectionId: SectionId): ContentUpdater {
