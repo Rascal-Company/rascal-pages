@@ -147,6 +147,8 @@ export type CasesContent = {
   heading: string;
   subheading?: string;
   items: CaseItem[];
+  /** Number of columns for the case grid on large screens. Defaults to 2. */
+  columns?: 2 | 3;
 };
 
 /**
@@ -247,6 +249,8 @@ export type SectionStyle = {
   paddingY?: "none" | "sm" | "md" | "lg";
   /** Text alignment for the section content. */
   align?: "left" | "center" | "right";
+  /** Content width: the block default, or a narrower centered column. */
+  width?: "default" | "narrow";
 };
 
 export type ThemeConfig = {

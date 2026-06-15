@@ -31,6 +31,7 @@ export function buildSectionContainer(style?: SectionStyle): SectionContainer {
   const classes = [
     style.paddingY ? PADDING_Y[style.paddingY] : "",
     style.align ? ALIGN[style.align] : "",
+    style.width === "narrow" ? "mx-auto max-w-3xl" : "",
   ].filter(Boolean);
 
   return {

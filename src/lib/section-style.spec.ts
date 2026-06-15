@@ -24,4 +24,11 @@ describe(buildSectionContainer, () => {
   test("treats paddingY 'none' as no padding class", () => {
     expect(buildSectionContainer({ paddingY: "none" }).className).toBe("");
   });
+
+  test("constrains width when narrow, and leaves default unconstrained", () => {
+    expect(buildSectionContainer({ width: "narrow" }).className).toBe(
+      "mx-auto max-w-3xl",
+    );
+    expect(buildSectionContainer({ width: "default" }).className).toBe("");
+  });
 });
