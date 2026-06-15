@@ -32,6 +32,8 @@ export function buildSectionContainer(style?: SectionStyle): SectionContainer {
     style.paddingY ? PADDING_Y[style.paddingY] : "",
     style.align ? ALIGN[style.align] : "",
     style.width === "narrow" ? "mx-auto max-w-3xl" : "",
+    style.hideOnMobile ? "max-lg:hidden" : "",
+    style.hideOnDesktop ? "lg:hidden" : "",
   ].filter(Boolean);
 
   return {

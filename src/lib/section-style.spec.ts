@@ -31,4 +31,13 @@ describe(buildSectionContainer, () => {
     );
     expect(buildSectionContainer({ width: "default" }).className).toBe("");
   });
+
+  test("maps responsive visibility to breakpoint hidden classes", () => {
+    expect(buildSectionContainer({ hideOnMobile: true }).className).toBe(
+      "max-lg:hidden",
+    );
+    expect(buildSectionContainer({ hideOnDesktop: true }).className).toBe(
+      "lg:hidden",
+    );
+  });
 });
