@@ -325,3 +325,69 @@ feat: a commit of the type feat introduces a new feature to the codebase (this c
 BREAKING CHANGE: a commit that has a footer BREAKING CHANGE:, or appends a ! after the type/scope, introduces a breaking API change (correlating with MAJOR in Semantic Versioning). A BREAKING CHANGE can be part of commits of any type.
 types other than fix: and feat: are allowed, for example @commitlint/config-conventional (based on the Angular convention) recommends build:, chore:, ci:, docs:, style:, refactor:, perf:, test:, and others.
 footers other than BREAKING CHANGE: <description> may be provided and follow a convention similar to git trailer format.
+
+---
+
+## Projektinhallinta — Linear (PM-järjestelmä)
+
+> **Linear on ainoa totuuden lähde devauksen seurannassa.** Cyclet, todot, statukset ja projektien läpivienti hoidetaan Linearissa MCP:n kautta.
+>
+> **n8n-pm-MCP on DEPRECATED projektinhallinnassa — ÄLÄ käytä sitä cyclien, todojen tai seurannan hallintaan.** n8n jää vain workflow-automaatioon (sisältöputket, integraatiot). Kaikki PM → Linear.
+
+### Työtilan rakenne
+
+- **Team:** `Rascal AI` (key `RAS`, id `f7d82c01-f9b3-414f-95ad-5e849f077c43`). Yksi team kattaa kaikki tuotteet.
+- **Initiative = tuote.** Tämä repo (rascal-pages) kuuluu initiativeen **Rascal Pages** (id `63777f09-3aa0-40cc-af0b-5147cf53fb65`).
+  - Rascal AI — `19bf46c1-b59f-4ebd-98f0-a8fab96f280b`
+  - Rascal CRM — `7b0b6459-9602-464d-a07a-551853dfc5f9`
+  - Rascal Pages — `63777f09-3aa0-40cc-af0b-5147cf53fb65` ← **tämä repo**
+- **Project = ShapeUp-batch** (Ongelma / Appetite / Scope / Valmis kun). Liitetään initiativeen, `targetDate` kuukausi-/kvartaalitarkkuudella.
+- **Cycle = 2 viikon devaussykli.** Cycle 1 = 14.6.–28.6.2026, sen jälkeen aina seuraavat 2 vk. Issuet ajastetaan cycleen.
+- **Issue = todo.** Statuspolku: `Backlog → Todo → In Progress → In Review → Done` (lisäksi `Triage`, `Canceled`, `Duplicate`).
+
+### Oletukset uudelle issuelle (todolle)
+
+Kun luot todon devaustyöstä, käytä näitä oletuksia:
+
+- `team`: `RAS`
+- `cycle`: nykyinen aktiivinen cycle (hae `list_cycles` `type: current`)
+- `state`: `Todo`
+- `assignee`: **tekijä joka ajaa Claude Codea juuri nyt — tiimi käyttää tätä, ÄLÄ kovakoodaa Samia.** Käytä `"me"` ellei tekijää ole erikseen kerrottu; voit assignata oikealle tiimin jäsenelle nimellä/emaililla.
+- `project`: liitä oikeaan ShapeUp-projektiin jos työ kuuluu sellaiseen.
+- `priority`: aseta jos tiedossa (1=Urgent … 4=Low).
+
+Poikkeus: pelkkä ideointi / "joskus myöhemmin" → `state: Backlog`, ei cycleä.
+
+### CRUD — Linear MCP -työkalut
+
+Kaikki työkalut ovat prefiksillä `mcp__claude_ai_Linear__`.
+
+**Read**
+- `list_cycles` (`teamId`, `type: current|previous|next`) — hae aktiivinen cycle.
+- `list_issues` (`assignee:"me"`, `cycle`, `project`, `state`, `query`) — mikä on työn alla / cyclessä.
+- `get_issue` (id, esim. `RAS-123`) — yksittäisen todon detaljit.
+- `list_projects` (`team`, `initiative`) — ShapeUp-batchit. `get_project` koko speksiin.
+- `list_issue_statuses`, `list_users` — tarkista statukset / tiimin jäsenet.
+
+**Create / Update** (sama työkalu; `id` mukana ⇒ päivitys, ilman ⇒ luonti)
+- `save_issue` — luo/päivitä todo. Luonnissa pakolliset `title` + `team`. Käytä `assignee` (EI `assigneeId`), `state`, `cycle`, `project`, `description` (markdown — oikeat rivinvaihdot, ei `\n`-escapeja).
+- `save_project` — luo/päivitä ShapeUp-projekti. Luonnissa `name` + `addTeams:["RAS"]` + `addInitiatives:["Rascal Pages"]`.
+- `save_comment` — kommentoi issueta/projektia (`issueId`/`projectId` + `body`).
+- Issuen `links`-kenttä (tai `create_attachment_from_upload`) — liitä PR/commit/dokumentti.
+
+### Läpivienti — miten CC ajaa cyclen/projektin
+
+1. **Aloita:** `list_issues assignee:"me" cycle:current state:"Todo"` → valitse seuraava todo.
+2. **Ota työn alle:** `save_issue id:RAS-xxx state:"In Progress"`.
+3. **Devaa:** branchin nimeen issue-tunnus, esim. `feature/RAS-123-lyhyt-kuvaus`. Kirjoita `RAS-123` commit-/PR-otsikkoon tai -bodyyn → Linear linkittää automaattisesti. `Fixes RAS-123` PR:ssä siirtää issuen Doneen mergessä.
+4. **Reviewiin:** PR auki → `save_issue id:RAS-xxx state:"In Review"` ja lisää PR issuen `links`-kenttään.
+5. **Valmis:** merge → `Done` (automaattisesti magic wordilla tai `save_issue state:"Done"`).
+6. **Työ ilman valmista todoa:** luo ensin issue (oletukset yllä), sitten kohdasta 2 eteenpäin.
+
+### Säännöt
+
+- **L-1 (MUST)** Älä käytä n8n-pm-MCP:tä projektinhallintaan. Linear on ainoa PM.
+- **L-2 (MUST)** Jokaisella devaustyöllä on Linear-issue ennen mergeä; viittaa siihen branchissa ja commitissa (`RAS-123`).
+- **L-3 (SHOULD)** Päivitä issuen status työn edetessä (In Progress → In Review → Done), älä jätä Todoon.
+- **L-4 (SHOULD)** Liitä työ oikeaan initiativeen (tuote) ja, jos sopii, ShapeUp-projektiin sekä aktiiviseen cycleen.
+- **L-5 (SHOULD NOT)** Älä kovakoodaa assigneeta yhdelle henkilölle — oletus on tekijä itse (`"me"`).
