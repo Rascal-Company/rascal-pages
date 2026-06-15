@@ -1,9 +1,23 @@
 "use client";
 
+import { cva } from "class-variance-authority";
 import type { CasesContent } from "@/src/lib/templates";
 import type { SiteId } from "@/src/lib/types";
 import { surfaceTokens } from "./appearance";
 import EditableText from "./EditableText";
+
+const casesGridVariants = cva(
+  "mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:mt-20 lg:max-w-none",
+  {
+    variants: {
+      columns: {
+        2: "lg:grid-cols-2",
+        3: "lg:grid-cols-3",
+      },
+    },
+    defaultVariants: { columns: 2 },
+  },
+);
 
 type CasesBlockProps = {
   content: CasesContent;
@@ -44,7 +58,7 @@ export default function CasesBlock({
           )}
         </div>
 
-        <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:mt-20 lg:max-w-none lg:grid-cols-2">
+        <div className={casesGridVariants({ columns: content.columns })}>
           {content.items.map((item, index) => (
             <article
               key={index}

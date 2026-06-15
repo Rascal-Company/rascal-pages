@@ -71,6 +71,28 @@ export default function CasesBlockEditor({
         />
       </div>
 
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-1">
+          Sarakkeet
+        </label>
+        <div className="grid grid-cols-2 gap-1">
+          {([2, 3] as const).map((cols) => (
+            <button
+              key={cols}
+              type="button"
+              onClick={() => updateField("columns", cols)}
+              className={`rounded-md border px-2 py-1.5 text-xs font-medium transition-colors ${
+                (content.columns ?? 2) === cols
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-foreground hover:bg-accent"
+              }`}
+            >
+              {cols}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-foreground">Projektit</span>
         <button

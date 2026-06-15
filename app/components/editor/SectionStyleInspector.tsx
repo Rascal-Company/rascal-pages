@@ -20,6 +20,11 @@ const ALIGN_OPTIONS: { value: NonNullable<SectionStyle["align"]>; label: string 
   { value: "right", label: "Oikea" },
 ];
 
+const WIDTH_OPTIONS: { value: NonNullable<SectionStyle["width"]>; label: string }[] = [
+  { value: "default", label: "Oletus" },
+  { value: "narrow", label: "Kapea" },
+];
+
 export default function SectionStyleInspector({
   style,
   onChange,
@@ -82,7 +87,7 @@ export default function SectionStyleInspector({
         </div>
       </div>
 
-      <div>
+      <div className="mb-4">
         <label className="block text-sm font-medium text-foreground">
           Tekstin linjaus
         </label>
@@ -94,6 +99,28 @@ export default function SectionStyleInspector({
               onClick={() => onChange({ align: option.value })}
               className={`rounded-md border px-2 py-1.5 text-xs font-medium transition-colors ${
                 style?.align === option.value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border text-foreground hover:bg-accent"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-foreground">
+          Leveys
+        </label>
+        <div className="mt-2 grid grid-cols-2 gap-1">
+          {WIDTH_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onChange({ width: option.value })}
+              className={`rounded-md border px-2 py-1.5 text-xs font-medium transition-colors ${
+                (style?.width ?? "default") === option.value
                   ? "border-primary bg-primary/10 text-primary"
                   : "border-border text-foreground hover:bg-accent"
               }`}
