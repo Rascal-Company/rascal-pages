@@ -42,7 +42,7 @@ import TemplateSelector from "./TemplateSelector";
 import ThemeFields from "./fields/ThemeFields";
 import StyleFields from "./fields/StyleFields";
 import SeoFields from "./fields/SeoFields";
-import SaveButton from "./SaveButton";
+import { Button } from "@/app/components/ui/button";
 import EditorPreview from "./EditorPreview";
 import PublishedToggle from "./PublishedToggle";
 import SortableSectionItem from "./SortableSectionItem";
@@ -101,6 +101,12 @@ export default function Editor({
   );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [insertAfterId, setInsertAfterId] = useState<SectionId | null>(null);
+  const [activeTab, setActiveTab] = useState<"section" | "page">("section");
+
+  const selectSection = (id: SectionId | null) => {
+    setActiveSectionId(id);
+    if (id) setActiveTab("section");
+  };
 
   const rootDomain = "rascalpages.fi";
 
@@ -238,16 +244,43 @@ export default function Editor({
   return (
     <EditorSiteProvider siteId={siteId}>
       <div className="flex h-screen bg-background">
-      {/* Left Sidebar - Section List (25%) */}
+      {/* Sidebar */}
       {!isFullPreview && (
-        <div className="w-1/4 min-w-[250px] max-w-[350px] overflow-y-auto border-r border-border bg-card p-4">
-          <EditorHeader
-            siteSubdomain={siteSubdomain}
-            onSettingsClick={() => setIsSettingsOpen(true)}
-          />
-          <StatusMessages error={error} success={success} />
+        <aside className="flex w-[360px] min-w-[320px] max-w-[420px] flex-col border-r border-border bg-card">
+          <div className="border-b border-border p-4">
+            <EditorHeader
+              siteSubdomain={siteSubdomain}
+              onSettingsClick={() => setIsSettingsOpen(true)}
+            />
+          </div>
 
-          <div className="space-y-4">
+          <div className="flex gap-1 border-b border-border px-3 pt-2">
+            {(
+              [
+                { id: "section", label: "Osio" },
+                { id: "page", label: "Sivu" },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4">
+            <StatusMessages error={error} success={success} />
+
+            {activeTab === "page" && (
+              <div className="space-y-4">
             <TemplateSelector
               currentTemplateId={content.templateId || "saas-modern"}
               onTemplateChange={handleTemplateChange}
@@ -324,7 +357,7 @@ export default function Editor({
                         key={section.id}
                         section={section}
                         isActive={section.id === activeSectionId}
-                        onClick={() => setActiveSectionId(section.id)}
+                        onClick={() => selectSection(section.id)}
                         onToggleVisibility={() =>
                           setContent(toggleSectionVisibility(section.id))
                         }
@@ -361,48 +394,44 @@ export default function Editor({
             />
 
             <SeoFields
-              metaTitle={content.seo?.metaTitle}
-              metaDescription={content.seo?.metaDescription}
-              ogImage={content.seo?.ogImage}
-              onUpdate={(field, value) =>
-                setContent(updateSeoField(field, value))
-              }
-            />
+                  metaTitle={content.seo?.metaTitle}
+                  metaDescription={content.seo?.metaDescription}
+                  ogImage={content.seo?.ogImage}
+                  onUpdate={(field, value) =>
+                    setContent(updateSeoField(field, value))
+                  }
+                />
+              </div>
+            )}
 
-            <div className="flex justify-end">
-              <SaveStatusIndicator
-                status={saveStatus}
-                lastSavedAt={lastSavedAt}
-              />
-            </div>
-
-            <SaveButton isSaving={isSaving} onSave={handleSave} />
+            {activeTab === "section" &&
+              (activeSection ? (
+                <div className="space-y-4">
+                  <SectionStyleInspector
+                    style={activeSection.style}
+                    onChange={(patch) =>
+                      setContent(updateSectionStyle(activeSection.id, patch))
+                    }
+                  />
+                  <BlockEditor
+                    section={activeSection}
+                    onUpdate={handleSectionUpdate}
+                  />
+                </div>
+              ) : (
+                <div className="flex h-full items-center justify-center px-2 text-center text-sm text-muted-foreground">
+                  Valitse osio kankaalta tai Sivu-välilehdeltä muokataksesi sitä
+                </div>
+              ))}
           </div>
-        </div>
-      )}
 
-      {/* Middle Panel - Section Editor (25%) */}
-      {!isFullPreview && (
-        <div className="w-1/4 min-w-[300px] max-w-[400px] overflow-y-auto border-r border-border bg-card p-4">
-          {activeSection ? (
-            <div className="space-y-4">
-              <SectionStyleInspector
-                style={activeSection.style}
-                onChange={(patch) =>
-                  setContent(updateSectionStyle(activeSection.id, patch))
-                }
-              />
-              <BlockEditor
-                section={activeSection}
-                onUpdate={handleSectionUpdate}
-              />
-            </div>
-          ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground">
-              Valitse osio vasemmalta muokataksesi sitä
-            </div>
-          )}
-        </div>
+          <div className="flex items-center justify-between gap-2 border-t border-border p-3">
+            <SaveStatusIndicator status={saveStatus} lastSavedAt={lastSavedAt} />
+            <Button onClick={handleSave} disabled={isSaving} size="sm">
+              {isSaving ? "Tallennetaan..." : "Tallenna"}
+            </Button>
+          </div>
+        </aside>
       )}
 
       {/* Right Side - Preview */}
@@ -508,7 +537,7 @@ export default function Editor({
           siteId={siteId}
           previewMode={previewMode}
           activeSectionId={activeSectionId}
-          onSelectSection={setActiveSectionId}
+          onSelectSection={selectSection}
           onMoveSection={(id, dir) => setContent(moveSection(id, dir))}
           onDuplicateSection={(id) => setContent(duplicateSection(id))}
           onRemoveSection={handleRemoveSection}

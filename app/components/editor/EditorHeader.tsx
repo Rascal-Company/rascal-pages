@@ -16,15 +16,15 @@ export default function EditorHeader({
   const router = useRouter();
 
   return (
-    <div className="mb-6">
-      <div className="flex items-center justify-between">
+    <div>
+      <div className="flex items-center justify-between gap-2">
         <Button
-          variant="link"
+          variant="ghost"
           size="sm"
           onClick={() => router.push("/app/dashboard")}
-          className="h-auto px-0 text-muted-foreground hover:text-foreground"
+          className="-ml-2 h-auto px-2 text-muted-foreground hover:text-foreground"
         >
-          ← Takaisin dashboardiin
+          ← Takaisin
         </Button>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -33,10 +33,7 @@ export default function EditorHeader({
           </Button>
         </div>
       </div>
-      <h1 className="mt-4 text-2xl font-bold text-foreground">
-        Muokkaa sivustoa
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <p className="mt-1 truncate text-xs text-muted-foreground">
         {siteSubdomain}.rascalpages.fi
       </p>
     </div>
