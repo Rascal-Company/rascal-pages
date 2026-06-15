@@ -14,6 +14,7 @@ import type { Post } from "@/src/lib/posts";
 import { migrateToSections } from "@/app/components/editor/utils/contentUtils";
 import { buildGoogleFontsUrl } from "@/src/lib/fonts";
 import { buildSiteThemeVars } from "@/src/lib/site-theme";
+import { buildSectionContainer } from "@/src/lib/section-style";
 import { isDarkAppearance } from "@/app/components/blocks/appearance";
 import {
   HeroBlock,
@@ -271,6 +272,16 @@ export default function SiteRenderer({
 
           if (!block) return null;
 
+          const container = buildSectionContainer(section.style);
+          const styledBlock =
+            container.className || container.style ? (
+              <div className={container.className} style={container.style}>
+                {block}
+              </div>
+            ) : (
+              block
+            );
+
           const showRule =
             (isDark || isLightPortfolio) &&
             index > 0 &&
@@ -393,7 +404,7 @@ export default function SiteRenderer({
                       onUpdateSectionField?.(section.id, field, value)
                     }
                   >
-                    {block}
+                    {styledBlock}
                   </SectionEditProvider>
                   <button
                     type="button"
@@ -408,7 +419,7 @@ export default function SiteRenderer({
                   </button>
                 </div>
               ) : (
-                block
+                styledBlock
               )}
             </Fragment>
           );

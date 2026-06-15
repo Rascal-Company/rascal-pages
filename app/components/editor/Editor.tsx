@@ -26,6 +26,7 @@ import {
   removeSection,
   duplicateSection,
   moveSection,
+  updateSectionStyle,
   updateThemeColor,
   updateThemeFont,
   updateThemeAppearance,
@@ -46,6 +47,7 @@ import EditorPreview from "./EditorPreview";
 import PublishedToggle from "./PublishedToggle";
 import SortableSectionItem from "./SortableSectionItem";
 import BlockEditor from "./BlockEditor";
+import SectionStyleInspector from "./SectionStyleInspector";
 import AddSectionButton from "./AddSectionButton";
 import SectionPicker from "./SectionPicker";
 import SettingsModal from "./SettingsModal";
@@ -383,10 +385,18 @@ export default function Editor({
       {!isFullPreview && (
         <div className="w-1/4 min-w-[300px] max-w-[400px] overflow-y-auto border-r border-border bg-card p-4">
           {activeSection ? (
-            <BlockEditor
-              section={activeSection}
-              onUpdate={handleSectionUpdate}
-            />
+            <div className="space-y-4">
+              <SectionStyleInspector
+                style={activeSection.style}
+                onChange={(patch) =>
+                  setContent(updateSectionStyle(activeSection.id, patch))
+                }
+              />
+              <BlockEditor
+                section={activeSection}
+                onUpdate={handleSectionUpdate}
+              />
+            </div>
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
               Valitse osio vasemmalta muokataksesi sitä
