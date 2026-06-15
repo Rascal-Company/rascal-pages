@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import type {
   TemplateConfig,
   HeroContent,
@@ -47,6 +47,7 @@ type SiteRendererProps = {
   onRemoveSection?: (sectionId: SectionId) => void;
   /** Open the section picker to insert after the given section. */
   onRequestInsert?: (afterSectionId: SectionId) => void;
+  onReorderSections?: (draggedId: SectionId, targetId: SectionId) => void;
 };
 
 export default function SiteRenderer({
@@ -61,7 +62,9 @@ export default function SiteRenderer({
   onDuplicateSection,
   onRemoveSection,
   onRequestInsert,
+  onReorderSections,
 }: SiteRendererProps) {
+  const [dragOverId, setDragOverId] = useState<SectionId | null>(null);
   const normalizedContent = migrateToSections(content);
   const { sections, theme } = normalizedContent;
 
@@ -282,14 +285,39 @@ export default function SiteRenderer({
               {editable ? (
                 <div
                   data-section-id={section.id}
+                  draggable
                   onClick={(e) => {
                     e.stopPropagation();
                     onSelectSection?.(section.id);
                   }}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("text/section-id", section.id);
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (dragOverId !== section.id) setDragOverId(section.id);
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverId === section.id) setDragOverId(null);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const draggedId = e.dataTransfer.getData(
+                      "text/section-id",
+                    ) as SectionId;
+                    setDragOverId(null);
+                    if (draggedId && draggedId !== section.id) {
+                      onReorderSections?.(draggedId, section.id);
+                    }
+                  }}
+                  onDragEnd={() => setDragOverId(null)}
                   className={`group relative cursor-pointer outline-offset-[-2px] transition-[outline] ${
-                    section.id === activeSectionId
-                      ? "outline outline-2 outline-primary"
-                      : "hover:outline hover:outline-2 hover:outline-primary/40"
+                    dragOverId === section.id
+                      ? "outline-dashed outline-2 outline-primary"
+                      : section.id === activeSectionId
+                        ? "outline outline-2 outline-primary"
+                        : "hover:outline hover:outline-2 hover:outline-primary/40"
                   }`}
                 >
                   <span className="pointer-events-none absolute left-3 top-3 z-20 rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground opacity-0 shadow transition-opacity group-hover:opacity-100">

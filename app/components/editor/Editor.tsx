@@ -489,6 +489,9 @@ export default function Editor({
           onDuplicateSection={(id) => setContent(duplicateSection(id))}
           onRemoveSection={handleRemoveSection}
           onRequestInsert={(afterId) => setInsertAfterId(afterId)}
+          onReorderSections={(draggedId, targetId) =>
+            setContent(reorderSections(draggedId, targetId))
+          }
         />
       </div>
 

@@ -14,6 +14,7 @@ interface EditorPreviewProps {
   onDuplicateSection?: (sectionId: SectionId) => void;
   onRemoveSection?: (sectionId: SectionId) => void;
   onRequestInsert?: (afterSectionId: SectionId) => void;
+  onReorderSections?: (draggedId: SectionId, targetId: SectionId) => void;
 }
 
 export default function EditorPreview({
@@ -26,6 +27,7 @@ export default function EditorPreview({
   onDuplicateSection,
   onRemoveSection,
   onRequestInsert,
+  onReorderSections,
 }: EditorPreviewProps) {
   const isMobile = previewMode === "mobile";
 
@@ -57,6 +59,7 @@ export default function EditorPreview({
             onDuplicateSection={onDuplicateSection}
             onRemoveSection={onRemoveSection}
             onRequestInsert={onRequestInsert}
+            onReorderSections={onReorderSections}
           />
           {isMobile && (
             <div className="bg-gray-800 px-4 py-3 flex items-center justify-center">
