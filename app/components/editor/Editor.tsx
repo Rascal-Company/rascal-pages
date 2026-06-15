@@ -45,6 +45,7 @@ import BlockEditor from "./BlockEditor";
 import AddSectionButton from "./AddSectionButton";
 import SettingsModal from "./SettingsModal";
 import SaveStatusIndicator from "./SaveStatusIndicator";
+import { EditorSiteProvider } from "./EditorSiteContext";
 import { useHistoryState } from "./hooks/useHistoryState";
 import { useAutosave } from "./hooks/useAutosave";
 
@@ -207,7 +208,8 @@ export default function Editor({
   const activeSection = content.sections.find((s) => s.id === activeSectionId);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <EditorSiteProvider siteId={siteId}>
+      <div className="flex h-screen bg-gray-50">
       {/* Left Sidebar - Section List (25%) */}
       {!isFullPreview && (
         <div className="w-1/4 min-w-[250px] max-w-[350px] overflow-y-auto border-r border-gray-200 bg-white p-4">
@@ -475,6 +477,7 @@ export default function Editor({
         customDomain={siteCustomDomain}
         initialSettings={initialSettings}
       />
-    </div>
+      </div>
+    </EditorSiteProvider>
   );
 }

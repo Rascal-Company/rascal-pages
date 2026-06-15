@@ -2,6 +2,7 @@
 
 import type { FeatureItem } from "@/src/lib/templates";
 import SortableFieldList from "../fields/SortableFieldList";
+import ImageUploadField from "../fields/ImageUploadField";
 
 type FeaturesBlockEditorProps = {
   content: FeatureItem[];
@@ -68,22 +69,10 @@ export default function FeaturesBlockEditor({
         );
       case "image":
         return (
-          <div>
-            <input
-              type="url"
-              value={feature.image || ""}
-              onChange={(e) => handleFieldUpdate(index, "image", e.target.value)}
-              placeholder="https://example.com/kuva.jpg"
-              className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
-            />
-            {feature.image && (
-              <img
-                src={feature.image}
-                alt={feature.title}
-                className="mt-2 h-12 w-12 rounded-md object-cover"
-              />
-            )}
-          </div>
+          <ImageUploadField
+            value={feature.image}
+            onChange={(url) => handleFieldUpdate(index, "image", url)}
+          />
         );
       case "title":
         return (

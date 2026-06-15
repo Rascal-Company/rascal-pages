@@ -1,6 +1,7 @@
 "use client";
 
 import type { SeoConfig } from "@/src/lib/templates";
+import ImageUploadField from "./ImageUploadField";
 
 type SeoFieldsProps = {
   metaTitle?: string;
@@ -88,14 +89,13 @@ export default function SeoFields({
         >
           Jakokuva (Open Graph)
         </label>
-        <input
-          id="seo-og-image"
-          type="url"
-          value={ogImage ?? ""}
-          onChange={(e) => onUpdate("ogImage", e.target.value)}
-          placeholder="https://..."
-          className="mt-2 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
-        />
+        <div className="mt-2">
+          <ImageUploadField
+            value={ogImage}
+            onChange={(url) => onUpdate("ogImage", url)}
+            placeholder="https://..."
+          />
+        </div>
         <p className="mt-1 text-xs text-gray-500">
           Kuva, joka näytetään kun linkki jaetaan somessa (suositus 1200×630).
         </p>
