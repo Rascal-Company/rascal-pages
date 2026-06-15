@@ -19,10 +19,9 @@ export default function BlogListBlock({
   posts,
   theme,
   isPreview = false,
-  templateId,
 }: BlogListBlockProps) {
   const primaryColor = theme.primaryColor || "#0EA5E9";
-  const t = surfaceTokens(theme, templateId);
+  const t = surfaceTokens();
   const visiblePosts = (posts ?? []).slice(0, content.postsToShow);
 
   // Hide the section entirely on the published site when there are no posts yet,

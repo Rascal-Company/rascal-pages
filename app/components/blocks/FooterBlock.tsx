@@ -18,9 +18,9 @@ export default function FooterBlock({ theme, templateId }: FooterBlockProps) {
     <footer
       className={
         isDark
-          ? "border-t border-[#232327] bg-transparent text-[#a1a1aa]"
+          ? "border-t border-border bg-transparent text-muted-foreground"
           : isLightPortfolio
-            ? "border-t border-[#e4e4e7] bg-transparent text-[#52525b]"
+            ? "border-t border-border bg-transparent text-muted-foreground"
             : "bg-gray-900 text-white"
       }
     >
@@ -29,9 +29,9 @@ export default function FooterBlock({ theme, templateId }: FooterBlockProps) {
           <p
             className={`text-sm leading-5 ${
               isDark
-                ? "text-[#71717a]"
+                ? "text-muted-foreground/70"
                 : isLightPortfolio
-                  ? "text-[#71717a]"
+                  ? "text-muted-foreground/70"
                   : "text-gray-400"
             }`}
           >

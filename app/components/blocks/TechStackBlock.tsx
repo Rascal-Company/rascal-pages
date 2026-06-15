@@ -12,14 +12,10 @@ type TechStackBlockProps = {
   templateId?: string;
 };
 
-export default function TechStackBlock({
-  content,
-  theme,
-  templateId,
-}: TechStackBlockProps) {
+export default function TechStackBlock({ content }: TechStackBlockProps) {
   if (!content || content.groups.length === 0) return null;
 
-  const t = surfaceTokens(theme, templateId);
+  const t = surfaceTokens();
 
   return (
     <section id="osaaminen" className={`py-24 sm:py-32 ${t.sectionAlt}`}>

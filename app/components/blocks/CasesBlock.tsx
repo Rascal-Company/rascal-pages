@@ -15,12 +15,11 @@ type CasesBlockProps = {
 export default function CasesBlock({
   content,
   theme,
-  templateId,
 }: CasesBlockProps) {
   if (!content || content.items.length === 0) return null;
 
   const primaryColor = theme.primaryColor || "#3B82F6";
-  const t = surfaceTokens(theme, templateId);
+  const t = surfaceTokens();
 
   return (
     <section id="projektit" className="py-24 sm:py-32">

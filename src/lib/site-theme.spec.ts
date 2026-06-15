@@ -28,6 +28,15 @@ describe(buildSiteThemeVars, () => {
     ]);
   });
 
+  test("uses the portfolio light base for the portfolio template", () => {
+    const vars = buildSiteThemeVars({ primaryColor: "#3B82F6" }, "portfolio");
+    expect([vars["--foreground"], vars["--muted-foreground"], vars["--border"]]).toEqual([
+      "#18181b",
+      "#52525b",
+      "#e4e4e7",
+    ]);
+  });
+
   test("explicit palette values override the appearance base", () => {
     const vars = buildSiteThemeVars({
       primaryColor: "#3B82F6",

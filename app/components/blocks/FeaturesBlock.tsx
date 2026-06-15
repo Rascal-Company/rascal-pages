@@ -57,10 +57,10 @@ function renderFeatureField(
   }
 }
 
-export default function FeaturesBlock({ content, theme }: FeaturesBlockProps) {
+export default function FeaturesBlock({ content }: FeaturesBlockProps) {
   if (!content || content.length === 0) return null;
 
-  const t = surfaceTokens(theme);
+  const t = surfaceTokens();
 
   return (
     <section className="py-24 sm:py-32">

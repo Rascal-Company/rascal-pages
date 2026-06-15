@@ -80,7 +80,7 @@ export default function SiteRenderer({
 
   const fontStyles: React.CSSProperties = {
     scrollBehavior: "smooth",
-    ...buildSiteThemeVars(theme),
+    ...buildSiteThemeVars(theme, normalizedContent.templateId),
     ...(theme.headingFont && {
       ["--heading-font" as string]: `'${theme.headingFont}', sans-serif`,
     }),

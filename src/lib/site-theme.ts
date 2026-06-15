@@ -42,10 +42,29 @@ const DARK_BASE: SurfaceBase = {
   border: "#232327",
 };
 
+/**
+ * Light base tuned for the Portfolio template (cooler near-black text, hairline
+ * borders), matching the editorial polish of its dark variant.
+ */
+const PORTFOLIO_LIGHT_BASE: SurfaceBase = {
+  background: "#ffffff",
+  foreground: "#18181b",
+  muted: "#f4f4f5",
+  mutedForeground: "#52525b",
+  card: "#ffffff",
+  cardForeground: "#18181b",
+  border: "#e4e4e7",
+};
+
 export const DEFAULT_PRIMARY = "#3B82F6";
 
-function pickBase(theme: Pick<ThemeConfig, "appearance">): SurfaceBase {
-  return theme.appearance === "dark" ? DARK_BASE : LIGHT_BASE;
+function pickBase(
+  theme: Pick<ThemeConfig, "appearance">,
+  templateId?: string,
+): SurfaceBase {
+  if (theme.appearance === "dark") return DARK_BASE;
+  if (templateId === "portfolio") return PORTFOLIO_LIGHT_BASE;
+  return LIGHT_BASE;
 }
 
 /**
@@ -53,8 +72,11 @@ function pickBase(theme: Pick<ThemeConfig, "appearance">): SurfaceBase {
  * anything unset falls back to the appearance base, and `primary` falls back to
  * the legacy `primaryColor`.
  */
-export function buildSiteThemeVars(theme: ThemeConfig): SiteThemeVars {
-  const base = pickBase(theme);
+export function buildSiteThemeVars(
+  theme: ThemeConfig,
+  templateId?: string,
+): SiteThemeVars {
+  const base = pickBase(theme, templateId);
   const palette: SitePalette = theme.palette ?? {};
   const primary =
     palette.primary?.trim() || theme.primaryColor?.trim() || DEFAULT_PRIMARY;

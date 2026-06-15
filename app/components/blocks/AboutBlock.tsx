@@ -18,18 +18,14 @@ function renderAboutField(
   content: AboutContent,
   fieldKey: string,
   isDark: boolean,
-  isLightPortfolio: boolean,
+  isPortfolio: boolean,
 ): ReactNode {
   switch (fieldKey) {
     case "name":
       return (
         <h2
           className={`text-3xl font-bold tracking-tight sm:text-4xl mb-6 ${
-            isDark
-              ? "text-[#f5f5f7]"
-              : isLightPortfolio
-                ? "text-[#18181b]"
-                : "text-gray-900"
+            isPortfolio ? "text-foreground" : "text-gray-900"
           }`}
           style={{ fontFamily: "var(--heading-font, inherit)" }}
         >
@@ -45,11 +41,7 @@ function renderAboutField(
         >
           <p
             className={`text-lg leading-8 whitespace-pre-line ${
-              isDark
-                ? "text-[#a1a1aa]"
-                : isLightPortfolio
-                  ? "text-[#52525b]"
-                  : "text-gray-600"
+              isPortfolio ? "text-muted-foreground" : "text-gray-600"
             }`}
             style={{ fontFamily: "var(--body-font, inherit)" }}
           >
@@ -64,11 +56,7 @@ function renderAboutField(
           src={content.image}
           alt={content.name}
           className={`mb-8 h-28 w-28 rounded-full object-cover ${
-            isDark
-              ? "ring-1 ring-[#232327]"
-              : isLightPortfolio
-                ? "ring-1 ring-[#e4e4e7]"
-                : ""
+            isPortfolio ? "ring-1 ring-border" : ""
           }`}
         />
       ) : null;
@@ -85,7 +73,7 @@ export default function AboutBlock({
   if (!content) return null;
 
   const isDark = theme.appearance === "dark";
-  const isLightPortfolio = !isDark && templateId === "portfolio";
+  const isPortfolio = isDark || templateId === "portfolio";
   const order = content.fieldOrder || DEFAULT_ABOUT_ORDER;
 
   return (
@@ -97,7 +85,7 @@ export default function AboutBlock({
               content,
               fieldKey,
               isDark,
-              isLightPortfolio,
+              isPortfolio,
             );
             return rendered ? <div key={fieldKey}>{rendered}</div> : null;
           })}
