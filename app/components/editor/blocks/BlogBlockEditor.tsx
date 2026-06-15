@@ -20,34 +20,34 @@ export default function BlogBlockEditor({
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-muted-foreground">
         Blogiosio näyttää uusimmat julkaistut kirjoitukset. Itse kirjoitukset
         hallitaan erikseen (esim. n8n-automaation kautta).
       </p>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-foreground mb-1">
           Otsikko
         </label>
         <input
           type="text"
           value={content?.heading || ""}
           onChange={(e) => handleFieldUpdate("heading", e.target.value)}
-          className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+          className="block w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-foreground mb-1">
           Alaotsikko
         </label>
         <input
           type="text"
           value={content?.subheading || ""}
           onChange={(e) => handleFieldUpdate("subheading", e.target.value)}
-          className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+          className="block w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-foreground mb-1">
           Näytettävien kirjoitusten määrä
         </label>
         <input
@@ -61,7 +61,7 @@ export default function BlogBlockEditor({
               Math.max(1, Number(e.target.value) || 1),
             )
           }
-          className="block w-32 rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+          className="block w-32 rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
         />
       </div>
     </div>

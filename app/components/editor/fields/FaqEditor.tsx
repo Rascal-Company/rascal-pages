@@ -16,12 +16,12 @@ export default function FaqEditor({
   onUpdate,
 }: FaqEditorProps) {
   return (
-    <div className="rounded-lg border border-gray-200 p-4">
+    <div className="rounded-lg border border-border p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">UKK</h2>
+        <h2 className="text-lg font-semibold text-foreground">UKK</h2>
         <button
           onClick={onAdd}
-          className="rounded-md bg-brand-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-accent-hover"
+          className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-hover"
         >
           + Lisää
         </button>
@@ -30,40 +30,40 @@ export default function FaqEditor({
         {(faq || []).map((item, index) => (
           <div
             key={index}
-            className="rounded-md border border-gray-200 bg-gray-50 p-4"
+            className="rounded-md border border-border bg-muted p-4"
           >
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-foreground">
                 Kysymys {index + 1}
               </span>
               <button
                 onClick={() => onRemove(index)}
-                className="text-sm text-red-600 hover:text-red-700"
+                className="text-sm text-destructive hover:text-destructive"
               >
                 Poista
               </button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600">
+                <label className="block text-xs font-medium text-muted-foreground">
                   Kysymys
                 </label>
                 <input
                   type="text"
                   value={item.question || ""}
                   onChange={(e) => onUpdate(index, "question", e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+                  className="mt-1 block w-full rounded-md border border-input px-2 py-1.5 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-ring"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600">
+                <label className="block text-xs font-medium text-muted-foreground">
                   Vastaus
                 </label>
                 <textarea
                   value={item.answer || ""}
                   onChange={(e) => onUpdate(index, "answer", e.target.value)}
                   rows={3}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+                  className="mt-1 block w-full rounded-md border border-input px-2 py-1.5 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-ring"
                 />
               </div>
             </div>

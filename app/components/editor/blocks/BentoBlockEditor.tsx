@@ -27,13 +27,13 @@ function BentoPreview({ item }: { item: BentoItem }) {
   switch (item.type) {
     case "heading":
       return (
-        <span className="text-lg font-bold leading-tight text-gray-900">
+        <span className="text-lg font-bold leading-tight text-foreground">
           {item.text || "Otsikko"}
         </span>
       );
     case "text":
       return (
-        <span className="text-xs leading-snug text-gray-600">
+        <span className="text-xs leading-snug text-muted-foreground">
           {item.text || "Tekstisisältö"}
         </span>
       );
@@ -46,21 +46,21 @@ function BentoPreview({ item }: { item: BentoItem }) {
           className="h-full w-full rounded object-cover"
         />
       ) : (
-        <span className="text-xs text-gray-400">Kuva</span>
+        <span className="text-xs text-muted-foreground">Kuva</span>
       );
     case "button":
       return (
-        <span className="rounded-md bg-brand-accent px-3 py-1 text-xs font-semibold text-white">
+        <span className="rounded-md bg-primary px-3 py-1 text-xs font-semibold text-white">
           {item.text || "Nappi"}
         </span>
       );
     case "stat":
       return (
         <span className="flex flex-col items-center">
-          <span className="text-xl font-bold text-gray-900">
+          <span className="text-xl font-bold text-foreground">
             {item.value || "100+"}
           </span>
-          <span className="text-[10px] text-gray-500">
+          <span className="text-[10px] text-muted-foreground">
             {item.label || "Kuvaus"}
           </span>
         </span>
@@ -68,11 +68,11 @@ function BentoPreview({ item }: { item: BentoItem }) {
     case "card":
       return (
         <span className="flex flex-col items-start text-left">
-          <span className="text-sm font-semibold text-gray-900">
+          <span className="text-sm font-semibold text-foreground">
             {item.text || "Kortin otsikko"}
           </span>
           {item.body && (
-            <span className="mt-0.5 line-clamp-2 text-[10px] text-gray-500">
+            <span className="mt-0.5 line-clamp-2 text-[10px] text-muted-foreground">
               {item.body}
             </span>
           )}
@@ -89,7 +89,7 @@ type BentoBlockEditorProps = {
 };
 
 const inputClass =
-  "block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm";
+  "block w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm";
 
 const PALETTE: { type: BentoElementType; label: string }[] = [
   { type: "heading", label: "+ Otsikko" },
@@ -174,7 +174,7 @@ export default function BentoBlockEditor({
           <button
             key={p.type}
             onClick={() => addItem(p.type)}
-            className="rounded-md bg-brand-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-accent-hover"
+            className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-hover"
           >
             {p.label}
           </button>
@@ -182,7 +182,7 @@ export default function BentoBlockEditor({
       </div>
 
       {items.length > 0 && (
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-2">
+        <div className="rounded-md border border-border bg-muted p-2">
           <ResponsiveGridLayout
             className="layout"
             layouts={{ lg: layout, md: layout, sm: layout, xs: layout }}
@@ -203,8 +203,8 @@ export default function BentoBlockEditor({
                   item.type === "image"
                     ? "p-0"
                     : isBoxed(item)
-                      ? "border border-gray-300 bg-white shadow-sm"
-                      : "border border-dashed border-gray-200"
+                      ? "border border-input bg-card shadow-sm"
+                      : "border border-dashed border-border"
                 }`}
               >
                 <span className="pointer-events-none flex max-h-full items-center justify-center overflow-hidden">
@@ -220,15 +220,15 @@ export default function BentoBlockEditor({
         {items.map((item, index) => (
           <div
             key={item.id}
-            className="rounded-md border border-gray-200 bg-gray-50 p-4 space-y-2"
+            className="rounded-md border border-border bg-muted p-4 space-y-2"
           >
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-foreground">
                 {TYPE_LABELS[item.type]} {index + 1}
               </span>
               <button
                 onClick={() => removeItem(item.id)}
-                className="text-sm text-red-600 hover:text-red-700"
+                className="text-sm text-destructive hover:text-destructive"
               >
                 Poista
               </button>
@@ -325,14 +325,14 @@ export default function BentoBlockEditor({
             )}
 
             {item.type !== "image" && (
-              <label className="flex items-center gap-2 text-sm text-gray-600">
+              <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <input
                   type="checkbox"
                   checked={isBoxed(item)}
                   onChange={(e) =>
                     updateItem(item.id, { boxed: e.target.checked })
                   }
-                  className="h-4 w-4 rounded border-gray-300 text-brand-accent focus:ring-brand-accent"
+                  className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
                 />
                 Korosta laatikkona
               </label>

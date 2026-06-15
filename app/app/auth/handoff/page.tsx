@@ -47,10 +47,10 @@ export default function AuthHandoff() {
   }, [router, supabase.auth]);
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-50 font-sans">
+    <div className="h-screen flex items-center justify-center bg-background font-sans">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-        <p className="text-gray-600">{status}</p>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground mx-auto mb-4"></div>
+        <p className="text-muted-foreground">{status}</p>
       </div>
     </div>
   );

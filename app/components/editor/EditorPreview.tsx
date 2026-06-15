@@ -18,15 +18,15 @@ export default function EditorPreview({
   const isMobile = previewMode === "mobile";
 
   return (
-    <div className="h-full w-full bg-gray-100 p-8 pt-16">
+    <div className="h-full w-full bg-muted p-8 pt-16">
       <div
         className={`mx-auto transition-all duration-300 ${
           isMobile ? "max-w-[375px]" : "max-w-full"
         }`}
       >
         <div
-          className={`rounded-lg border bg-white shadow-lg overflow-hidden ${
-            isMobile ? "border-gray-400 border-4" : "border-gray-300"
+          className={`rounded-lg border bg-card shadow-lg overflow-hidden ${
+            isMobile ? "border-gray-400 border-4" : "border-input"
           }`}
         >
           {isMobile && (

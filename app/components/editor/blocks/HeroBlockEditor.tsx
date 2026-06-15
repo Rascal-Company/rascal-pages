@@ -168,7 +168,7 @@ export default function HeroBlockEditor({
             type="text"
             value={content?.title || ""}
             onChange={(e) => handleFieldUpdate("title", e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+            className="block w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
           />
         );
       case "subtitle":
@@ -177,16 +177,16 @@ export default function HeroBlockEditor({
             value={content?.subtitle || ""}
             onChange={(e) => handleFieldUpdate("subtitle", e.target.value)}
             rows={3}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+            className="block w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
           />
         );
       case "cta":
         return (
           <div className="space-y-4">
             {/* Form Toggle Section */}
-            <div className="border-t border-gray-200 pt-4">
+            <div className="border-t border-border pt-4">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-foreground">
                   Näytä lomake pääosiossa
                 </label>
                 <button
@@ -194,26 +194,26 @@ export default function HeroBlockEditor({
                   role="switch"
                   aria-checked={content?.showForm ?? false}
                   onClick={() => handleToggleForm(!content?.showForm)}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    content?.showForm ? "bg-blue-600" : "bg-gray-200"
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                    content?.showForm ? "bg-primary" : "bg-muted"
                   }`}
                 >
                   <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 transition duration-200 ease-in-out ${
                       content?.showForm ? "translate-x-5" : "translate-x-0"
                     }`}
                   />
                 </button>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Kerää sähköposteja suoraan pääosiossa
               </p>
             </div>
 
             {content?.showForm && (
-              <div className="space-y-6 rounded-lg bg-gray-50 p-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-blue-800">
+              <div className="space-y-6 rounded-lg bg-muted p-4">
+                <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
+                  <p className="text-sm text-primary">
                     Tiedot tallennetaan aina Rascal Pages -järjestelmään. Voit
                     lisäksi määrittää oman webhook URL:n.
                   </p>
@@ -222,13 +222,13 @@ export default function HeroBlockEditor({
                 {/* Fields */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-foreground">
                       Lomakkeen kentät
                     </label>
                   </div>
 
                   {formFields.length === 0 && (
-                    <p className="text-sm text-gray-500 italic">
+                    <p className="text-sm text-muted-foreground italic">
                       Ei kenttiä. Lisää kenttä alta.
                     </p>
                   )}
@@ -237,7 +237,7 @@ export default function HeroBlockEditor({
                     {formFields.map((field, index) => (
                       <div
                         key={field.id}
-                        className="border border-gray-200 rounded-lg p-3 bg-white"
+                        className="border border-border rounded-lg p-3 bg-card"
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
@@ -250,16 +250,16 @@ export default function HeroBlockEditor({
                                     : field.id,
                                 )
                               }
-                              className="text-sm font-medium text-gray-700 hover:text-gray-900"
+                              className="text-sm font-medium text-foreground hover:text-foreground"
                             >
                               {expandedFieldId === field.id ? "▼" : "▶"}{" "}
                               {field.label || "Nimetön kenttä"}
                             </button>
-                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
                               {FIELD_TYPE_LABELS[field.type]}
                             </span>
                             {field.required && (
-                              <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                              <span className="text-xs text-destructive bg-destructive/10 px-2 py-1 rounded">
                                 Pakollinen
                               </span>
                             )}
@@ -269,7 +269,7 @@ export default function HeroBlockEditor({
                               type="button"
                               onClick={() => moveField(field.id, "up")}
                               disabled={index === 0}
-                              className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
                               title="Siirrä ylös"
                             >
                               ↑
@@ -278,7 +278,7 @@ export default function HeroBlockEditor({
                               type="button"
                               onClick={() => moveField(field.id, "down")}
                               disabled={index === formFields.length - 1}
-                              className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
                               title="Siirrä alas"
                             >
                               ↓
@@ -286,7 +286,7 @@ export default function HeroBlockEditor({
                             <button
                               type="button"
                               onClick={() => removeField(field.id)}
-                              className="p-1 text-red-600 hover:text-red-800"
+                              className="p-1 text-destructive hover:text-destructive"
                               title="Poista kenttä"
                             >
                               ✕
@@ -295,9 +295,9 @@ export default function HeroBlockEditor({
                         </div>
 
                         {expandedFieldId === field.id && (
-                          <div className="space-y-3 mt-3 pt-3 border-t border-gray-200">
+                          <div className="space-y-3 mt-3 pt-3 border-t border-border">
                             <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <label className="block text-xs font-medium text-muted-foreground mb-1">
                                 Kentän otsikko
                               </label>
                               <input
@@ -309,13 +309,13 @@ export default function HeroBlockEditor({
                                   })
                                 }
                                 placeholder="Esim. Sähköpostiosoite"
-                                className="w-full text-sm rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+                                className="w-full text-sm rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring"
                               />
                             </div>
 
                             {field.type !== "checkbox" && (
                               <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                <label className="block text-xs font-medium text-muted-foreground mb-1">
                                   Placeholder-teksti
                                 </label>
                                 <input
@@ -327,13 +327,13 @@ export default function HeroBlockEditor({
                                     })
                                   }
                                   placeholder="Esim. nimi@esimerkki.fi"
-                                  className="w-full text-sm rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+                                  className="w-full text-sm rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring"
                                 />
                               </div>
                             )}
 
                             <div>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <label className="block text-xs font-medium text-muted-foreground mb-1">
                                 Kentän nimi (tekninen)
                               </label>
                               <input
@@ -345,7 +345,7 @@ export default function HeroBlockEditor({
                                   })
                                 }
                                 placeholder="esim. email, name, phone"
-                                className="w-full text-sm rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+                                className="w-full text-sm rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring"
                               />
                             </div>
 
@@ -359,11 +359,11 @@ export default function HeroBlockEditor({
                                     required: e.target.checked,
                                   })
                                 }
-                                className="h-4 w-4 rounded border-gray-300 text-brand-accent focus:ring-brand-accent"
+                                className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
                               />
                               <label
                                 htmlFor={`required-${field.id}`}
-                                className="text-sm text-gray-700"
+                                className="text-sm text-foreground"
                               >
                                 Pakollinen kenttä
                               </label>
@@ -378,28 +378,28 @@ export default function HeroBlockEditor({
                     <button
                       type="button"
                       onClick={() => addField("email")}
-                      className="text-sm px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                      className="text-sm px-3 py-2 bg-muted text-foreground rounded hover:bg-accent"
                     >
                       + Sähköposti
                     </button>
                     <button
                       type="button"
                       onClick={() => addField("text")}
-                      className="text-sm px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                      className="text-sm px-3 py-2 bg-muted text-foreground rounded hover:bg-accent"
                     >
                       + Tekstikenttä
                     </button>
                     <button
                       type="button"
                       onClick={() => addField("textarea")}
-                      className="text-sm px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                      className="text-sm px-3 py-2 bg-muted text-foreground rounded hover:bg-accent"
                     >
                       + Tekstialue
                     </button>
                     <button
                       type="button"
                       onClick={() => addField("checkbox")}
-                      className="text-sm px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                      className="text-sm px-3 py-2 bg-muted text-foreground rounded hover:bg-accent"
                     >
                       + Valintaruutu
                     </button>
@@ -408,7 +408,7 @@ export default function HeroBlockEditor({
 
                 {/* Submit button text */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Lähetysnapin teksti
                   </label>
                   <input
@@ -421,13 +421,13 @@ export default function HeroBlockEditor({
                       })
                     }
                     placeholder={content.ctaText || "Lähetä"}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+                    className="w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
                   />
                 </div>
 
                 {/* Webhook URL */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-foreground mb-2">
                     Webhook URL (valinnainen)
                   </label>
                   <input
@@ -437,21 +437,21 @@ export default function HeroBlockEditor({
                       onUpdate({ ...content, formWebhookUrl: e.target.value })
                     }
                     placeholder="https://your-webhook.com/endpoint"
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+                    className="w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Lomakkeen tiedot lähetetään tähän URL:iin JSON-muodossa.
                   </p>
                 </div>
 
                 {/* Success message */}
-                <div className="pt-4 border-t border-gray-200">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">
+                <div className="pt-4 border-t border-border">
+                  <h3 className="text-sm font-medium text-foreground mb-3">
                     Onnistumisviesti
                   </h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-foreground mb-1">
                         Otsikko
                       </label>
                       <input
@@ -461,11 +461,11 @@ export default function HeroBlockEditor({
                           handleSuccessMessageUpdate("title", e.target.value)
                         }
                         placeholder="Kiitos!"
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+                        className="w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-foreground mb-1">
                         Kuvaus
                       </label>
                       <input
@@ -478,14 +478,14 @@ export default function HeroBlockEditor({
                           )
                         }
                         placeholder="Tietosi on tallennettu."
-                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+                        className="w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-foreground">
                     Lähetyksen jälkeinen linkki (valinnainen)
                   </label>
                   <input
@@ -495,9 +495,9 @@ export default function HeroBlockEditor({
                       handleFieldUpdate("ctaLink", e.target.value)
                     }
                     placeholder="https://example.com/kiitos"
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+                    className="mt-1 block w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
                   />
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Avautuu uuteen välilehteen lomakkeen lähetyksen jälkeen
                   </p>
                 </div>
@@ -507,7 +507,7 @@ export default function HeroBlockEditor({
             {!content?.showForm && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-foreground">
                     CTA-teksti
                   </label>
                   <input
@@ -516,11 +516,11 @@ export default function HeroBlockEditor({
                     onChange={(e) =>
                       handleFieldUpdate("ctaText", e.target.value)
                     }
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+                    className="block w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-foreground">
                     CTA-linkki
                   </label>
                   <input
@@ -529,7 +529,7 @@ export default function HeroBlockEditor({
                     onChange={(e) =>
                       handleFieldUpdate("ctaLink", e.target.value)
                     }
-                    className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+                    className="block w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
                   />
                 </div>
               </div>

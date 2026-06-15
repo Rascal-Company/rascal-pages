@@ -34,10 +34,10 @@ export default function FaqBlockEditor({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-700">UKK</span>
+        <span className="text-sm font-medium text-foreground">UKK</span>
         <button
           onClick={handleAdd}
-          className="rounded-md bg-brand-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-accent-hover"
+          className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-hover"
         >
           + Lisää
         </button>
@@ -46,22 +46,22 @@ export default function FaqBlockEditor({
         {faq.map((item, index) => (
           <div
             key={index}
-            className="rounded-md border border-gray-200 bg-gray-50 p-4"
+            className="rounded-md border border-border bg-muted p-4"
           >
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-foreground">
                 Kysymys {index + 1}
               </span>
               <button
                 onClick={() => handleRemove(index)}
-                className="text-sm text-red-600 hover:text-red-700"
+                className="text-sm text-destructive hover:text-destructive"
               >
                 Poista
               </button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600">
+                <label className="block text-xs font-medium text-muted-foreground">
                   Kysymys
                 </label>
                 <input
@@ -70,11 +70,11 @@ export default function FaqBlockEditor({
                   onChange={(e) =>
                     handleFieldUpdate(index, "question", e.target.value)
                   }
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+                  className="mt-1 block w-full rounded-md border border-input px-2 py-1.5 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-ring"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600">
+                <label className="block text-xs font-medium text-muted-foreground">
                   Vastaus
                 </label>
                 <textarea
@@ -83,7 +83,7 @@ export default function FaqBlockEditor({
                     handleFieldUpdate(index, "answer", e.target.value)
                   }
                   rows={3}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+                  className="mt-1 block w-full rounded-md border border-input px-2 py-1.5 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-ring"
                 />
               </div>
             </div>

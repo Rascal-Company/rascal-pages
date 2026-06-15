@@ -4,6 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Section } from "@/src/lib/templates";
 import { SECTION_TYPE_LABELS } from "@/src/lib/templates";
+import { Button } from "@/app/components/ui/button";
 
 type SortableSectionItemProps = {
   section: Section;
@@ -43,14 +44,14 @@ export default function SortableSectionItem({
       style={style}
       className={`group flex items-center gap-2 rounded-lg border p-3 transition-colors ${
         isActive
-          ? "border-brand-accent bg-brand-accent/5"
-          : "border-gray-200 hover:border-gray-300"
+          ? "border-primary bg-primary/5"
+          : "border-border hover:border-input"
       } ${!section.isVisible ? "opacity-50" : ""}`}
     >
       <button
         {...attributes}
         {...listeners}
-        className="cursor-grab touch-none p-1 text-gray-400 hover:text-gray-600"
+        className="cursor-grab touch-none p-1 text-muted-foreground hover:text-foreground"
         aria-label="Drag to reorder"
       >
         <svg
@@ -70,18 +71,20 @@ export default function SortableSectionItem({
 
       <button
         onClick={onClick}
-        className="flex-1 text-left text-sm font-medium text-gray-900"
+        className="flex-1 text-left text-sm font-medium text-foreground"
       >
         {SECTION_TYPE_LABELS[section.type]}
       </button>
 
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground hover:text-foreground"
           onClick={(e) => {
             e.stopPropagation();
             onToggleVisibility();
           }}
-          className="p-1 text-gray-400 hover:text-gray-600"
           title={section.isVisible ? "Piilota" : "Näytä"}
         >
           {section.isVisible ? (
@@ -119,14 +122,16 @@ export default function SortableSectionItem({
               />
             </svg>
           )}
-        </button>
+        </Button>
 
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground hover:text-foreground"
           onClick={(e) => {
             e.stopPropagation();
             onDuplicate();
           }}
-          className="p-1 text-gray-400 hover:text-gray-600"
           title="Kopioi"
         >
           <svg
@@ -142,14 +147,16 @@ export default function SortableSectionItem({
               d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
             />
           </svg>
-        </button>
+        </Button>
 
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground hover:text-destructive"
           onClick={(e) => {
             e.stopPropagation();
             onRemove();
           }}
-          className="p-1 text-gray-400 hover:text-red-600"
           title="Poista"
         >
           <svg
@@ -165,7 +172,7 @@ export default function SortableSectionItem({
               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
             />
           </svg>
-        </button>
+        </Button>
       </div>
     </div>
   );
