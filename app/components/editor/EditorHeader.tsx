@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/app/components/ui/button";
+import ThemeToggle from "@/app/components/ThemeToggle";
 
 interface EditorHeaderProps {
   siteSubdomain: string;
@@ -25,9 +26,12 @@ export default function EditorHeader({
         >
           ← Takaisin dashboardiin
         </Button>
-        <Button variant="outline" size="sm" onClick={onSettingsClick}>
-          Asetukset
-        </Button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Button variant="outline" size="sm" onClick={onSettingsClick}>
+            Asetukset
+          </Button>
+        </div>
       </div>
       <h1 className="mt-4 text-2xl font-bold text-foreground">
         Muokkaa sivustoa

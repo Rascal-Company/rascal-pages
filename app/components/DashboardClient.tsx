@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { togglePagePublish } from "@/app/actions/toggle-publish";
 import { deleteSite } from "@/app/actions";
 import { useToast } from "@/app/components/ui/ToastContainer";
+import ThemeToggle from "@/app/components/ThemeToggle";
 import { createSiteId } from "@/src/lib/types";
 import { getHomeUrl } from "@/app/lib/navigation";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
@@ -154,14 +155,14 @@ export default function DashboardClient({
   if (!isAuthenticated) {
     return (
       <>
-        <div className="flex min-h-screen items-center justify-center bg-brand-light">
+        <div className="flex min-h-screen items-center justify-center bg-background">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-brand-dark">
+            <h1 className="text-2xl font-bold text-foreground">
               Kirjaudu sisään
             </h1>
             <button
               onClick={() => setIsLoginModalOpen(true)}
-              className="mt-4 rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-accent-hover"
+              className="mt-4 rounded-lg bg-primary px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
             >
               Kirjaudu sisään
             </button>
@@ -177,32 +178,33 @@ export default function DashboardClient({
 
   return (
     <>
-      <div className="min-h-screen bg-brand-light">
+      <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {/* Otsikko */}
           <div className="mb-8 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-brand-dark">
+              <h1 className="text-3xl font-bold text-foreground">
                 Omat sivustot
               </h1>
             </div>
-            <div className="flex gap-3">
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
               <button
                 onClick={() => setIsAiModalOpen(true)}
-                className="rounded-lg border border-brand-accent bg-white px-6 py-3 text-sm font-medium text-brand-accent transition-colors hover:bg-brand-accent/5"
+                className="rounded-lg border border-primary bg-card px-6 py-3 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
               >
                 ✨ Luo AI:n avulla
               </button>
               <Link
                 href="/app/dashboard/new"
-                className="rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-brand-accent-hover"
+                className="rounded-lg bg-primary px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
               >
                 + Uusi sivusto
               </Link>
               <button
                 onClick={handleLogout}
                 type="button"
-                className="rounded-lg border border-brand-dark/20 bg-brand-beige px-6 py-3 text-sm font-medium text-brand-dark transition-colors hover:bg-brand-beige/80"
+                className="rounded-lg border border-foreground/20 bg-card px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-card/80"
               >
                 Kirjaudu ulos
               </button>
@@ -211,10 +213,10 @@ export default function DashboardClient({
 
           {/* Sivustojen ruudukko */}
           {sites.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-brand-dark/20 bg-brand-beige p-12 text-center">
+            <div className="rounded-lg border border-dashed border-foreground/20 bg-card p-12 text-center">
               <div className="mx-auto max-w-md">
                 <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
+                  className="mx-auto h-12 w-12 text-muted-foreground"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -227,16 +229,16 @@ export default function DashboardClient({
                     d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                   />
                 </svg>
-                <h3 className="mt-4 text-lg font-semibold text-brand-dark">
+                <h3 className="mt-4 text-lg font-semibold text-foreground">
                   Ei vielä sivustoja
                 </h3>
-                <p className="mt-2 text-sm text-brand-dark/70">
+                <p className="mt-2 text-sm text-foreground/70">
                   Aloita luomalla ensimmäinen sivustosi
                 </p>
                 <div className="mt-6">
                   <Link
                     href="/app/dashboard/new"
-                    className="inline-flex items-center rounded-md bg-brand-accent px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-brand-accent-hover"
+                    className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-hover"
                   >
                     + Uusi sivusto
                   </Link>
@@ -248,12 +250,12 @@ export default function DashboardClient({
               {sites.map((site) => (
                 <div
                   key={site.id}
-                  className="group relative overflow-hidden rounded-lg border border-brand-dark/10 bg-brand-beige shadow-sm transition-shadow hover:shadow-md"
+                  className="group relative overflow-hidden rounded-lg border border-foreground/10 bg-card shadow-sm transition-shadow hover:shadow-md"
                 >
                   {/* Placeholder-kuvake */}
                   <div className="h-48 w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                     <svg
-                      className="h-16 w-16 text-gray-400"
+                      className="h-16 w-16 text-muted-foreground"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -269,11 +271,11 @@ export default function DashboardClient({
                   <div className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-brand-dark">
+                        <h3 className="text-lg font-semibold text-foreground">
                           {site.subdomain}.rascalpages.fi
                         </h3>
                         {site.custom_domain && (
-                          <p className="mt-1 text-sm text-brand-dark/70">
+                          <p className="mt-1 text-sm text-foreground/70">
                             {site.custom_domain}
                           </p>
                         )}
@@ -281,12 +283,12 @@ export default function DashboardClient({
                     </div>
 
                     {/* Julkaisutoggle */}
-                    <div className="mt-4 flex items-center justify-between rounded-lg border border-brand-dark/10 bg-white p-3">
+                    <div className="mt-4 flex items-center justify-between rounded-lg border border-foreground/10 bg-card p-3">
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-brand-dark">
+                        <p className="text-sm font-medium text-foreground">
                           Julkaistu
                         </p>
-                        <p className="mt-0.5 text-xs text-brand-dark/60">
+                        <p className="mt-0.5 text-xs text-foreground/60">
                           {site.published
                             ? "Sivu on julkinen ja näkyy kävijöille"
                             : "Sivu on piilossa"}
@@ -303,9 +305,9 @@ export default function DashboardClient({
                         }
                         className={`
                           relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
-                          transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-accent
+                          transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary
                           focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-                          ${site.published ? "bg-brand-accent" : "bg-gray-200"}
+                          ${site.published ? "bg-primary" : "bg-gray-200"}
                         `}
                         role="switch"
                         aria-checked={site.published}
@@ -315,7 +317,7 @@ export default function DashboardClient({
                       >
                         <span
                           className={`
-                            pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
+                            pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 
                             transition duration-200 ease-in-out
                             ${site.published ? "translate-x-5" : "translate-x-0"}
                           `}
@@ -325,15 +327,15 @@ export default function DashboardClient({
 
                     {/* URL-kenttä kopiointia varten */}
                     <div className="mt-4">
-                      <label className="block text-xs font-medium text-brand-dark/70 mb-1">
+                      <label className="block text-xs font-medium text-foreground/70 mb-1">
                         Sivuston URL
                       </label>
-                      <div className="flex items-center gap-2 rounded-md border border-brand-dark/20 bg-white p-2">
+                      <div className="flex items-center gap-2 rounded-md border border-foreground/20 bg-card p-2">
                         <input
                           type="text"
                           value={`https://${site.subdomain}.rascalpages.fi`}
                           readOnly
-                          className="flex-1 bg-transparent text-sm text-brand-dark outline-none"
+                          className="flex-1 bg-transparent text-sm text-foreground outline-none"
                         />
                         <button
                           type="button"
@@ -342,7 +344,7 @@ export default function DashboardClient({
                             navigator.clipboard.writeText(url);
                             showToast("URL kopioitu leikepöydälle!", "success");
                           }}
-                          className="flex-shrink-0 rounded p-1.5 text-brand-dark/60 transition-colors hover:bg-brand-light hover:text-brand-dark"
+                          className="flex-shrink-0 rounded p-1.5 text-foreground/60 transition-colors hover:bg-background hover:text-foreground"
                           aria-label="Kopioi URL"
                         >
                           <svg
@@ -365,19 +367,19 @@ export default function DashboardClient({
                     <div className="mt-4 flex gap-2">
                       <Link
                         href={`/app/dashboard/${site.id}`}
-                        className="flex-1 rounded-md border border-brand-dark/20 bg-white px-3 py-1.5 text-center text-sm font-medium text-brand-dark transition-colors hover:bg-brand-light"
+                        className="flex-1 rounded-md border border-foreground/20 bg-card px-3 py-1.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-background"
                       >
                         Muokkaa
                       </Link>
                       <Link
                         href={`/app/dashboard/${site.id}/analytics`}
-                        className="flex-1 rounded-md border border-brand-dark/20 bg-white px-3 py-1.5 text-center text-sm font-medium text-brand-dark transition-colors hover:bg-brand-light"
+                        className="flex-1 rounded-md border border-foreground/20 bg-card px-3 py-1.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-background"
                       >
                         Analytiikka
                       </Link>
                       <button
                         onClick={() => handleDeleteSite(site.id)}
-                        className="flex-shrink-0 rounded-md border border-red-300 bg-white px-3 py-1.5 text-center text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                        className="flex-shrink-0 rounded-md border border-red-300 bg-card px-3 py-1.5 text-center text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
                         disabled={
                           (togglePublishMutation.isPending &&
                             togglePublishMutation.variables?.siteId ===
@@ -410,18 +412,18 @@ export default function DashboardClient({
       {/* Poistovahvistusdialogi */}
       {isConfirmingDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-medium text-brand-dark">
+          <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-xl">
+            <h3 className="text-lg font-medium text-foreground">
               Poista sivusto
             </h3>
-            <p className="mt-2 text-sm text-brand-dark/70">
+            <p className="mt-2 text-sm text-foreground/70">
               Oletko varma että haluat poistaa tämän sivuston? Tätä toimintoa ei
               voi perua.
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={cancelDeleteSite}
-                className="rounded-md border border-brand-dark/20 bg-white px-4 py-2 text-sm font-medium text-brand-dark transition-colors hover:bg-brand-light"
+                className="rounded-md border border-foreground/20 bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
                 disabled={deleteSiteMutation.isPending}
               >
                 Peruuta
