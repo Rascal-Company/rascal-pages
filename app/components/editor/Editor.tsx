@@ -474,6 +474,8 @@ export default function Editor({
           content={content}
           siteId={siteId}
           previewMode={previewMode}
+          activeSectionId={activeSectionId}
+          onSelectSection={setActiveSectionId}
         />
       </div>
 

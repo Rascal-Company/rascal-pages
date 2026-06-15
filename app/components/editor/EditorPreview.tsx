@@ -2,18 +2,22 @@
 
 import { TemplateConfig } from "@/src/lib/templates";
 import SiteRenderer from "@/app/components/renderer/SiteRenderer";
-import type { SiteId } from "@/src/lib/types";
+import type { SiteId, SectionId } from "@/src/lib/types";
 
 interface EditorPreviewProps {
   content: TemplateConfig;
   siteId: SiteId;
   previewMode?: "desktop" | "mobile";
+  activeSectionId?: SectionId | null;
+  onSelectSection?: (sectionId: SectionId) => void;
 }
 
 export default function EditorPreview({
   content,
   siteId,
   previewMode = "desktop",
+  activeSectionId = null,
+  onSelectSection,
 }: EditorPreviewProps) {
   const isMobile = previewMode === "mobile";
 
@@ -34,7 +38,14 @@ export default function EditorPreview({
               <div className="w-16 h-1 bg-gray-600 rounded-full" />
             </div>
           )}
-          <SiteRenderer content={content} siteId={siteId} isPreview={true} />
+          <SiteRenderer
+            content={content}
+            siteId={siteId}
+            isPreview={true}
+            editable={true}
+            activeSectionId={activeSectionId}
+            onSelectSection={onSelectSection}
+          />
           {isMobile && (
             <div className="bg-gray-800 px-4 py-3 flex items-center justify-center">
               <div className="w-10 h-10 border-2 border-gray-600 rounded-full" />

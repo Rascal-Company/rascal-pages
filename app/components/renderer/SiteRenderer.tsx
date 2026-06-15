@@ -6,8 +6,9 @@ import type {
   HeroContent,
   SectionContentMap,
 } from "@/src/lib/templates";
+import { SECTION_TYPE_LABELS } from "@/src/lib/templates";
 import { PageViewTracker } from "@/app/components/PageViewTracker";
-import type { SiteId } from "@/src/lib/types";
+import type { SiteId, SectionId } from "@/src/lib/types";
 import type { Post } from "@/src/lib/posts";
 import { migrateToSections } from "@/app/components/editor/utils/contentUtils";
 import { buildGoogleFontsUrl } from "@/src/lib/fonts";
@@ -37,6 +38,10 @@ type SiteRendererProps = {
   siteId: SiteId;
   isPreview?: boolean;
   posts?: Post[];
+  /** Enables on-canvas section selection affordances (editor only). */
+  editable?: boolean;
+  activeSectionId?: SectionId | null;
+  onSelectSection?: (sectionId: SectionId) => void;
 };
 
 export default function SiteRenderer({
@@ -44,6 +49,9 @@ export default function SiteRenderer({
   siteId,
   isPreview = false,
   posts,
+  editable = false,
+  activeSectionId = null,
+  onSelectSection,
 }: SiteRendererProps) {
   const normalizedContent = migrateToSections(content);
   const { sections, theme } = normalizedContent;
@@ -262,7 +270,27 @@ export default function SiteRenderer({
                   />
                 </div>
               )}
-              {block}
+              {editable ? (
+                <div
+                  data-section-id={section.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectSection?.(section.id);
+                  }}
+                  className={`group relative cursor-pointer outline-offset-[-2px] transition-[outline] ${
+                    section.id === activeSectionId
+                      ? "outline outline-2 outline-primary"
+                      : "hover:outline hover:outline-2 hover:outline-primary/40"
+                  }`}
+                >
+                  <span className="pointer-events-none absolute left-3 top-3 z-20 rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground opacity-0 shadow transition-opacity group-hover:opacity-100">
+                    {SECTION_TYPE_LABELS[section.type]}
+                  </span>
+                  {block}
+                </div>
+              ) : (
+                block
+              )}
             </Fragment>
           );
         })}
