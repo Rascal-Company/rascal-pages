@@ -242,10 +242,22 @@ export type ThemeConfig = {
   appearance?: "light" | "dark";
 };
 
+/**
+ * Per-page SEO overrides. When a field is unset, metadata is derived from the
+ * page content (about/hero). Stored on TemplateConfig so it travels with the
+ * page content and is saved through the normal page-save flow.
+ */
+export type SeoConfig = {
+  metaTitle?: string;
+  metaDescription?: string;
+  ogImage?: string;
+};
+
 export type TemplateConfig = {
   templateId: string;
   theme: ThemeConfig;
   sections: Section[];
+  seo?: SeoConfig;
   // DEPRECATED: Keep for migration, remove later
   hero?: HeroContent;
   features?: FeatureItem[];

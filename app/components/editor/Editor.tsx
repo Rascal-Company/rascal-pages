@@ -28,6 +28,7 @@ import {
   updateThemeColor,
   updateThemeFont,
   updateThemeAppearance,
+  updateSeoField,
 } from "./utils/sectionUpdaters";
 import type { SiteId, SectionId } from "@/src/lib/types";
 import { useToast } from "@/app/components/ui/ToastContainer";
@@ -35,6 +36,7 @@ import EditorHeader from "./EditorHeader";
 import StatusMessages from "./StatusMessages";
 import TemplateSelector from "./TemplateSelector";
 import ThemeFields from "./fields/ThemeFields";
+import SeoFields from "./fields/SeoFields";
 import SaveButton from "./SaveButton";
 import EditorPreview from "./EditorPreview";
 import PublishedToggle from "./PublishedToggle";
@@ -227,6 +229,15 @@ export default function Editor({
               }
               onAppearanceUpdate={(appearance) =>
                 setContent(updateThemeAppearance(appearance))
+              }
+            />
+
+            <SeoFields
+              metaTitle={content.seo?.metaTitle}
+              metaDescription={content.seo?.metaDescription}
+              ogImage={content.seo?.ogImage}
+              onUpdate={(field, value) =>
+                setContent(updateSeoField(field, value))
               }
             />
 
