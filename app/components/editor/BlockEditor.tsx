@@ -5,7 +5,6 @@ import type {
   SectionContentMap,
   SectionType,
 } from "@/src/lib/templates";
-import { SECTION_TYPE_LABELS } from "@/src/lib/templates";
 import {
   HeroBlockEditor,
   FeaturesBlockEditor,
@@ -30,9 +29,6 @@ type BlockEditorProps = {
 export default function BlockEditor({ section, onUpdate }: BlockEditorProps) {
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">
-        {SECTION_TYPE_LABELS[section.type]}
-      </h3>
       {(() => {
         switch (section.type) {
           case "hero":

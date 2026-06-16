@@ -46,8 +46,7 @@ import { Button } from "@/app/components/ui/button";
 import EditorPreview from "./EditorPreview";
 import PublishedToggle from "./PublishedToggle";
 import SortableSectionItem from "./SortableSectionItem";
-import BlockEditor from "./BlockEditor";
-import SectionStyleInspector from "./SectionStyleInspector";
+import FloatingSectionEditor from "./FloatingSectionEditor";
 import AddSectionButton from "./AddSectionButton";
 import SectionPicker from "./SectionPicker";
 import SettingsModal from "./SettingsModal";
@@ -101,11 +100,9 @@ export default function Editor({
   );
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [insertAfterId, setInsertAfterId] = useState<SectionId | null>(null);
-  const [activeTab, setActiveTab] = useState<"section" | "page">("section");
 
   const selectSection = (id: SectionId | null) => {
     setActiveSectionId(id);
-    if (id) setActiveTab("section");
   };
 
   const rootDomain = "rascalpages.fi";
@@ -244,156 +241,137 @@ export default function Editor({
   return (
     <EditorSiteProvider siteId={siteId}>
       <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      {!isFullPreview && (
-        <aside className="flex w-[360px] min-w-[320px] max-w-[420px] flex-col border-r border-border bg-card">
-          <div className="border-b border-border p-4">
-            <EditorHeader
-              siteSubdomain={siteSubdomain}
-              onSettingsClick={() => setIsSettingsOpen(true)}
-            />
-          </div>
-
-          <div className="flex gap-1 border-b border-border px-3 pt-2">
-            {(
-              [
-                { id: "section", label: "Osio" },
-                { id: "page", label: "Sivu" },
-              ] as const
-            ).map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? "border-primary text-foreground"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4">
-            <StatusMessages error={error} success={success} />
-
-            {activeTab === "page" && (
-              <div className="space-y-4">
-            <TemplateSelector
-              currentTemplateId={content.templateId || "saas-modern"}
-              onTemplateChange={handleTemplateChange}
-            />
-
-            <PublishedToggle
-              published={published}
-              onToggle={setPublished}
-              isSaving={isSaving}
-            />
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-foreground">Osiot</h3>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={undo}
-                    disabled={!canUndo}
-                    title="Kumoa (Ctrl/Cmd+Z)"
-                    aria-label="Kumoa"
-                    className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 14L4 9l5-5M4 9h11a5 5 0 015 5v0a5 5 0 01-5 5h-1"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={redo}
-                    disabled={!canRedo}
-                    title="Tee uudelleen (Ctrl/Cmd+Shift+Z)"
-                    aria-label="Tee uudelleen"
-                    className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 14l5-5-5-5m5 5H9a5 5 0 00-5 5v0a5 5 0 005 5h1"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={content.sections.map((s) => s.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="space-y-2">
-                    {content.sections.map((section) => (
-                      <SortableSectionItem
-                        key={section.id}
-                        section={section}
-                        isActive={section.id === activeSectionId}
-                        onClick={() => selectSection(section.id)}
-                        onToggleVisibility={() =>
-                          setContent(toggleSectionVisibility(section.id))
-                        }
-                        onRemove={() => handleRemoveSection(section.id)}
-                        onDuplicate={() =>
-                          setContent(duplicateSection(section.id))
-                        }
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
-              <AddSectionButton onAdd={handleAddSection} />
+        {/* Sidebar */}
+        {!isFullPreview && (
+          <aside className="flex w-[360px] min-w-[320px] max-w-[420px] flex-col border-r border-border bg-card">
+            <div className="border-b border-border p-4">
+              <EditorHeader
+                siteSubdomain={siteSubdomain}
+                onSettingsClick={() => setIsSettingsOpen(true)}
+              />
             </div>
 
-            <StyleFields
-              radius={content.theme?.radius}
-              onPreset={(preset) => setContent(applyThemePreset(preset))}
-              onRadiusUpdate={(radius) => setContent(updateThemeRadius(radius))}
-            />
+            <div className="flex-1 overflow-y-auto p-4">
+              <StatusMessages error={error} success={success} />
 
-            <ThemeFields
-              primaryColor={content.theme?.primaryColor}
-              headingFont={content.theme?.headingFont}
-              bodyFont={content.theme?.bodyFont}
-              appearance={content.theme?.appearance}
-              onColorUpdate={(value) => setContent(updateThemeColor(value))}
-              onFontUpdate={(field, fontName) =>
-                setContent(updateThemeFont(field, fontName))
-              }
-              onAppearanceUpdate={(appearance) =>
-                setContent(updateThemeAppearance(appearance))
-              }
-            />
+              <div className="space-y-4">
+                <TemplateSelector
+                  currentTemplateId={content.templateId || "saas-modern"}
+                  onTemplateChange={handleTemplateChange}
+                />
 
-            <SeoFields
+                <PublishedToggle
+                  published={published}
+                  onToggle={setPublished}
+                  isSaving={isSaving}
+                />
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-medium text-foreground">
+                      Osiot
+                    </h3>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={undo}
+                        disabled={!canUndo}
+                        title="Kumoa (Ctrl/Cmd+Z)"
+                        aria-label="Kumoa"
+                        className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 14L4 9l5-5M4 9h11a5 5 0 015 5v0a5 5 0 01-5 5h-1"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={redo}
+                        disabled={!canRedo}
+                        title="Tee uudelleen (Ctrl/Cmd+Shift+Z)"
+                        aria-label="Tee uudelleen"
+                        className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 14l5-5-5-5m5 5H9a5 5 0 00-5 5v0a5 5 0 005 5h1"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={content.sections.map((s) => s.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-2">
+                        {content.sections.map((section) => (
+                          <SortableSectionItem
+                            key={section.id}
+                            section={section}
+                            isActive={section.id === activeSectionId}
+                            onClick={() => selectSection(section.id)}
+                            onToggleVisibility={() =>
+                              setContent(toggleSectionVisibility(section.id))
+                            }
+                            onRemove={() => handleRemoveSection(section.id)}
+                            onDuplicate={() =>
+                              setContent(duplicateSection(section.id))
+                            }
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                  <AddSectionButton onAdd={handleAddSection} />
+                </div>
+
+                <StyleFields
+                  radius={content.theme?.radius}
+                  onPreset={(preset) => setContent(applyThemePreset(preset))}
+                  onRadiusUpdate={(radius) =>
+                    setContent(updateThemeRadius(radius))
+                  }
+                />
+
+                <ThemeFields
+                  primaryColor={content.theme?.primaryColor}
+                  headingFont={content.theme?.headingFont}
+                  bodyFont={content.theme?.bodyFont}
+                  appearance={content.theme?.appearance}
+                  onColorUpdate={(value) => setContent(updateThemeColor(value))}
+                  onFontUpdate={(field, fontName) =>
+                    setContent(updateThemeFont(field, fontName))
+                  }
+                  onAppearanceUpdate={(appearance) =>
+                    setContent(updateThemeAppearance(appearance))
+                  }
+                />
+
+                <SeoFields
                   metaTitle={content.seo?.metaTitle}
                   metaDescription={content.seo?.metaDescription}
                   ogImage={content.seo?.ogImage}
@@ -402,104 +380,39 @@ export default function Editor({
                   }
                 />
               </div>
-            )}
+            </div>
 
-            {activeTab === "section" &&
-              (activeSection ? (
-                <div className="space-y-4">
-                  <SectionStyleInspector
-                    style={activeSection.style}
-                    onChange={(patch) =>
-                      setContent(updateSectionStyle(activeSection.id, patch))
-                    }
-                  />
-                  <BlockEditor
-                    section={activeSection}
-                    onUpdate={handleSectionUpdate}
-                  />
-                </div>
-              ) : (
-                <div className="flex h-full items-center justify-center px-2 text-center text-sm text-muted-foreground">
-                  Valitse osio kankaalta tai Sivu-välilehdeltä muokataksesi sitä
-                </div>
-              ))}
-          </div>
+            <div className="flex items-center justify-between gap-2 border-t border-border p-3">
+              <SaveStatusIndicator
+                status={saveStatus}
+                lastSavedAt={lastSavedAt}
+              />
+              <Button onClick={handleSave} disabled={isSaving} size="sm">
+                {isSaving ? "Tallennetaan..." : "Tallenna"}
+              </Button>
+            </div>
+          </aside>
+        )}
 
-          <div className="flex items-center justify-between gap-2 border-t border-border p-3">
-            <SaveStatusIndicator status={saveStatus} lastSavedAt={lastSavedAt} />
-            <Button onClick={handleSave} disabled={isSaving} size="sm">
-              {isSaving ? "Tallennetaan..." : "Tallenna"}
-            </Button>
-          </div>
-        </aside>
-      )}
-
-      {/* Right Side - Preview */}
-      <div className="relative flex-1 overflow-y-auto">
-        {/* Preview Controls */}
-        <div
-          className={`absolute top-4 z-10 flex items-center gap-2 ${
-            isFullPreview ? "left-4" : "right-4"
-          }`}
-        >
-          {/* Device Toggle */}
-          <div className="flex rounded-lg border border-border bg-card shadow-sm">
-            <button
-              onClick={() => setPreviewMode("desktop")}
-              className={`flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors ${
-                previewMode === "desktop"
-                  ? "bg-accent text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              } rounded-l-lg`}
-              title="Desktop"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={() => setPreviewMode("mobile")}
-              className={`flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors ${
-                previewMode === "mobile"
-                  ? "bg-accent text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              } rounded-r-lg border-l border-border`}
-              title="Mobile"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
-                />
-              </svg>
-            </button>
-          </div>
-
-          {/* Full Preview Toggle */}
-          <button
-            onClick={() => setIsFullPreview(!isFullPreview)}
-            className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
-            title={isFullPreview ? "Näytä editori" : "Koko näytön esikatselu"}
+        {/* Right Side - Preview */}
+        <div className="relative flex-1 overflow-hidden">
+          {/* Preview Controls */}
+          <div
+            className={`absolute top-4 z-10 flex items-center gap-2 ${
+              isFullPreview ? "left-4" : "right-4"
+            }`}
           >
-            {isFullPreview ? (
-              <>
+            {/* Device Toggle */}
+            <div className="flex rounded-lg border border-border bg-card shadow-sm">
+              <button
+                onClick={() => setPreviewMode("desktop")}
+                className={`flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors ${
+                  previewMode === "desktop"
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                } rounded-l-lg`}
+                title="Desktop"
+              >
                 <svg
                   className="h-4 w-4"
                   fill="none"
@@ -510,60 +423,121 @@ export default function Editor({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                   />
                 </svg>
-                Editori
-              </>
-            ) : (
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+              </button>
+              <button
+                onClick={() => setPreviewMode("mobile")}
+                className={`flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors ${
+                  previewMode === "mobile"
+                    ? "bg-accent text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                } rounded-r-lg border-l border-border`}
+                title="Mobile"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-                />
-              </svg>
-            )}
-          </button>
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Full Preview Toggle */}
+            <button
+              onClick={() => setIsFullPreview(!isFullPreview)}
+              className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
+              title={isFullPreview ? "Näytä editori" : "Koko näytön esikatselu"}
+            >
+              {isFullPreview ? (
+                <>
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                    />
+                  </svg>
+                  Editori
+                </>
+              ) : (
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
+          <div className="h-full w-full overflow-y-auto">
+            <EditorPreview
+              content={content}
+              siteId={siteId}
+              previewMode={previewMode}
+              activeSectionId={activeSectionId}
+              onSelectSection={selectSection}
+              onMoveSection={(id, dir) => setContent(moveSection(id, dir))}
+              onDuplicateSection={(id) => setContent(duplicateSection(id))}
+              onRemoveSection={handleRemoveSection}
+              onRequestInsert={(afterId) => setInsertAfterId(afterId)}
+              onReorderSections={(draggedId, targetId) =>
+                setContent(reorderSections(draggedId, targetId))
+              }
+              onUpdateSectionField={handleInlineFieldUpdate}
+            />
+          </div>
+
+          {!isFullPreview && activeSection && (
+            <FloatingSectionEditor
+              key={activeSection.id}
+              section={activeSection}
+              onUpdateContent={handleSectionUpdate}
+              onUpdateStyle={(patch) =>
+                setContent(updateSectionStyle(activeSection.id, patch))
+              }
+              onClose={() => setActiveSectionId(null)}
+            />
+          )}
         </div>
-        <EditorPreview
-          content={content}
+
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
           siteId={siteId}
-          previewMode={previewMode}
-          activeSectionId={activeSectionId}
-          onSelectSection={selectSection}
-          onMoveSection={(id, dir) => setContent(moveSection(id, dir))}
-          onDuplicateSection={(id) => setContent(duplicateSection(id))}
-          onRemoveSection={handleRemoveSection}
-          onRequestInsert={(afterId) => setInsertAfterId(afterId)}
-          onReorderSections={(draggedId, targetId) =>
-            setContent(reorderSections(draggedId, targetId))
-          }
-          onUpdateSectionField={handleInlineFieldUpdate}
+          subdomain={siteSubdomain}
+          rootDomain={rootDomain}
+          customDomain={siteCustomDomain}
+          initialSettings={initialSettings}
         />
-      </div>
 
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        siteId={siteId}
-        subdomain={siteSubdomain}
-        rootDomain={rootDomain}
-        customDomain={siteCustomDomain}
-        initialSettings={initialSettings}
-      />
-
-      <SectionPicker
-        open={insertAfterId !== null}
-        onClose={() => setInsertAfterId(null)}
-        onPick={handleInsertSection}
-      />
+        <SectionPicker
+          open={insertAfterId !== null}
+          onClose={() => setInsertAfterId(null)}
+          onPick={handleInsertSection}
+        />
       </div>
     </EditorSiteProvider>
   );
