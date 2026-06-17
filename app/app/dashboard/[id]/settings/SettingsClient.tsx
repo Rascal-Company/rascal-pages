@@ -634,7 +634,25 @@ print(resp.json())`;
       <h3 className="text-sm font-semibold text-brand-dark">
         Käyttö automaatiosta
       </h3>
-      <p className="mt-1 text-xs text-brand-dark/60">
+
+      <div className="mt-2 flex items-center justify-between gap-2 rounded-md border border-brand-dark/10 bg-brand-light p-3">
+        <div className="min-w-0">
+          <span className="block text-xs font-medium text-brand-dark/70">
+            Site ID
+          </span>
+          <code className="block break-all text-xs text-brand-dark">
+            {siteId}
+          </code>
+        </div>
+        <button
+          onClick={() => copy(siteId)}
+          className="shrink-0 text-xs font-medium text-primary hover:text-primary-hover"
+        >
+          Kopioi
+        </button>
+      </div>
+
+      <p className="mt-2 text-xs text-brand-dark/60">
         <code>POST {POSTS_ENDPOINT}</code> otsikolla{" "}
         <code>Authorization: Bearer &lt;avain&gt;</code>. Pakolliset kentät:{" "}
         <code>siteId</code>, <code>title</code>. Valinnaiset: <code>slug</code>,{" "}
