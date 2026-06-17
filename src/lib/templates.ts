@@ -20,12 +20,32 @@ export type SectionType =
   | "bento"
   | "footer";
 
+/**
+ * How a block's image is presented. `mode` chooses between a full-bleed
+ * section background and a contained "box" beside the text; `position`, `size`
+ * and `rounding` only apply in box mode. All fields optional — an unset
+ * `imageDisplay` keeps a block's legacy rendering for backwards compatibility.
+ */
+export type ImageMode = "background" | "box";
+export type ImagePosition = "left" | "right";
+export type ImageSize = "sm" | "md" | "lg";
+export type ImageRounding = "none" | "rounded" | "circle";
+
+export type ImageDisplay = {
+  mode?: ImageMode;
+  position?: ImagePosition;
+  size?: ImageSize;
+  rounding?: ImageRounding;
+};
+
 export type HeroContent = {
   title: string;
   subtitle: string;
   ctaText: string;
   ctaLink: string;
   image?: string;
+  /** Presentation of `image` (background vs. box). */
+  imageDisplay?: ImageDisplay;
   /** Optional small label shown above the headline (portfolio hero). */
   eyebrow?: string;
   /** Content alignment variant for the standard (non-portfolio) hero. */
@@ -69,6 +89,8 @@ export type AboutContent = {
   name: string;
   bio: string;
   image?: string;
+  /** Presentation of `image` (background vs. box). */
+  imageDisplay?: ImageDisplay;
   fieldOrder?: string[];
 };
 

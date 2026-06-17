@@ -3,6 +3,7 @@
 import type { AboutContent } from "@/src/lib/templates";
 import SortableFieldList from "../fields/SortableFieldList";
 import ImageUploadField from "../fields/ImageUploadField";
+import ImageDisplayControls from "../fields/ImageDisplayControls";
 
 type AboutBlockEditorProps = {
   content: AboutContent;
@@ -51,11 +52,24 @@ export default function AboutBlockEditor({
         );
       case "image":
         return (
-          <ImageUploadField
-            value={content?.image}
-            shape="round"
-            onChange={(url) => handleFieldUpdate("image", url)}
-          />
+          <div className="space-y-3">
+            <ImageUploadField
+              value={content?.image}
+              shape="round"
+              onChange={(url) => handleFieldUpdate("image", url)}
+            />
+            {content?.image && (
+              <ImageDisplayControls
+                value={content?.imageDisplay}
+                onChange={(patch) =>
+                  onUpdate({
+                    ...content,
+                    imageDisplay: { ...content?.imageDisplay, ...patch },
+                  })
+                }
+              />
+            )}
+          </div>
         );
       default:
         return null;
