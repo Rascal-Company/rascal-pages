@@ -53,6 +53,7 @@ type EditorProps = {
     googleAnalyticsId?: string;
     metaPixelId?: string;
   };
+  crmEnabled: boolean;
 };
 
 export default function Editor({
@@ -62,6 +63,7 @@ export default function Editor({
   initialContent,
   initialPublished = false,
   initialSettings = {},
+  crmEnabled,
 }: EditorProps) {
   const { showToast, showConfirm } = useToast();
   const [content, setContent] = useState<TemplateConfig>(
@@ -235,6 +237,7 @@ export default function Editor({
             <BlockEditor
               section={activeSection}
               onUpdate={handleSectionUpdate}
+              crmEnabled={crmEnabled}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-gray-500">

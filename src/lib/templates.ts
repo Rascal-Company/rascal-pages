@@ -35,6 +35,8 @@ export type HeroContent = {
   };
   // DEPRECATED: Use formFields instead
   collectName?: boolean;
+  exportToCrm?: boolean;
+  crmTag?: string;
 };
 
 export type FeatureItem = {
@@ -89,6 +91,8 @@ export type FormContent = {
     title: string;
     description: string;
   };
+  exportToCrm?: boolean;
+  crmTag?: string;
 };
 
 export type LogosContent = null;

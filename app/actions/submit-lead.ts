@@ -10,6 +10,8 @@ interface SubmitLeadResult {
   error?: string;
 }
 
+type CrmExport = { export: boolean; tag?: string };
+
 function isValidEmail(email: string): boolean {
   if (!email) return false;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -65,6 +67,7 @@ export async function submitLeadCore(
   siteId: SiteId,
   fields: Record<string, string | boolean>,
   customWebhookUrl?: string | null,
+  crm?: CrmExport,
 ): Promise<SubmitLeadResult> {
   // 0. Bot protection: honeypot + timing check
   if (isBotSubmission(fields)) {
@@ -86,7 +89,13 @@ export async function submitLeadCore(
   }
 
   // 3. Prepare payload
-  const payload = {
+  const payload: {
+    type: string;
+    siteId: SiteId;
+    fields: Record<string, string | boolean>;
+    timestamp: string;
+    crm?: { export: true; tag: string | null };
+  } = {
     type: "new_lead",
     siteId,
     fields: {
@@ -95,6 +104,10 @@ export async function submitLeadCore(
     },
     timestamp: new Date().toISOString(),
   };
+
+  if (crm?.export === true) {
+    payload.crm = { export: true, tag: crm.tag?.trim() || null };
+  }
 
   // 4. Send to default n8n webhook (always)
   const defaultWebhook = process.env.N8N_RASCALPAGES_LEADS;
@@ -144,6 +157,7 @@ export async function submitLead(
   siteId: SiteId,
   fields: Record<string, string | boolean>,
   customWebhookUrl?: string | null,
+  crm?: CrmExport,
 ): Promise<SubmitLeadResult> {
   const headerStore = await headers();
   const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -157,5 +171,5 @@ export async function submitLead(
   }
 
   const supabase = await createClient();
-  return submitLeadCore(supabase, siteId, fields, customWebhookUrl);
+  return submitLeadCore(supabase, siteId, fields, customWebhookUrl, crm);
 }

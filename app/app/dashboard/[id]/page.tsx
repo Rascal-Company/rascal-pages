@@ -35,6 +35,17 @@ export default async function SiteEditorPage({ params }: PageProps) {
     return <div>Virhe: Organisaatiota ei löydy.</div>;
   }
 
+  // 2b. Tarkista onko organisaatiolla rascal-crm käytössä
+  const { data: crmProduct } = await supabase
+    .from("organization_products")
+    .select("id, products!inner(slug)")
+    .eq("org_id", orgMember.org_id)
+    .eq("is_enabled", true)
+    .eq("products.slug", "rascal-crm")
+    .maybeSingle();
+
+  const crmEnabled = Boolean(crmProduct);
+
   // 3. Hae sivuston tiedot
   const { data: site, error: siteError } = await supabase
     .from("sites")
@@ -81,6 +92,7 @@ export default async function SiteEditorPage({ params }: PageProps) {
       initialContent={pageContent}
       initialPublished={initialPublished}
       initialSettings={initialSettings}
+      crmEnabled={crmEnabled}
     />
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import type { HeroContent, FormField } from "@/src/lib/templates";
 import { AnalyticsLink } from "@/app/components/AnalyticsLink";
@@ -52,7 +52,7 @@ export default function HeroBlock({
     "idle",
   );
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const formLoadedAt = useRef(Date.now());
+  const [formLoadedAt] = useState(() => Date.now());
 
   const formFields = content.formFields || DEFAULT_HERO_FIELDS;
   const formSubmitButtonText =
@@ -80,13 +80,14 @@ export default function HeroBlock({
     });
 
     fields._hp_website = (formData.get("_hp_website") as string) || "";
-    fields._hp_ts = String(formLoadedAt.current);
+    fields._hp_ts = String(formLoadedAt);
 
     startTransition(async () => {
       const result = await submitLead(
         siteId,
         fields,
         content.formWebhookUrl || null,
+        { export: content.exportToCrm ?? false, tag: content.crmTag },
       );
       if (result.success) {
         setFormStatus("success");

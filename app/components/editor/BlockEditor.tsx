@@ -22,9 +22,14 @@ import {
 type BlockEditorProps = {
   section: Section;
   onUpdate: (content: SectionContentMap[SectionType]) => void;
+  crmEnabled: boolean;
 };
 
-export default function BlockEditor({ section, onUpdate }: BlockEditorProps) {
+export default function BlockEditor({
+  section,
+  onUpdate,
+  crmEnabled,
+}: BlockEditorProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900">
@@ -37,6 +42,7 @@ export default function BlockEditor({ section, onUpdate }: BlockEditorProps) {
               <HeroBlockEditor
                 content={section.content as SectionContentMap["hero"]}
                 onUpdate={onUpdate}
+                crmEnabled={crmEnabled}
               />
             );
           case "features":
@@ -79,6 +85,7 @@ export default function BlockEditor({ section, onUpdate }: BlockEditorProps) {
               <FormBlockEditor
                 content={section.content as SectionContentMap["form"]}
                 onUpdate={onUpdate}
+                crmEnabled={crmEnabled}
               />
             );
           case "logos":
