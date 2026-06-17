@@ -404,31 +404,6 @@ export default function Editor({
               isFullPreview ? "left-4" : "right-4"
             }`}
           >
-            {/* Show Sidebar (only when hidden) */}
-            {!isFullPreview && !isSidebarOpen && (
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
-                title="Näytä sivupalkki"
-                aria-label="Näytä sivupalkki"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 4v16M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"
-                  />
-                </svg>
-                Sivupalkki
-              </button>
-            )}
-
             {/* Device Toggle */}
             <div className="flex rounded-lg border border-border bg-card shadow-sm">
               <button
@@ -519,6 +494,31 @@ export default function Editor({
               )}
             </button>
           </div>
+
+          {/* Reveal sidebar — tab on the left edge it slides out from */}
+          {!isFullPreview && !isSidebarOpen && (
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              title="Näytä sivupalkki"
+              aria-label="Näytä sivupalkki"
+              className="absolute left-0 top-1/2 z-20 flex h-14 w-7 -translate-y-1/2 items-center justify-center rounded-r-xl border border-l-0 border-border bg-card text-muted-foreground shadow-md transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          )}
+
           <div className="h-full w-full overflow-y-auto">
             <EditorPreview
               content={content}
