@@ -22,8 +22,10 @@ const DEFAULT_POSITION = { x: 16, y: 16 };
 
 /**
  * Squarespace-style floating editor that docks over the canvas. Replaces the
- * sidebar section tab: selecting a section on the canvas opens this panel with
- * that section's style + content controls. Draggable by its header.
+ * sidebar section tab: selecting a section opens this panel with that section's
+ * style + content controls. Draggable by its header, collapsible to the title
+ * bar, and vertically resizable. Position/size persist while switching sections
+ * because the component stays mounted (no remount key).
  */
 export default function FloatingSectionEditor({
   section,
@@ -32,6 +34,7 @@ export default function FloatingSectionEditor({
   onClose,
 }: FloatingSectionEditorProps) {
   const [position, setPosition] = useState(DEFAULT_POSITION);
+  const [collapsed, setCollapsed] = useState(false);
   const dragOrigin = useRef<{
     pointerX: number;
     pointerY: number;
@@ -70,9 +73,11 @@ export default function FloatingSectionEditor({
     };
   };
 
+  const stopDragStart = (e: React.PointerEvent) => e.stopPropagation();
+
   return (
     <div
-      className="absolute z-40 flex max-h-[calc(100%-2rem)] w-[340px] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+      className="absolute z-40 flex w-[340px] max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
       style={{ left: position.x, top: position.y }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -80,41 +85,79 @@ export default function FloatingSectionEditor({
         onPointerDown={startDrag}
         className="flex cursor-grab touch-none items-center justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2 active:cursor-grabbing"
       >
-        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
           <span
             aria-hidden="true"
             className="select-none text-muted-foreground"
           >
             ⠿
           </span>
-          {SECTION_TYPE_LABELS[section.type]}
+          <span className="truncate">{SECTION_TYPE_LABELS[section.type]}</span>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Sulje muokkain"
-          title="Sulje"
-          className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-        >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        <div className="flex shrink-0 items-center gap-0.5">
+          <button
+            type="button"
+            onPointerDown={stopDragStart}
+            onClick={() => setCollapsed((c) => !c)}
+            aria-label={collapsed ? "Laajenna" : "Pienennä"}
+            aria-expanded={!collapsed}
+            title={collapsed ? "Laajenna" : "Pienennä"}
+            className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d={collapsed ? "M19 9l-7 7-7-7" : "M5 15l7-7 7 7"}
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onPointerDown={stopDragStart}
+            onClick={onClose}
+            aria-label="Sulje muokkain"
+            title="Sulje"
+            className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
-        <SectionStyleInspector style={section.style} onChange={onUpdateStyle} />
-        <BlockEditor section={section} onUpdate={onUpdateContent} />
-      </div>
+      {!collapsed && (
+        <div
+          className="space-y-4 resize-y overflow-y-auto p-4"
+          style={{
+            height: 440,
+            minHeight: 160,
+            maxHeight: "calc(100vh - 7rem)",
+          }}
+        >
+          <SectionStyleInspector
+            style={section.style}
+            onChange={onUpdateStyle}
+          />
+          <BlockEditor section={section} onUpdate={onUpdateContent} />
+        </div>
+      )}
     </div>
   );
 }

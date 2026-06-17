@@ -95,6 +95,7 @@ export default function Editor({
     content.sections[0]?.id || null,
   );
   const [isFullPreview, setIsFullPreview] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">(
     "desktop",
   );
@@ -242,7 +243,7 @@ export default function Editor({
     <EditorSiteProvider siteId={siteId}>
       <div className="flex h-screen bg-background">
         {/* Sidebar */}
-        {!isFullPreview && (
+        {!isFullPreview && isSidebarOpen && (
           <aside className="flex w-[360px] min-w-[320px] max-w-[420px] flex-col border-r border-border bg-card">
             <div className="border-b border-border p-4">
               <EditorHeader
@@ -402,6 +403,35 @@ export default function Editor({
               isFullPreview ? "left-4" : "right-4"
             }`}
           >
+            {/* Sidebar Toggle */}
+            {!isFullPreview && (
+              <button
+                onClick={() => setIsSidebarOpen((open) => !open)}
+                className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
+                title={
+                  isSidebarOpen ? "Piilota sivupalkki" : "Näytä sivupalkki"
+                }
+                aria-label={
+                  isSidebarOpen ? "Piilota sivupalkki" : "Näytä sivupalkki"
+                }
+                aria-pressed={!isSidebarOpen}
+              >
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 4v16M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"
+                  />
+                </svg>
+              </button>
+            )}
+
             {/* Device Toggle */}
             <div className="flex rounded-lg border border-border bg-card shadow-sm">
               <button
@@ -512,7 +542,6 @@ export default function Editor({
 
           {!isFullPreview && activeSection && (
             <FloatingSectionEditor
-              key={activeSection.id}
               section={activeSection}
               onUpdateContent={handleSectionUpdate}
               onUpdateStyle={(patch) =>
