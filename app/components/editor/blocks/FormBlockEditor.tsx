@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { nanoid } from "nanoid";
-import type { FormContent, FormField, FormFieldType } from "@/src/lib/templates";
+import type {
+  FormContent,
+  FormField,
+  FormFieldType,
+} from "@/src/lib/templates";
 
 type FormBlockEditorProps = {
   content: FormContent;
@@ -110,59 +114,115 @@ export default function FormBlockEditor({
           {fields.map((field, index) => (
             <div
               key={field.id}
-              className="border border-border rounded-lg p-4 bg-card"
+              className="rounded-lg border border-border bg-card p-3"
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setExpandedFieldId(
-                        expandedFieldId === field.id ? null : field.id,
-                      )
-                    }
-                    className="text-sm font-medium text-foreground hover:text-foreground"
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpandedFieldId(
+                      expandedFieldId === field.id ? null : field.id,
+                    )
+                  }
+                  aria-expanded={expandedFieldId === field.id}
+                  className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-sm font-medium text-foreground"
+                >
+                  <svg
+                    className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+                      expandedFieldId === field.id ? "rotate-90" : ""
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    {expandedFieldId === field.id ? "▼" : "▶"}{" "}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                  <span className="truncate">
                     {field.label || "Nimetön kenttä"}
-                  </button>
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                    {FIELD_TYPE_LABELS[field.type]}
                   </span>
-                  {field.required && (
-                    <span className="text-xs text-destructive bg-destructive/10 px-2 py-1 rounded">
-                      Pakollinen
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-1">
+                </button>
+                <div className="flex shrink-0 items-center gap-0.5">
                   <button
                     type="button"
                     onClick={() => moveField(field.id, "up")}
                     disabled={index === 0}
-                    className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
                     title="Siirrä ylös"
+                    aria-label="Siirrä ylös"
                   >
-                    ↑
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
+                      />
+                    </svg>
                   </button>
                   <button
                     type="button"
                     onClick={() => moveField(field.id, "down")}
                     disabled={index === fields.length - 1}
-                    className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
                     title="Siirrä alas"
+                    aria-label="Siirrä alas"
                   >
-                    ↓
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
                   </button>
                   <button
                     type="button"
                     onClick={() => removeField(field.id)}
-                    className="p-1 text-destructive hover:text-destructive"
+                    className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                     title="Poista kenttä"
+                    aria-label="Poista kenttä"
                   >
-                    🗑️
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
                   </button>
                 </div>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                  {FIELD_TYPE_LABELS[field.type]}
+                </span>
+                {field.required && (
+                  <span className="rounded bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+                    Pakollinen
+                  </span>
+                )}
               </div>
 
               {expandedFieldId === field.id && (
@@ -277,9 +337,7 @@ export default function FormBlockEditor({
         <input
           type="text"
           value={content.formTitle || ""}
-          onChange={(e) =>
-            onUpdate({ ...content, formTitle: e.target.value })
-          }
+          onChange={(e) => onUpdate({ ...content, formTitle: e.target.value })}
           placeholder="Lataa ilmaiseksi"
           className="w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
         />
@@ -309,9 +367,7 @@ export default function FormBlockEditor({
         <input
           type="url"
           value={content.webhookUrl || ""}
-          onChange={(e) =>
-            onUpdate({ ...content, webhookUrl: e.target.value })
-          }
+          onChange={(e) => onUpdate({ ...content, webhookUrl: e.target.value })}
           placeholder="https://your-webhook.com/endpoint"
           className="w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
         />

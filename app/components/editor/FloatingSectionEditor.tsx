@@ -77,7 +77,7 @@ export default function FloatingSectionEditor({
 
   return (
     <div
-      className="absolute z-40 flex w-[340px] max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
+      className="absolute z-40 flex w-[360px] max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl ring-1 ring-black/5"
       style={{ left: position.x, top: position.y }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -86,12 +86,19 @@ export default function FloatingSectionEditor({
         className="flex cursor-grab touch-none items-center justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2 active:cursor-grabbing"
       >
         <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
-          <span
+          <svg
             aria-hidden="true"
-            className="select-none text-muted-foreground"
+            className="h-4 w-4 shrink-0 text-muted-foreground"
+            viewBox="0 0 24 24"
+            fill="currentColor"
           >
-            ⠿
-          </span>
+            <circle cx="9" cy="6" r="1.5" />
+            <circle cx="15" cy="6" r="1.5" />
+            <circle cx="9" cy="12" r="1.5" />
+            <circle cx="15" cy="12" r="1.5" />
+            <circle cx="9" cy="18" r="1.5" />
+            <circle cx="15" cy="18" r="1.5" />
+          </svg>
           <span className="truncate">{SECTION_TYPE_LABELS[section.type]}</span>
         </div>
         <div className="flex shrink-0 items-center gap-0.5">
@@ -144,7 +151,7 @@ export default function FloatingSectionEditor({
       </div>
       {!collapsed && (
         <div
-          className="space-y-4 resize-y overflow-y-auto p-4"
+          className="resize-y space-y-4 overflow-y-auto overflow-x-hidden p-4"
           style={{
             height: 440,
             minHeight: 160,
