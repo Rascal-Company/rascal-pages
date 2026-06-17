@@ -23,6 +23,18 @@ const ROUNDING_CLASS: Record<ImageRounding, string> = {
   circle: "rounded-full",
 };
 
+const THUMB_SIZE_CLASS: Record<ImageSize, string> = {
+  sm: "h-12 w-12",
+  md: "h-16 w-16",
+  lg: "h-24 w-24",
+};
+
+const BANNER_HEIGHT_CLASS: Record<ImageSize, string> = {
+  sm: "h-40",
+  md: "h-52",
+  lg: "h-64",
+};
+
 export const DEFAULT_IMAGE_SIZE: ImageSize = "md";
 export const DEFAULT_IMAGE_ROUNDING: ImageRounding = "rounded";
 export const DEFAULT_IMAGE_POSITION: ImagePosition = "right";
@@ -56,4 +68,32 @@ export function imageBoxClassName(display: ImageDisplay | undefined): string {
   ]
     .filter(Boolean)
     .join(" ");
+}
+
+/**
+ * Square thumbnail / avatar used by card-grid blocks (features, testimonials):
+ * `size` sets the fixed dimensions, `rounding` the corner shape.
+ */
+export function cardThumbClassName(display: ImageDisplay | undefined): string {
+  const size = display?.size ?? DEFAULT_IMAGE_SIZE;
+  const rounding = display?.rounding ?? DEFAULT_IMAGE_ROUNDING;
+  return `${THUMB_SIZE_CLASS[size]} object-cover ${ROUNDING_CLASS[rounding]}`;
+}
+
+/**
+ * Full-width banner used by the cases cards: `size` sets the height. Rounding
+ * is intentionally not applied — the card clips the banner to its own corners.
+ */
+export function bannerImageClassName(
+  display: ImageDisplay | undefined,
+): string {
+  const size = display?.size ?? DEFAULT_IMAGE_SIZE;
+  return `${BANNER_HEIGHT_CLASS[size]} w-full object-cover`;
+}
+
+/** Corner rounding only, for images that fill their own box (bento). */
+export function imageRoundingClassName(
+  display: ImageDisplay | undefined,
+): string {
+  return ROUNDING_CLASS[display?.rounding ?? DEFAULT_IMAGE_ROUNDING];
 }

@@ -19,6 +19,7 @@ import {
   nextFreeY,
   isBoxed,
 } from "@/src/lib/bento";
+import ImageDisplayControls from "../fields/ImageDisplayControls";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -142,11 +143,12 @@ export default function BentoBlockEditor({
   );
 
   const addItem = (type: BentoElementType) => {
-    onUpdate({ items: [...items, defaultItem(type, items)] });
+    onUpdate({ ...content, items: [...items, defaultItem(type, items)] });
   };
 
   const updateItem = (id: string, patch: Partial<BentoItem>) => {
     onUpdate({
+      ...content,
       items: items.map((item) =>
         item.id === id ? { ...item, ...patch } : item,
       ),
@@ -154,12 +156,13 @@ export default function BentoBlockEditor({
   };
 
   const removeItem = (id: string) => {
-    onUpdate({ items: items.filter((item) => item.id !== id) });
+    onUpdate({ ...content, items: items.filter((item) => item.id !== id) });
   };
 
   const onLayoutChange = (next: Layout) => {
     const byId = new Map(next.map((l) => [l.i, l]));
     onUpdate({
+      ...content,
       items: items.map((item) => {
         const l = byId.get(item.id);
         return l ? { ...item, x: l.x, y: l.y, w: l.w, h: l.h } : item;
@@ -180,6 +183,25 @@ export default function BentoBlockEditor({
           </button>
         ))}
       </div>
+
+      {items.some((item) => item.type === "image" && item.url) && (
+        <div>
+          <label className="mb-1 block text-sm font-medium text-foreground">
+            Kuvien pyöristys
+          </label>
+          <ImageDisplayControls
+            variant="card"
+            fields={["rounding"]}
+            value={content.imageDisplay}
+            onChange={(patch) =>
+              onUpdate({
+                ...content,
+                imageDisplay: { ...content.imageDisplay, ...patch },
+              })
+            }
+          />
+        </div>
+      )}
 
       {items.length > 0 && (
         <div className="rounded-md border border-border bg-muted p-2">

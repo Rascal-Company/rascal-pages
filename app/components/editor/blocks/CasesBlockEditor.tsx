@@ -3,6 +3,7 @@
 import type { CasesContent, CaseItem, CaseOutcome } from "@/src/lib/templates";
 import { parseTagList, formatTagList } from "@/src/lib/templates";
 import ImageUploadField from "../fields/ImageUploadField";
+import ImageDisplayControls from "../fields/ImageDisplayControls";
 
 type CasesBlockEditorProps = {
   content: CasesContent;
@@ -92,6 +93,25 @@ export default function CasesBlockEditor({
           ))}
         </div>
       </div>
+
+      {items.some((item) => item.image) && (
+        <div>
+          <label className="mb-1 block text-sm font-medium text-foreground">
+            Kuvien koko
+          </label>
+          <ImageDisplayControls
+            variant="card"
+            fields={["size"]}
+            value={content.imageDisplay}
+            onChange={(patch) =>
+              updateField("imageDisplay", {
+                ...content.imageDisplay,
+                ...patch,
+              })
+            }
+          />
+        </div>
+      )}
 
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-foreground">Projektit</span>

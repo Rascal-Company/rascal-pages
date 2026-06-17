@@ -16,6 +16,12 @@ import {
 type ImageDisplayControlsProps = {
   value?: ImageDisplay;
   onChange: (patch: Partial<ImageDisplay>) => void;
+  /**
+   * "section" (default): full control with background/box mode. "card": just
+   * the size/rounding fields listed in `fields`, for card-grid block images.
+   */
+  variant?: "section" | "card";
+  fields?: ("size" | "rounding")[];
 };
 
 type Option<T> = { value: T; label: string };
@@ -89,7 +95,32 @@ function Segmented<T extends string>({
 export default function ImageDisplayControls({
   value,
   onChange,
+  variant = "section",
+  fields = ["size", "rounding"],
 }: ImageDisplayControlsProps) {
+  if (variant === "card") {
+    return (
+      <div className="space-y-3 rounded-md border border-border bg-muted/30 p-3">
+        {fields.includes("size") && (
+          <Segmented
+            label="Koko"
+            options={SIZE_OPTIONS}
+            selected={value?.size ?? DEFAULT_IMAGE_SIZE}
+            onSelect={(size) => onChange({ size })}
+          />
+        )}
+        {fields.includes("rounding") && (
+          <Segmented
+            label="Pyöristys"
+            options={ROUNDING_OPTIONS}
+            selected={value?.rounding ?? DEFAULT_IMAGE_ROUNDING}
+            onSelect={(rounding) => onChange({ rounding })}
+          />
+        )}
+      </div>
+    );
+  }
+
   const isBox = value?.mode === "box";
 
   return (

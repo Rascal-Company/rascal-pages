@@ -1,9 +1,14 @@
 "use client";
 
-import type { BentoContent, BentoItem } from "@/src/lib/templates";
+import type {
+  BentoContent,
+  BentoItem,
+  ImageDisplay,
+} from "@/src/lib/templates";
 import type { SiteId } from "@/src/lib/types";
 import { BENTO_COLUMNS, isBoxed, itemsInReadingOrder } from "@/src/lib/bento";
 import { surfaceTokens } from "./appearance";
+import { imageRoundingClassName } from "@/src/lib/image-display";
 
 type BentoBlockProps = {
   content: BentoContent;
@@ -16,10 +21,12 @@ function BentoElement({
   item,
   primaryColor,
   tokens,
+  imageDisplay,
 }: {
   item: BentoItem;
   primaryColor: string;
   tokens: ReturnType<typeof surfaceTokens>;
+  imageDisplay?: ImageDisplay;
 }) {
   switch (item.type) {
     case "heading":
@@ -46,7 +53,9 @@ function BentoElement({
         <img
           src={item.url}
           alt={item.text || ""}
-          className="h-full w-full rounded-xl object-cover"
+          className={`h-full w-full object-cover ${
+            imageDisplay ? imageRoundingClassName(imageDisplay) : "rounded-xl"
+          }`}
         />
       ) : null;
     case "button":
@@ -164,6 +173,7 @@ export default function BentoBlock({ content, theme }: BentoBlockProps) {
                 item={item}
                 primaryColor={primaryColor}
                 tokens={t}
+                imageDisplay={content.imageDisplay}
               />
             </div>
           ))}

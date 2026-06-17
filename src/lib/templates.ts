@@ -69,6 +69,8 @@ export type FeatureItem = {
   title: string;
   description: string;
   image?: string;
+  /** Presentation of `image` (size/rounding). Shared across all feature cards. */
+  imageDisplay?: ImageDisplay;
   fieldOrder?: string[];
 };
 
@@ -82,6 +84,8 @@ export type TestimonialItem = {
   text: string;
   company?: string;
   avatar?: string;
+  /** Presentation of `avatar` (size/rounding). Shared across all testimonials. */
+  imageDisplay?: ImageDisplay;
   fieldOrder?: string[];
 };
 
@@ -171,6 +175,8 @@ export type CasesContent = {
   items: CaseItem[];
   /** Number of columns for the case grid on large screens. Defaults to 2. */
   columns?: 2 | 3;
+  /** Presentation of the case card images (size). */
+  imageDisplay?: ImageDisplay;
 };
 
 /**
@@ -232,6 +238,8 @@ export type BentoItem = {
  */
 export type BentoContent = {
   items: BentoItem[];
+  /** Presentation of bento image elements (rounding). */
+  imageDisplay?: ImageDisplay;
 };
 
 export type SectionContentMap = {
