@@ -58,6 +58,7 @@ export default function PostsClient({
   const [draft, setDraft] = useState<Draft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Post | null>(null);
 
   const setField = <K extends keyof Draft>(field: K, value: Draft[K]) => {
     setDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
@@ -104,6 +105,7 @@ export default function PostsClient({
       const result = await deletePost(siteId, postId);
       if (result.success) {
         showToast("Postaus poistettu.", "success");
+        setPendingDelete(null);
         router.refresh();
       } else {
         showToast(result.error, "error");
@@ -195,7 +197,7 @@ export default function PostsClient({
                     Muokkaa
                   </button>
                   <button
-                    onClick={() => handleDelete(post.id)}
+                    onClick={() => setPendingDelete(post)}
                     disabled={deletingId === post.id}
                     className="rounded-md border border-red-300 bg-card px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
                   >
@@ -207,6 +209,37 @@ export default function PostsClient({
           </ul>
         )}
       </div>
+
+      {pendingDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-xl">
+            <h3 className="text-lg font-medium text-brand-dark">
+              Poista postaus
+            </h3>
+            <p className="mt-2 text-sm text-brand-dark/70">
+              Oletko varma että haluat poistaa postauksen{" "}
+              <span className="font-medium">{pendingDelete.title}</span>? Tätä
+              toimintoa ei voi perua.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setPendingDelete(null)}
+                disabled={deletingId === pendingDelete.id}
+                className="rounded-md border border-brand-dark/20 bg-card px-4 py-2 text-sm font-medium text-brand-dark transition-colors hover:bg-brand-light disabled:opacity-50"
+              >
+                Peruuta
+              </button>
+              <button
+                onClick={() => handleDelete(pendingDelete.id)}
+                disabled={deletingId === pendingDelete.id}
+                className="rounded-md border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+              >
+                {deletingId === pendingDelete.id ? "Poistetaan…" : "Poista"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

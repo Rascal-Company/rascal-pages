@@ -60,8 +60,15 @@ async function assertSiteOwnership(
 /**
  * Build the persisted row shape from user input, filling slug/excerpt/publish
  * defaults. Pure and reused by both create and update.
+ *
+ * `existingPublishedAt` preserves the original publish date on updates: a post
+ * that is (still) published keeps its first-publish timestamp instead of being
+ * reset on every save. A new publish (no existing timestamp) gets "now".
  */
-function toPostRow(input: PostInput): {
+function toPostRow(
+  input: PostInput,
+  existingPublishedAt: string | null = null,
+): {
   slug: string;
   fields: Record<string, unknown>;
 } | null {
@@ -84,7 +91,9 @@ function toPostRow(input: PostInput): {
         input.excerpt?.trim() || (content ? deriveExcerpt(content) : null),
       cover_image: input.coverImage?.trim() || null,
       published,
-      published_at: published ? new Date().toISOString() : null,
+      published_at: published
+        ? (existingPublishedAt ?? new Date().toISOString())
+        : null,
       seo_title: input.seoTitle?.trim() || null,
       seo_description: input.seoDescription?.trim() || null,
     },
@@ -131,7 +140,15 @@ export async function updatePostCore(
     return { success: false, error: "Sivustoa ei löydy tai ei oikeuksia." };
   }
 
-  const row = toPostRow(input);
+  // Preserve the original publish date instead of resetting it on every save.
+  const { data: existing } = await client
+    .from("posts")
+    .select("published_at")
+    .eq("id", postId)
+    .eq("site_id", siteId)
+    .maybeSingle();
+
+  const row = toPostRow(input, existing?.published_at ?? null);
   if (!row) return { success: false, error: "Otsikko on pakollinen." };
 
   const { data, error } = await client
