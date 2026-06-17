@@ -43,6 +43,8 @@ interface SettingsClientProps {
 const inputClass =
   "w-full rounded-md border border-brand-dark/20 bg-card px-4 py-2 text-sm text-brand-dark outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20";
 
+const POSTS_ENDPOINT = "https://app.rascalpages.fi/api/posts";
+
 export default function SettingsClient({
   siteId,
   subdomain,
@@ -576,7 +578,112 @@ function ApiKeysSection({
           ))}
         </ul>
       )}
+
+      <ApiUsageExamples
+        siteId={siteId}
+        apiKey={freshKey}
+        showToast={showToast}
+      />
     </SectionCard>
+  );
+}
+
+function ApiUsageExamples({
+  siteId,
+  apiKey,
+  showToast,
+}: {
+  siteId: SiteId;
+  apiKey: string | null;
+  showToast: ShowToast;
+}) {
+  const keyValue = apiKey ?? "<API_AVAIN>";
+
+  const curlSnippet = `curl -X POST ${POSTS_ENDPOINT} \\
+  -H "Authorization: Bearer ${keyValue}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "siteId": "${siteId}",
+    "title": "Ensimmäinen postaus",
+    "content": "Postauksen sisältö…",
+    "published": true
+  }'`;
+
+  const pythonSnippet = `import requests
+
+resp = requests.post(
+    "${POSTS_ENDPOINT}",
+    headers={"Authorization": "Bearer ${keyValue}"},
+    json={
+        "siteId": "${siteId}",
+        "title": "Ensimmäinen postaus",
+        "content": "Postauksen sisältö…",
+        "published": True,
+    },
+)
+resp.raise_for_status()
+print(resp.json())`;
+
+  const copy = (code: string) => {
+    navigator.clipboard.writeText(code);
+    showToast("Kopioitu leikepöydälle!", "success");
+  };
+
+  return (
+    <div className="mt-6 border-t border-brand-dark/10 pt-4">
+      <h3 className="text-sm font-semibold text-brand-dark">
+        Käyttö automaatiosta
+      </h3>
+      <p className="mt-1 text-xs text-brand-dark/60">
+        <code>POST {POSTS_ENDPOINT}</code> otsikolla{" "}
+        <code>Authorization: Bearer &lt;avain&gt;</code>. Pakolliset kentät:{" "}
+        <code>siteId</code>, <code>title</code>. Valinnaiset: <code>slug</code>,{" "}
+        <code>excerpt</code>, <code>coverImage</code>, <code>published</code>,{" "}
+        <code>publishedAt</code>, <code>seoTitle</code>,{" "}
+        <code>seoDescription</code>. Sama (siteId, slug) päivittää olemassa
+        olevan postauksen.
+        {!apiKey && (
+          <>
+            {" "}
+            Esimerkeissä <code>&lt;API_AVAIN&gt;</code> — korvaa luomallasi
+            avaimella.
+          </>
+        )}
+      </p>
+      <CodeSnippet label="curl" code={curlSnippet} onCopy={copy} />
+      <CodeSnippet
+        label="Python (requests)"
+        code={pythonSnippet}
+        onCopy={copy}
+      />
+    </div>
+  );
+}
+
+function CodeSnippet({
+  label,
+  code,
+  onCopy,
+}: {
+  label: string;
+  code: string;
+  onCopy: (code: string) => void;
+}) {
+  return (
+    <div className="mt-3">
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-xs font-medium text-brand-dark/70">{label}</span>
+        <button
+          onClick={() => onCopy(code)}
+          className="text-xs font-medium text-primary hover:text-primary-hover"
+        >
+          Kopioi
+        </button>
+      </div>
+      <pre className="overflow-x-auto rounded-md bg-brand-dark p-3 text-xs leading-relaxed text-white">
+        <code>{code}</code>
+      </pre>
+    </div>
   );
 }
 
