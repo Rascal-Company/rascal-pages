@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { TestimonialItem } from "@/src/lib/templates";
 import type { SiteId } from "@/src/lib/types";
 import { surfaceTokens, type SurfaceTokens } from "./appearance";
+import { cardThumbClassName } from "@/src/lib/image-display";
 
 type TestimonialsBlockProps = {
   content: TestimonialItem[];
@@ -21,22 +22,26 @@ function renderTestimonialField(
   t: SurfaceTokens,
 ): ReactNode {
   switch (fieldKey) {
-    case "avatar":
+    case "avatar": {
+      const avatarClass = testimonial.imageDisplay
+        ? cardThumbClassName(testimonial.imageDisplay)
+        : "h-10 w-10 rounded-full object-cover";
       return testimonial.avatar ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={testimonial.avatar}
           alt={testimonial.name}
-          className="h-10 w-10 rounded-full object-cover"
+          className={avatarClass}
         />
       ) : (
         <div
-          className="h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
+          className={`flex items-center justify-center text-sm font-bold text-white ${avatarClass}`}
           style={{ backgroundColor: primaryColor }}
         >
           {testimonial.name?.charAt(0).toUpperCase() || "A"}
         </div>
       );
+    }
     case "text":
       return (
         <p

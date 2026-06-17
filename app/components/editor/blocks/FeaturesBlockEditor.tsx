@@ -1,8 +1,9 @@
 "use client";
 
-import type { FeatureItem } from "@/src/lib/templates";
+import type { FeatureItem, ImageDisplay } from "@/src/lib/templates";
 import SortableFieldList from "../fields/SortableFieldList";
 import ImageUploadField from "../fields/ImageUploadField";
+import ImageDisplayControls from "../fields/ImageDisplayControls";
 
 type FeaturesBlockEditorProps = {
   content: FeatureItem[];
@@ -55,7 +56,19 @@ export default function FeaturesBlockEditor({
     );
   };
 
-  const renderField = (index: number, feature: FeatureItem, fieldKey: string) => {
+  // Image presentation is shared across all feature cards, so apply the patch
+  // to every item (their content is stored per-item, not block-level).
+  const sharedImageDisplay = features.find((f) => f.imageDisplay)?.imageDisplay;
+  const applyImageDisplay = (patch: Partial<ImageDisplay>) => {
+    const next = { ...sharedImageDisplay, ...patch };
+    onUpdate(features.map((item) => ({ ...item, imageDisplay: next })));
+  };
+
+  const renderField = (
+    index: number,
+    feature: FeatureItem,
+    fieldKey: string,
+  ) => {
     switch (fieldKey) {
       case "icon":
         return (
@@ -102,7 +115,9 @@ export default function FeaturesBlockEditor({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-foreground">Ominaisuudet</span>
+        <span className="text-sm font-medium text-foreground">
+          Ominaisuudet
+        </span>
         <button
           onClick={handleAdd}
           className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-hover"
@@ -110,6 +125,18 @@ export default function FeaturesBlockEditor({
           + Lisää
         </button>
       </div>
+      {features.some((f) => f.image) && (
+        <div>
+          <label className="mb-1 block text-sm font-medium text-foreground">
+            Kuvien koko & pyöristys
+          </label>
+          <ImageDisplayControls
+            variant="card"
+            value={sharedImageDisplay}
+            onChange={applyImageDisplay}
+          />
+        </div>
+      )}
       <div className="space-y-4">
         {features.map((feature, index) => (
           <div

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { FeatureItem } from "@/src/lib/templates";
 import type { SiteId } from "@/src/lib/types";
 import { surfaceTokens, type SurfaceTokens } from "./appearance";
+import { cardThumbClassName } from "@/src/lib/image-display";
 
 type FeaturesBlockProps = {
   content: FeatureItem[];
@@ -31,7 +32,11 @@ function renderFeatureField(
         <img
           src={feature.image}
           alt={feature.title}
-          className="h-16 w-16 rounded-xl object-cover mb-4"
+          className={`mb-4 ${
+            feature.imageDisplay
+              ? cardThumbClassName(feature.imageDisplay)
+              : "h-16 w-16 rounded-xl object-cover"
+          }`}
         />
       ) : null;
     case "title":

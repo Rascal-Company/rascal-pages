@@ -6,6 +6,11 @@ import type { HeroContent, FormField } from "@/src/lib/templates";
 import { cva } from "class-variance-authority";
 import { AnalyticsLink } from "@/app/components/AnalyticsLink";
 import EditableText from "./EditableText";
+import {
+  imageBoxClassName,
+  imagePosition,
+  isBoxMode,
+} from "@/src/lib/image-display";
 import { submitLead } from "@/app/actions/submit-lead";
 import type { SiteId } from "@/src/lib/types";
 
@@ -122,6 +127,13 @@ export default function HeroBlock({
   const defaultOrder = ["title", "subtitle", "cta", "image"];
   const order = content.fieldOrder || defaultOrder;
 
+  // In box mode the image renders as a contained column beside the text, so it
+  // must not also paint the section background. The form column takes priority.
+  const boxImage =
+    isBoxMode(content.imageDisplay) && !!content.image && !hasForm;
+  const imageOnLeft = imagePosition(content.imageDisplay) === "left";
+  const bgImage = boxImage ? undefined : content.image;
+
   const isPortfolioHero = isDark || isLightPortfolio;
 
   const renderHeroField = (fieldKey: string): ReactNode => {
@@ -222,24 +234,24 @@ export default function HeroBlock({
   };
 
   const sectionStyle: React.CSSProperties = isDark
-    ? content.image
+    ? bgImage
       ? {
-          backgroundImage: `linear-gradient(rgba(10,10,11,0.72), rgba(10,10,11,0.72)), url(${content.image})`,
+          backgroundImage: `linear-gradient(rgba(10,10,11,0.72), rgba(10,10,11,0.72)), url(${bgImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }
       : {}
     : isLightPortfolio
-      ? content.image
+      ? bgImage
         ? {
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.78), rgba(255,255,255,0.78)), url(${content.image})`,
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.78), rgba(255,255,255,0.78)), url(${bgImage})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }
         : {}
       : {
-          backgroundImage: content.image
-            ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${content.image})`
+          backgroundImage: bgImage
+            ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${bgImage})`
             : `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
           backgroundSize: "cover",
           backgroundPosition: "center",
@@ -254,7 +266,7 @@ export default function HeroBlock({
       }
       style={sectionStyle}
     >
-      {isPortfolioHero && !content.image && (
+      {isPortfolioHero && !bgImage && (
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
@@ -274,19 +286,41 @@ export default function HeroBlock({
       >
         <div
           className={
-            hasForm
-              ? "mx-auto grid lg:grid-cols-2 gap-12 items-center"
+            hasForm || boxImage
+              ? "mx-auto grid items-center gap-12 lg:grid-cols-2"
               : isPortfolioHero
                 ? "mx-auto max-w-3xl text-left"
                 : heroContentVariants({ layout: content.layout })
           }
         >
+          {boxImage && imageOnLeft && (
+            <div className="flex justify-center lg:justify-start">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={content.image}
+                alt={content.title || ""}
+                className={imageBoxClassName(content.imageDisplay)}
+              />
+            </div>
+          )}
+
           <div>
             {order.map((fieldKey) => {
               const rendered = renderHeroField(fieldKey);
               return rendered ? <div key={fieldKey}>{rendered}</div> : null;
             })}
           </div>
+
+          {boxImage && !imageOnLeft && (
+            <div className="flex justify-center lg:justify-end">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={content.image}
+                alt={content.title || ""}
+                className={imageBoxClassName(content.imageDisplay)}
+              />
+            </div>
+          )}
 
           {hasForm && (
             <div className="rounded-2xl bg-white p-8 shadow-2xl">

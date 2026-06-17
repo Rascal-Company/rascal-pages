@@ -2,9 +2,14 @@
 
 import { useState } from "react";
 import { nanoid } from "nanoid";
-import type { HeroContent, FormField, FormFieldType } from "@/src/lib/templates";
+import type {
+  HeroContent,
+  FormField,
+  FormFieldType,
+} from "@/src/lib/templates";
 import SortableFieldList from "../fields/SortableFieldList";
 import ImageUploadField from "../fields/ImageUploadField";
+import ImageDisplayControls from "../fields/ImageDisplayControls";
 
 type HeroBlockEditorProps = {
   content: HeroContent;
@@ -42,7 +47,7 @@ export default function HeroBlockEditor({
       ...content,
       showForm: checked,
       formFields: checked
-        ? content.formFields ?? [
+        ? (content.formFields ?? [
             {
               id: "field-email-1",
               type: "email" as const,
@@ -62,17 +67,18 @@ export default function HeroBlockEditor({
             {
               id: "field-consent-1",
               type: "checkbox" as const,
-              label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+              label:
+                "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
               required: false,
               name: "marketingConsent",
             },
-          ]
+          ])
         : undefined,
       formSuccessMessage: checked
-        ? content.formSuccessMessage ?? {
+        ? (content.formSuccessMessage ?? {
             title: "Kiitos!",
             description: "Tietosi on tallennettu.",
-          }
+          })
         : undefined,
     });
   };
@@ -538,10 +544,23 @@ export default function HeroBlockEditor({
         );
       case "image":
         return (
-          <ImageUploadField
-            value={content?.image}
-            onChange={(url) => handleFieldUpdate("image", url)}
-          />
+          <div className="space-y-3">
+            <ImageUploadField
+              value={content?.image}
+              onChange={(url) => handleFieldUpdate("image", url)}
+            />
+            {content?.image && (
+              <ImageDisplayControls
+                value={content?.imageDisplay}
+                onChange={(patch) =>
+                  onUpdate({
+                    ...content,
+                    imageDisplay: { ...content?.imageDisplay, ...patch },
+                  })
+                }
+              />
+            )}
+          </div>
         );
       default:
         return null;

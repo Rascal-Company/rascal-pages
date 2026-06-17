@@ -1,8 +1,9 @@
 "use client";
 
-import type { TestimonialItem } from "@/src/lib/templates";
+import type { TestimonialItem, ImageDisplay } from "@/src/lib/templates";
 import SortableFieldList from "../fields/SortableFieldList";
 import ImageUploadField from "../fields/ImageUploadField";
+import ImageDisplayControls from "../fields/ImageDisplayControls";
 
 type TestimonialsBlockEditorProps = {
   content: TestimonialItem[];
@@ -53,6 +54,16 @@ export default function TestimonialsBlockEditor({
         i === index ? { ...item, fieldOrder: newOrder } : item,
       ),
     );
+  };
+
+  // Avatar presentation is shared across all testimonials, so apply the patch
+  // to every item (their content is stored per-item, not block-level).
+  const sharedImageDisplay = testimonials.find(
+    (t) => t.imageDisplay,
+  )?.imageDisplay;
+  const applyImageDisplay = (patch: Partial<ImageDisplay>) => {
+    const next = { ...sharedImageDisplay, ...patch };
+    onUpdate(testimonials.map((item) => ({ ...item, imageDisplay: next })));
   };
 
   const renderField = (
@@ -114,6 +125,18 @@ export default function TestimonialsBlockEditor({
           + Lisää
         </button>
       </div>
+      {testimonials.some((t) => t.avatar) && (
+        <div>
+          <label className="mb-1 block text-sm font-medium text-foreground">
+            Profiilikuvien koko & pyöristys
+          </label>
+          <ImageDisplayControls
+            variant="card"
+            value={sharedImageDisplay}
+            onChange={applyImageDisplay}
+          />
+        </div>
+      )}
       <div className="space-y-4">
         {testimonials.map((testimonial, index) => (
           <div

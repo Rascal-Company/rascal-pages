@@ -20,12 +20,32 @@ export type SectionType =
   | "bento"
   | "footer";
 
+/**
+ * How a block's image is presented. `mode` chooses between a full-bleed
+ * section background and a contained "box" beside the text; `position`, `size`
+ * and `rounding` only apply in box mode. All fields optional — an unset
+ * `imageDisplay` keeps a block's legacy rendering for backwards compatibility.
+ */
+export type ImageMode = "background" | "box";
+export type ImagePosition = "left" | "right";
+export type ImageSize = "sm" | "md" | "lg";
+export type ImageRounding = "none" | "rounded" | "circle";
+
+export type ImageDisplay = {
+  mode?: ImageMode;
+  position?: ImagePosition;
+  size?: ImageSize;
+  rounding?: ImageRounding;
+};
+
 export type HeroContent = {
   title: string;
   subtitle: string;
   ctaText: string;
   ctaLink: string;
   image?: string;
+  /** Presentation of `image` (background vs. box). */
+  imageDisplay?: ImageDisplay;
   /** Optional small label shown above the headline (portfolio hero). */
   eyebrow?: string;
   /** Content alignment variant for the standard (non-portfolio) hero. */
@@ -49,6 +69,8 @@ export type FeatureItem = {
   title: string;
   description: string;
   image?: string;
+  /** Presentation of `image` (size/rounding). Shared across all feature cards. */
+  imageDisplay?: ImageDisplay;
   fieldOrder?: string[];
 };
 
@@ -62,6 +84,8 @@ export type TestimonialItem = {
   text: string;
   company?: string;
   avatar?: string;
+  /** Presentation of `avatar` (size/rounding). Shared across all testimonials. */
+  imageDisplay?: ImageDisplay;
   fieldOrder?: string[];
 };
 
@@ -69,6 +93,8 @@ export type AboutContent = {
   name: string;
   bio: string;
   image?: string;
+  /** Presentation of `image` (background vs. box). */
+  imageDisplay?: ImageDisplay;
   fieldOrder?: string[];
 };
 
@@ -149,6 +175,8 @@ export type CasesContent = {
   items: CaseItem[];
   /** Number of columns for the case grid on large screens. Defaults to 2. */
   columns?: 2 | 3;
+  /** Presentation of the case card images (size). */
+  imageDisplay?: ImageDisplay;
 };
 
 /**
@@ -210,6 +238,8 @@ export type BentoItem = {
  */
 export type BentoContent = {
   items: BentoItem[];
+  /** Presentation of bento image elements (rounding). */
+  imageDisplay?: ImageDisplay;
 };
 
 export type SectionContentMap = {

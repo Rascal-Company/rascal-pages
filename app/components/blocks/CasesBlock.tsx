@@ -5,6 +5,7 @@ import type { CasesContent } from "@/src/lib/templates";
 import type { SiteId } from "@/src/lib/types";
 import { surfaceTokens } from "./appearance";
 import EditableText from "./EditableText";
+import { bannerImageClassName } from "@/src/lib/image-display";
 
 const casesGridVariants = cva(
   "mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:mt-20 lg:max-w-none",
@@ -27,10 +28,7 @@ type CasesBlockProps = {
   templateId?: string;
 };
 
-export default function CasesBlock({
-  content,
-  theme,
-}: CasesBlockProps) {
+export default function CasesBlock({ content, theme }: CasesBlockProps) {
   if (!content || content.items.length === 0) return null;
 
   const primaryColor = theme.primaryColor || "#3B82F6";
@@ -69,7 +67,11 @@ export default function CasesBlock({
                 <img
                   src={item.image}
                   alt={item.title}
-                  className="h-52 w-full object-cover"
+                  className={
+                    content.imageDisplay
+                      ? bannerImageClassName(content.imageDisplay)
+                      : "h-52 w-full object-cover"
+                  }
                 />
               )}
               <div className="flex flex-1 flex-col p-8">
