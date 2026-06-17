@@ -249,6 +249,7 @@ export default function Editor({
               <EditorHeader
                 siteSubdomain={siteSubdomain}
                 onSettingsClick={() => setIsSettingsOpen(true)}
+                onHideSidebar={() => setIsSidebarOpen(false)}
               />
             </div>
 
@@ -403,18 +404,13 @@ export default function Editor({
               isFullPreview ? "left-4" : "right-4"
             }`}
           >
-            {/* Sidebar Toggle */}
-            {!isFullPreview && (
+            {/* Show Sidebar (only when hidden) */}
+            {!isFullPreview && !isSidebarOpen && (
               <button
-                onClick={() => setIsSidebarOpen((open) => !open)}
+                onClick={() => setIsSidebarOpen(true)}
                 className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
-                title={
-                  isSidebarOpen ? "Piilota sivupalkki" : "Näytä sivupalkki"
-                }
-                aria-label={
-                  isSidebarOpen ? "Piilota sivupalkki" : "Näytä sivupalkki"
-                }
-                aria-pressed={!isSidebarOpen}
+                title="Näytä sivupalkki"
+                aria-label="Näytä sivupalkki"
               >
                 <svg
                   className="h-4 w-4"
@@ -429,6 +425,7 @@ export default function Editor({
                     d="M9 4v16M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"
                   />
                 </svg>
+                Sivupalkki
               </button>
             )}
 
