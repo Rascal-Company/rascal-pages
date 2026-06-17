@@ -2,6 +2,8 @@
 
 import type { AboutContent } from "@/src/lib/templates";
 import SortableFieldList from "../fields/SortableFieldList";
+import ImageUploadField from "../fields/ImageUploadField";
+import ImageDisplayControls from "../fields/ImageDisplayControls";
 
 type AboutBlockEditorProps = {
   content: AboutContent;
@@ -36,7 +38,7 @@ export default function AboutBlockEditor({
             type="text"
             value={content?.name || ""}
             onChange={(e) => handleFieldUpdate("name", e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+            className="block w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
           />
         );
       case "bio":
@@ -45,24 +47,26 @@ export default function AboutBlockEditor({
             value={content?.bio || ""}
             onChange={(e) => handleFieldUpdate("bio", e.target.value)}
             rows={6}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+            className="block w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
           />
         );
       case "image":
         return (
-          <div>
-            <input
-              type="url"
-              value={content?.image || ""}
-              onChange={(e) => handleFieldUpdate("image", e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+          <div className="space-y-3">
+            <ImageUploadField
+              value={content?.image}
+              shape="round"
+              onChange={(url) => handleFieldUpdate("image", url)}
             />
             {content?.image && (
-              <img
-                src={content.image}
-                alt={content.name}
-                className="mt-2 h-16 w-16 rounded-full object-cover"
+              <ImageDisplayControls
+                value={content?.imageDisplay}
+                onChange={(patch) =>
+                  onUpdate({
+                    ...content,
+                    imageDisplay: { ...content?.imageDisplay, ...patch },
+                  })
+                }
               />
             )}
           </div>

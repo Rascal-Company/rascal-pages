@@ -2,7 +2,10 @@ import type {
   TemplateConfig,
   SectionType,
   SectionContentMap,
+  SeoConfig,
+  SectionStyle,
 } from "@/src/lib/templates";
+import type { ThemePreset } from "@/src/lib/site-theme";
 import type { SectionId } from "@/src/lib/types";
 import { createSection, getDefaultSectionContent } from "./contentUtils";
 
@@ -39,6 +42,41 @@ export function updateSectionContent<T extends SectionType>(
     ...prev,
     sections: prev.sections.map((s) =>
       s.id === sectionId ? { ...s, content } : s,
+    ),
+  });
+}
+
+/**
+ * Move a section one step up or down in the section order.
+ */
+export function moveSection(
+  sectionId: SectionId,
+  direction: "up" | "down",
+): ContentUpdater {
+  return (prev) => {
+    const index = prev.sections.findIndex((s) => s.id === sectionId);
+    if (index === -1) return prev;
+    const target = direction === "up" ? index - 1 : index + 1;
+    if (target < 0 || target >= prev.sections.length) return prev;
+
+    const sections = [...prev.sections];
+    [sections[index], sections[target]] = [sections[target], sections[index]];
+    return { ...prev, sections };
+  };
+}
+
+/**
+ * Merge a partial style patch into a section's style. Fields set to undefined
+ * in the patch are removed so the block falls back to its default styling.
+ */
+export function updateSectionStyle(
+  sectionId: SectionId,
+  patch: Partial<SectionStyle>,
+): ContentUpdater {
+  return (prev) => ({
+    ...prev,
+    sections: prev.sections.map((s) =>
+      s.id === sectionId ? { ...s, style: { ...s.style, ...patch } } : s,
     ),
   });
 }
@@ -139,5 +177,58 @@ export function updateThemeFont(
   return (prev) => ({
     ...prev,
     theme: { ...prev.theme, [field]: fontName || undefined },
+  });
+}
+
+/**
+ * Update theme appearance (light or dark)
+ */
+export function updateThemeAppearance(
+  appearance: "light" | "dark",
+): ContentUpdater {
+  return (prev) => ({
+    ...prev,
+    theme: { ...prev.theme, appearance },
+  });
+}
+
+/**
+ * Apply a curated theme preset: sets appearance, primary color and palette,
+ * replacing any previous custom palette.
+ */
+export function applyThemePreset(preset: ThemePreset): ContentUpdater {
+  return (prev) => ({
+    ...prev,
+    theme: {
+      ...prev.theme,
+      appearance: preset.appearance,
+      primaryColor: preset.primaryColor,
+      palette: preset.palette,
+    },
+  });
+}
+
+/**
+ * Update the site corner radius. An empty value clears it so the rendered site
+ * falls back to its default radius.
+ */
+export function updateThemeRadius(radius: string): ContentUpdater {
+  return (prev) => ({
+    ...prev,
+    theme: { ...prev.theme, radius: radius || undefined },
+  });
+}
+
+/**
+ * Update a single per-page SEO field. An empty value clears the override so
+ * metadata falls back to the content-derived value.
+ */
+export function updateSeoField(
+  field: keyof SeoConfig,
+  value: string,
+): ContentUpdater {
+  return (prev) => ({
+    ...prev,
+    seo: { ...prev.seo, [field]: value || undefined },
   });
 }

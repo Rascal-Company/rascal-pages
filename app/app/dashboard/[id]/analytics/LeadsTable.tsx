@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/app/components/ui/button";
 
 interface Lead {
   id: string;
@@ -72,15 +73,11 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                 type="checkbox"
                 checked={onlyMarketingConsent}
                 onChange={(e) => setOnlyMarketingConsent(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-brand-accent focus:ring-brand-accent"
+                className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
               />
               Vain markkinointilupa
             </label>
-            <button
-              onClick={handleExport}
-              disabled={filteredLeads.length === 0}
-              className="inline-flex items-center gap-2 rounded-md bg-brand-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <Button onClick={handleExport} disabled={filteredLeads.length === 0}>
               <svg
                 className="h-4 w-4"
                 fill="none"
@@ -95,7 +92,7 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                 />
               </svg>
               Lataa CSV
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -110,7 +107,7 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
           </div>
         ) : (
           <table className="w-full">
-            <thead className="bg-white">
+            <thead className="bg-card">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-brand-dark/70">
                   Sähköposti
@@ -128,7 +125,7 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
             </thead>
             <tbody className="divide-y divide-brand-dark/10 bg-brand-beige">
               {filteredLeads.map((lead) => (
-                <tr key={lead.id} className="hover:bg-white/50">
+                <tr key={lead.id} className="hover:bg-card/50">
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-brand-dark">
                     {lead.email}
                   </td>
@@ -141,7 +138,7 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                         Kyllä
                       </span>
                     ) : (
-                      <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600">
+                      <span className="inline-flex rounded-full bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">
                         Ei
                       </span>
                     )}

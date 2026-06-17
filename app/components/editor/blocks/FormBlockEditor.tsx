@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { nanoid } from "nanoid";
-import type { FormContent, FormField, FormFieldType } from "@/src/lib/templates";
+import type {
+  FormContent,
+  FormField,
+  FormFieldType,
+} from "@/src/lib/templates";
 
 type FormBlockEditorProps = {
   content: FormContent;
@@ -87,8 +91,8 @@ export default function FormBlockEditor({
 
   return (
     <div className="space-y-6">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
+      <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
+        <p className="text-sm text-primary">
           💡 Tiedot tallennetaan aina Rascal Pages -järjestelmään. Voit lisäksi
           määrittää oman webhook URL:n, johon tiedot lähetetään.
         </p>
@@ -97,13 +101,13 @@ export default function FormBlockEditor({
       {/* Fields */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             Lomakkeen kentät
           </label>
         </div>
 
         {fields.length === 0 && (
-          <p className="text-sm text-gray-500 italic">
+          <p className="text-sm text-muted-foreground italic">
             Ei kenttiä. Lisää kenttä alta.
           </p>
         )}
@@ -112,65 +116,121 @@ export default function FormBlockEditor({
           {fields.map((field, index) => (
             <div
               key={field.id}
-              className="border border-gray-200 rounded-lg p-4 bg-white"
+              className="rounded-lg border border-border bg-card p-3"
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setExpandedFieldId(
-                        expandedFieldId === field.id ? null : field.id,
-                      )
-                    }
-                    className="text-sm font-medium text-gray-700 hover:text-gray-900"
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpandedFieldId(
+                      expandedFieldId === field.id ? null : field.id,
+                    )
+                  }
+                  aria-expanded={expandedFieldId === field.id}
+                  className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-sm font-medium text-foreground"
+                >
+                  <svg
+                    className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+                      expandedFieldId === field.id ? "rotate-90" : ""
+                    }`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    {expandedFieldId === field.id ? "▼" : "▶"}{" "}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                  <span className="truncate">
                     {field.label || "Nimetön kenttä"}
-                  </button>
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                    {FIELD_TYPE_LABELS[field.type]}
                   </span>
-                  {field.required && (
-                    <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
-                      Pakollinen
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-1">
+                </button>
+                <div className="flex shrink-0 items-center gap-0.5">
                   <button
                     type="button"
                     onClick={() => moveField(field.id, "up")}
                     disabled={index === 0}
-                    className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
                     title="Siirrä ylös"
+                    aria-label="Siirrä ylös"
                   >
-                    ↑
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
+                      />
+                    </svg>
                   </button>
                   <button
                     type="button"
                     onClick={() => moveField(field.id, "down")}
                     disabled={index === fields.length - 1}
-                    className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
                     title="Siirrä alas"
+                    aria-label="Siirrä alas"
                   >
-                    ↓
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
                   </button>
                   <button
                     type="button"
                     onClick={() => removeField(field.id)}
-                    className="p-1 text-red-600 hover:text-red-800"
+                    className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                     title="Poista kenttä"
+                    aria-label="Poista kenttä"
                   >
-                    🗑️
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
                   </button>
                 </div>
               </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                  {FIELD_TYPE_LABELS[field.type]}
+                </span>
+                {field.required && (
+                  <span className="rounded bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
+                    Pakollinen
+                  </span>
+                )}
+              </div>
 
               {expandedFieldId === field.id && (
-                <div className="space-y-3 mt-3 pt-3 border-t border-gray-200">
+                <div className="space-y-3 mt-3 pt-3 border-t border-border">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
                       Kentän otsikko
                     </label>
                     <input
@@ -180,13 +240,13 @@ export default function FormBlockEditor({
                         updateField(field.id, { label: e.target.value })
                       }
                       placeholder="Esim. Sähköpostiosoite"
-                      className="w-full text-sm rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+                      className="w-full text-sm rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring"
                     />
                   </div>
 
                   {field.type !== "checkbox" && (
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
                         Placeholder-teksti
                       </label>
                       <input
@@ -196,13 +256,13 @@ export default function FormBlockEditor({
                           updateField(field.id, { placeholder: e.target.value })
                         }
                         placeholder="Esim. nimi@esimerkki.fi"
-                        className="w-full text-sm rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+                        className="w-full text-sm rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring"
                       />
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
                       Kentän nimi (tekninen)
                     </label>
                     <input
@@ -212,7 +272,7 @@ export default function FormBlockEditor({
                         updateField(field.id, { name: e.target.value })
                       }
                       placeholder="esim. email, name, phone"
-                      className="w-full text-sm rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+                      className="w-full text-sm rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring"
                     />
                   </div>
 
@@ -224,11 +284,11 @@ export default function FormBlockEditor({
                       onChange={(e) =>
                         updateField(field.id, { required: e.target.checked })
                       }
-                      className="h-4 w-4 rounded border-gray-300 text-brand-accent focus:ring-brand-accent"
+                      className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
                     />
                     <label
                       htmlFor={`required-${field.id}`}
-                      className="text-sm text-gray-700"
+                      className="text-sm text-foreground"
                     >
                       Pakollinen kenttä
                     </label>
@@ -243,28 +303,28 @@ export default function FormBlockEditor({
           <button
             type="button"
             onClick={() => addField("email")}
-            className="text-sm px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+            className="text-sm px-3 py-2 bg-muted text-foreground rounded hover:bg-accent"
           >
             + Sähköposti
           </button>
           <button
             type="button"
             onClick={() => addField("text")}
-            className="text-sm px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+            className="text-sm px-3 py-2 bg-muted text-foreground rounded hover:bg-accent"
           >
             + Tekstikenttä
           </button>
           <button
             type="button"
             onClick={() => addField("textarea")}
-            className="text-sm px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+            className="text-sm px-3 py-2 bg-muted text-foreground rounded hover:bg-accent"
           >
             + Tekstialue
           </button>
           <button
             type="button"
             onClick={() => addField("checkbox")}
-            className="text-sm px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+            className="text-sm px-3 py-2 bg-muted text-foreground rounded hover:bg-accent"
           >
             + Valintaruutu
           </button>
@@ -273,23 +333,21 @@ export default function FormBlockEditor({
 
       {/* Form title */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-foreground mb-2">
           Lomakkeen otsikko (valinnainen)
         </label>
         <input
           type="text"
           value={content.formTitle || ""}
-          onChange={(e) =>
-            onUpdate({ ...content, formTitle: e.target.value })
-          }
+          onChange={(e) => onUpdate({ ...content, formTitle: e.target.value })}
           placeholder="Lataa ilmaiseksi"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+          className="w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
         />
       </div>
 
       {/* Submit button text */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-foreground mb-2">
           Lähetysnapin teksti
         </label>
         <input
@@ -299,25 +357,23 @@ export default function FormBlockEditor({
             onUpdate({ ...content, submitButtonText: e.target.value })
           }
           placeholder="Lähetä"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+          className="w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
         />
       </div>
 
       {/* Webhook URL */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-foreground mb-2">
           Webhook URL (valinnainen)
         </label>
         <input
           type="url"
           value={content.webhookUrl || ""}
-          onChange={(e) =>
-            onUpdate({ ...content, webhookUrl: e.target.value })
-          }
+          onChange={(e) => onUpdate({ ...content, webhookUrl: e.target.value })}
           placeholder="https://your-webhook.com/endpoint"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+          className="w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
         />
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-muted-foreground">
           Lomakkeen tiedot lähetetään tähän URL:iin JSON-muodossa.
         </p>
       </div>
@@ -368,13 +424,13 @@ export default function FormBlockEditor({
       )}
 
       {/* Success message */}
-      <div className="pt-4 border-t border-gray-200">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">
+      <div className="pt-4 border-t border-border">
+        <h3 className="text-sm font-medium text-foreground mb-3">
           Onnistumisviesti
         </h3>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Otsikko
             </label>
             <input
@@ -391,11 +447,11 @@ export default function FormBlockEditor({
                 })
               }
               placeholder="Kiitos! Tietosi on tallennettu."
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+              className="w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-foreground mb-1">
               Kuvaus
             </label>
             <textarea
@@ -411,7 +467,7 @@ export default function FormBlockEditor({
               }
               placeholder="Saat pian lisätietoja sähköpostiisi."
               rows={2}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+              className="w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
             />
           </div>
         </div>

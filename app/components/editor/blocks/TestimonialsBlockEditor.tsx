@@ -1,7 +1,9 @@
 "use client";
 
-import type { TestimonialItem } from "@/src/lib/templates";
+import type { TestimonialItem, ImageDisplay } from "@/src/lib/templates";
 import SortableFieldList from "../fields/SortableFieldList";
+import ImageUploadField from "../fields/ImageUploadField";
+import ImageDisplayControls from "../fields/ImageDisplayControls";
 
 type TestimonialsBlockEditorProps = {
   content: TestimonialItem[];
@@ -54,6 +56,16 @@ export default function TestimonialsBlockEditor({
     );
   };
 
+  // Avatar presentation is shared across all testimonials, so apply the patch
+  // to every item (their content is stored per-item, not block-level).
+  const sharedImageDisplay = testimonials.find(
+    (t) => t.imageDisplay,
+  )?.imageDisplay;
+  const applyImageDisplay = (patch: Partial<ImageDisplay>) => {
+    const next = { ...sharedImageDisplay, ...patch };
+    onUpdate(testimonials.map((item) => ({ ...item, imageDisplay: next })));
+  };
+
   const renderField = (
     index: number,
     testimonial: TestimonialItem,
@@ -66,7 +78,7 @@ export default function TestimonialsBlockEditor({
             type="text"
             value={testimonial.name || ""}
             onChange={(e) => handleFieldUpdate(index, "name", e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+            className="block w-full rounded-md border border-input px-2 py-1.5 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-ring"
           />
         );
       case "text":
@@ -75,7 +87,7 @@ export default function TestimonialsBlockEditor({
             value={testimonial.text || ""}
             onChange={(e) => handleFieldUpdate(index, "text", e.target.value)}
             rows={3}
-            className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+            className="block w-full rounded-md border border-input px-2 py-1.5 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-ring"
           />
         );
       case "company":
@@ -86,29 +98,16 @@ export default function TestimonialsBlockEditor({
             onChange={(e) =>
               handleFieldUpdate(index, "company", e.target.value)
             }
-            className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
+            className="block w-full rounded-md border border-input px-2 py-1.5 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-ring"
           />
         );
       case "avatar":
         return (
-          <div>
-            <input
-              type="url"
-              value={testimonial.avatar || ""}
-              onChange={(e) =>
-                handleFieldUpdate(index, "avatar", e.target.value)
-              }
-              placeholder="https://example.com/avatar.jpg"
-              className="block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent"
-            />
-            {testimonial.avatar && (
-              <img
-                src={testimonial.avatar}
-                alt={testimonial.name}
-                className="mt-2 h-10 w-10 rounded-full object-cover"
-              />
-            )}
-          </div>
+          <ImageUploadField
+            value={testimonial.avatar}
+            shape="round"
+            onChange={(url) => handleFieldUpdate(index, "avatar", url)}
+          />
         );
       default:
         return null;
@@ -118,27 +117,39 @@ export default function TestimonialsBlockEditor({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-700">Suosittelut</span>
+        <span className="text-sm font-medium text-foreground">Suosittelut</span>
         <button
           onClick={handleAdd}
-          className="rounded-md bg-brand-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-accent-hover"
+          className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-hover"
         >
           + Lisää
         </button>
       </div>
+      {testimonials.some((t) => t.avatar) && (
+        <div>
+          <label className="mb-1 block text-sm font-medium text-foreground">
+            Profiilikuvien koko & pyöristys
+          </label>
+          <ImageDisplayControls
+            variant="card"
+            value={sharedImageDisplay}
+            onChange={applyImageDisplay}
+          />
+        </div>
+      )}
       <div className="space-y-4">
         {testimonials.map((testimonial, index) => (
           <div
             key={index}
-            className="rounded-md border border-gray-200 bg-gray-50 p-4"
+            className="rounded-md border border-border bg-muted p-4"
           >
             <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-foreground">
                 Suosittelu {index + 1}
               </span>
               <button
                 onClick={() => handleRemove(index)}
-                className="text-sm text-red-600 hover:text-red-700"
+                className="text-sm text-destructive hover:text-destructive"
               >
                 Poista
               </button>

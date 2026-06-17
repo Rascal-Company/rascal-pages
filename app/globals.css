@@ -1,29 +1,30 @@
 @import "tailwindcss";
+@import "@rascal/theme/theme.css";
 
 @theme {
   /* Rascal AI Brand Palette */
-  --color-brand-primary: #E87B4E;
-  --color-brand-primary-hover: #D66A3D;
-  --color-brand-highlight: #F5E6DC;
-  --color-brand-beige: #F5E6DC;
-  --color-brand-light: #FDF9F6;
-  --color-brand-dark: #1A1A1A;
-  --color-brand-dark-alt: #2C2C2C;
+  --color-brand-primary: #e87b4e;
+  --color-brand-primary-hover: #d66a3d;
+  --color-brand-highlight: #f5e6dc;
+  --color-brand-beige: #f5e6dc;
+  --color-brand-light: #fdf9f6;
+  --color-brand-dark: #1a1a1a;
+  --color-brand-dark-alt: #2c2c2c;
   --color-brand-black: #000;
-  --color-brand-accent: #E87B4E;
-  --color-brand-accent-hover: #D66A3D;
+  --color-brand-accent: #e87b4e;
+  --color-brand-accent-hover: #d66a3d;
 
   /* Additional App Colors */
-  --color-app-bg-primary: #F5E6DC;
-  --color-app-bg-secondary: #FDF9F6;
-  --color-sidebar-bg: #1A1A1A;
+  --color-app-bg-primary: #f5e6dc;
+  --color-app-bg-secondary: #fdf9f6;
+  --color-sidebar-bg: #1a1a1a;
 
   /* Accent Colors */
-  --color-accent-orange: #E87B4E;
+  --color-accent-orange: #e87b4e;
   --color-accent-green: #22c55e;
   --color-accent-blue: #2563eb;
   --color-accent-yellow: #fbbf24;
-  
+
   /* Text Colors */
   --color-text-body: #1f2937;
   --color-text-heading: #2d3748;
@@ -31,7 +32,7 @@
   --color-text-muted-light: #718096;
   --color-text-muted-dark: #4a5568;
   --color-text-sidebar: #cbd5e1;
-  
+
   /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -78,6 +79,132 @@ html {
 
 .accent-yellow {
   color: var(--color-accent-yellow);
+}
+
+/* Portfolio template: above-the-fold entrance animation.
+   Scoped to the dark Portfolio hero; final state is fully visible so
+   content stays readable for crawlers and reduced-motion users. */
+@keyframes portfolioFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.portfolio-fade {
+  animation: portfolioFadeUp 0.6s ease both;
+}
+
+.portfolio-fade-delay-1 {
+  animation-delay: 0.08s;
+}
+
+.portfolio-fade-delay-2 {
+  animation-delay: 0.16s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portfolio-fade {
+    animation: none;
+  }
+}
+
+/* Hairline divider between major Portfolio sections */
+.portfolio-rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+}
+
+/* Light counterpart of the hairline divider (light Portfolio appearance) */
+.portfolio-rule-light {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 0, 0, 0.08),
+    transparent
+  );
+}
+
+/* Voice interview orb */
+.orb-core {
+  background: radial-gradient(
+    circle at 30% 30%,
+    #93c5fd,
+    #3b82f6 45%,
+    #1e3a8a 85%
+  );
+  box-shadow:
+    0 0 60px rgba(59, 130, 246, 0.45),
+    inset 0 0 40px rgba(255, 255, 255, 0.12);
+  animation: orbBreathe 3.2s ease-in-out infinite;
+}
+
+.orb-speaking {
+  animation: orbSpeak 1.1s ease-in-out infinite;
+}
+
+.orb-busy {
+  animation: orbBreathe 1.2s ease-in-out infinite;
+}
+
+.orb-ring {
+  animation: orbRing 2.4s ease-out infinite;
+}
+
+@keyframes orbBreathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes orbSpeak {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.09);
+  }
+  50% {
+    transform: scale(0.97);
+  }
+  75% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes orbRing {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-core,
+  .orb-speaking,
+  .orb-busy,
+  .orb-ring {
+    animation: none;
+  }
 }
 
 /* Text color classes */

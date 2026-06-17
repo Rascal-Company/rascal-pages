@@ -89,6 +89,7 @@ export default async function SiteEditorPage({ params }: PageProps) {
       siteId={createSiteId(id)}
       pageId={pageId}
       siteSubdomain={site.subdomain}
+      siteCustomDomain={site.custom_domain ?? null}
       initialContent={pageContent}
       initialPublished={initialPublished}
       initialSettings={initialSettings}

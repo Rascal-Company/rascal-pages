@@ -15,7 +15,28 @@ export type SectionType =
   | "form"
   | "logos"
   | "blog"
+  | "cases"
+  | "techStack"
+  | "bento"
   | "footer";
+
+/**
+ * How a block's image is presented. `mode` chooses between a full-bleed
+ * section background and a contained "box" beside the text; `position`, `size`
+ * and `rounding` only apply in box mode. All fields optional — an unset
+ * `imageDisplay` keeps a block's legacy rendering for backwards compatibility.
+ */
+export type ImageMode = "background" | "box";
+export type ImagePosition = "left" | "right";
+export type ImageSize = "sm" | "md" | "lg";
+export type ImageRounding = "none" | "rounded" | "circle";
+
+export type ImageDisplay = {
+  mode?: ImageMode;
+  position?: ImagePosition;
+  size?: ImageSize;
+  rounding?: ImageRounding;
+};
 
 export type HeroContent = {
   title: string;
@@ -23,6 +44,12 @@ export type HeroContent = {
   ctaText: string;
   ctaLink: string;
   image?: string;
+  /** Presentation of `image` (background vs. box). */
+  imageDisplay?: ImageDisplay;
+  /** Optional small label shown above the headline (portfolio hero). */
+  eyebrow?: string;
+  /** Content alignment variant for the standard (non-portfolio) hero. */
+  layout?: "centered" | "left";
   fieldOrder?: string[];
   // Embedded form options
   showForm?: boolean;
@@ -44,6 +71,8 @@ export type FeatureItem = {
   title: string;
   description: string;
   image?: string;
+  /** Presentation of `image` (size/rounding). Shared across all feature cards. */
+  imageDisplay?: ImageDisplay;
   fieldOrder?: string[];
 };
 
@@ -57,6 +86,8 @@ export type TestimonialItem = {
   text: string;
   company?: string;
   avatar?: string;
+  /** Presentation of `avatar` (size/rounding). Shared across all testimonials. */
+  imageDisplay?: ImageDisplay;
   fieldOrder?: string[];
 };
 
@@ -64,6 +95,8 @@ export type AboutContent = {
   name: string;
   bio: string;
   image?: string;
+  /** Presentation of `image` (background vs. box). */
+  imageDisplay?: ImageDisplay;
   fieldOrder?: string[];
 };
 
@@ -109,6 +142,110 @@ export type BlogContent = {
   postsToShow: number;
 };
 
+/**
+ * A single measurable outcome shown as a stat on a case card,
+ * e.g. { value: "8–10h", label: "Aikasäästö / viikko" }.
+ */
+export type CaseOutcome = {
+  value: string;
+  label: string;
+};
+
+/**
+ * One portfolio work / project shown as a card in the `cases` section.
+ * Profession-agnostic: works for any portfolio (design, photography,
+ * consulting, development, …). Renders inline; no separate detail routes.
+ */
+export type CaseItem = {
+  title: string;
+  tagline: string;
+  summary: string;
+  image?: string;
+  /** Keyword chips (skills, tools, tags) rendered under the summary. */
+  tags: string[];
+  /** Headline metrics rendered as a small stat row. */
+  outcomes: CaseOutcome[];
+  linkLabel?: string;
+  linkUrl?: string;
+  fieldOrder?: string[];
+};
+
+/**
+ * Projects / case studies showcase section.
+ */
+export type CasesContent = {
+  heading: string;
+  subheading?: string;
+  items: CaseItem[];
+  /** Number of columns for the case grid on large screens. Defaults to 2. */
+  columns?: 2 | 3;
+  /** Presentation of the case card images (size). */
+  imageDisplay?: ImageDisplay;
+};
+
+/**
+ * A named group of skills/services/items, e.g.
+ * { group: "Palvelut", items: ["Konsultointi", "Suunnittelu"] }.
+ */
+export type TechStackGroup = {
+  group: string;
+  items: string[];
+};
+
+/**
+ * General "expertise" section grouped by area — services, skills, tools or
+ * specialties. Profession-agnostic; the heading (e.g. "Osaaminen",
+ * "Palvelut", "Teknologiat") is set per site.
+ */
+export type TechStackContent = {
+  heading: string;
+  subheading?: string;
+  groups: TechStackGroup[];
+};
+
+/**
+ * One element placed on the bento grid. Free-form fields are interpreted per
+ * `type`: heading/text/button use `text`; image/button use `url`; stat uses
+ * `value` + `label`; card uses `text` (title) + `body` + `tags` (+ optional
+ * `url`/`label` link). Placement is on a 12-column grid.
+ */
+export type BentoElementType =
+  | "heading"
+  | "text"
+  | "image"
+  | "button"
+  | "stat"
+  | "card";
+
+export type BentoItem = {
+  id: string;
+  type: BentoElementType;
+  text?: string;
+  url?: string;
+  value?: string;
+  label?: string;
+  /** Card body copy (rendered under the card title). */
+  body?: string;
+  /** Card keyword chips. */
+  tags?: string[];
+  /** Render the element on a raised card surface. Defaults per type. */
+  boxed?: boolean;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
+/**
+ * Squarespace-style bento grid: free-form draggable/resizable boxes on a
+ * 12-column snap grid, each holding a single element.
+ */
+export type BentoContent = {
+  items: BentoItem[];
+  /** Presentation of bento image elements (rounding). */
+  imageDisplay?: ImageDisplay;
+};
+
 export type SectionContentMap = {
   hero: HeroContent;
   features: FeatureItem[];
@@ -119,6 +256,9 @@ export type SectionContentMap = {
   form: FormContent;
   logos: LogosContent;
   blog: BlogContent;
+  cases: CasesContent;
+  techStack: TechStackContent;
+  bento: BentoContent;
   footer: FooterContent;
 };
 
@@ -127,18 +267,82 @@ export type Section<T extends SectionType = SectionType> = {
   type: T;
   content: SectionContentMap[T];
   isVisible: boolean;
+  /** Per-section layout/style overrides applied around the rendered block. */
+  style?: SectionStyle;
+};
+
+/**
+ * Per-section presentation overrides, applied by the renderer as a wrapper
+ * around the block. All fields are optional; unset means the block's own
+ * default styling is used.
+ */
+export type SectionStyle = {
+  /** Background color (CSS color) for the whole section band. */
+  background?: string;
+  /** Extra vertical padding around the section. */
+  paddingY?: "none" | "sm" | "md" | "lg";
+  /** Text alignment for the section content. */
+  align?: "left" | "center" | "right";
+  /** Content width: the block default, or a narrower centered column. */
+  width?: "default" | "narrow";
+  /** Hide the section on small (mobile) viewports. */
+  hideOnMobile?: boolean;
+  /** Hide the section on large (desktop) viewports. */
+  hideOnDesktop?: boolean;
 };
 
 export type ThemeConfig = {
   primaryColor: string;
   headingFont?: string;
   bodyFont?: string;
+  /**
+   * Visual appearance of the rendered site. "dark" switches blocks to the
+   * polished dark portfolio look; templates that omit this stay light.
+   */
+  appearance?: "light" | "dark";
+  /**
+   * Per-site color palette. Any field left unset is derived from
+   * `primaryColor` + `appearance` defaults by the site theme engine
+   * (`src/lib/site-theme.ts`), so existing sites keep their look.
+   */
+  palette?: SitePalette;
+  /** Corner radius for the site (CSS length, e.g. "0.5rem"). */
+  radius?: string;
+};
+
+/**
+ * Per-site design tokens mirroring the @rascal/theme contract, but with values
+ * chosen by the end customer (not the Rascal brand). Injected as CSS variables
+ * on the rendered site root by the site theme engine.
+ */
+export type SitePalette = {
+  primary?: string;
+  primaryForeground?: string;
+  background?: string;
+  foreground?: string;
+  muted?: string;
+  mutedForeground?: string;
+  card?: string;
+  cardForeground?: string;
+  border?: string;
+};
+
+/**
+ * Per-page SEO overrides. When a field is unset, metadata is derived from the
+ * page content (about/hero). Stored on TemplateConfig so it travels with the
+ * page content and is saved through the normal page-save flow.
+ */
+export type SeoConfig = {
+  metaTitle?: string;
+  metaDescription?: string;
+  ogImage?: string;
 };
 
 export type TemplateConfig = {
   templateId: string;
   theme: ThemeConfig;
   sections: Section[];
+  seo?: SeoConfig;
   // DEPRECATED: Keep for migration, remove later
   hero?: HeroContent;
   features?: FeatureItem[];
@@ -231,7 +435,8 @@ export const TEMPLATES: Template[] = [
             {
               id: "field-consent-1",
               type: "checkbox" as const,
-              label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+              label:
+                "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
               required: false,
               name: "marketingConsent",
             },
@@ -282,7 +487,8 @@ export const TEMPLATES: Template[] = [
             {
               id: "field-consent-1",
               type: "checkbox" as const,
-              label: "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
+              label:
+                "Haluan vastaanottaa markkinointiviestejä ja uutisia sähköpostiini.",
               required: false,
               name: "marketingConsent",
             },
@@ -467,7 +673,141 @@ export const TEMPLATES: Template[] = [
       ],
     },
   },
+  {
+    id: "portfolio",
+    name: "Portfolio",
+    description:
+      "Henkilökohtainen portfolio: hero, tarina, teknologiat, projektit (caset), blogi ja yhteydenotto.",
+    defaultContent: {
+      templateId: "portfolio",
+      theme: {
+        primaryColor: "#3b82f6",
+        appearance: "dark",
+        headingFont: "Inter",
+        bodyFont: "Inter",
+      },
+      sections: [
+        createSection("pf-hero-1", "hero", {
+          title: "Hei, olen [Nimesi]",
+          subtitle:
+            "Esittelen työtäni ja kerron kuka olen. Tältä sivulta näet projektini, osaamiseni ja uusimmat kuulumiseni.",
+          ctaText: "Katso työni",
+          ctaLink: "#projektit",
+        }),
+        createSection("pf-about-1", "about", {
+          name: "Tarina",
+          bio: "Lyhyt kuvaus siitä kuka olet, mitä teet ja mikä sinua ajaa. Kerro taustasi ja missä olet juuri nyt — pidä teksti henkilökohtaisena ja tuoreena.",
+          image: "",
+        }),
+        createSection("pf-techstack-1", "techStack", {
+          heading: "Osaaminen",
+          subheading: "Mitä teen ja missä olen vahvimmillani.",
+          groups: [
+            {
+              group: "Palvelut",
+              items: ["Konsultointi", "Suunnittelu", "Toteutus"],
+            },
+            { group: "Erikoisalat", items: ["Strategia", "Sisältö"] },
+          ],
+        }),
+        createSection("pf-cases-1", "cases", {
+          heading: "Työt",
+          subheading: "Valikoima työtä, josta olen ylpeä.",
+          items: [
+            {
+              title: "Työn nimi",
+              tagline: "Lyhyt iskulause työstä",
+              summary:
+                "Kuvaa muutamalla lauseella mitä teit, kenelle ja minkä tuloksen se tuotti.",
+              image: "",
+              tags: ["Avainsana", "Avainsana"],
+              outcomes: [
+                { value: "+40 %", label: "Kasvua tuloksissa" },
+                { value: "12", label: "Tyytyväistä asiakasta" },
+              ],
+              linkLabel: "Katso lisää",
+              linkUrl: "#",
+            },
+            {
+              title: "Toinen työ",
+              tagline: "Mitä tämä työ piti sisällään",
+              summary:
+                "Toinen esimerkki työstäsi. Korvaa omilla töilläsi ja lisää tarvittaessa kuvat ja linkit.",
+              image: "",
+              tags: ["Avainsana"],
+              outcomes: [{ value: "Valmis", label: "Julkaistu lopputulos" }],
+              linkLabel: "Lue lisää",
+              linkUrl: "#",
+            },
+          ],
+        }),
+        createSection("pf-blog-1", "blog", {
+          heading: "Uusimmat kirjoitukset",
+          subheading: "Ajatuksia, oppeja ja kuulumisia.",
+          postsToShow: 6,
+        }),
+        createSection("pf-form-1", "form", {
+          fields: [
+            {
+              id: "field-name-1",
+              type: "text" as const,
+              label: "Nimi",
+              placeholder: "Nimesi",
+              required: true,
+              name: "name",
+            },
+            {
+              id: "field-email-1",
+              type: "email" as const,
+              label: "Sähköpostiosoite",
+              placeholder: "nimi@esimerkki.fi",
+              required: true,
+              name: "email",
+            },
+            {
+              id: "field-message-1",
+              type: "textarea" as const,
+              label: "Viesti",
+              placeholder: "Kerro lyhyesti mistä on kyse",
+              required: false,
+              name: "message",
+            },
+          ],
+          formTitle: "Ota yhteyttä",
+          submitButtonText: "Lähetä viesti",
+          successMessage: {
+            title: "Kiitos viestistäsi!",
+            description: "Palaan sinulle pian.",
+          },
+        }),
+        createSection("pf-footer-1", "footer", null),
+      ],
+    },
+  },
 ];
+
+/**
+ * Parse a comma-separated chip input ("React, Supabase, ") into a clean,
+ * de-duplicated list, dropping blanks. Used by the cases/tech-stack editors.
+ */
+export function parseTagList(input: string): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const raw of input.split(",")) {
+    const tag = raw.trim();
+    if (tag.length === 0 || seen.has(tag)) continue;
+    seen.add(tag);
+    result.push(tag);
+  }
+  return result;
+}
+
+/**
+ * Render a tag list back into the comma-separated form shown in the editor.
+ */
+export function formatTagList(tags: string[]): string {
+  return tags.join(", ");
+}
 
 /**
  * Gets template by ID
@@ -496,6 +836,9 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   form: "Lomake",
   logos: "Logot",
   blog: "Blogi",
+  cases: "Projektit",
+  techStack: "Osaaminen",
+  bento: "Ruudukko",
   footer: "Alapalkki",
 };
 
@@ -512,5 +855,8 @@ export const ADDABLE_SECTION_TYPES: SectionType[] = [
   "form",
   "logos",
   "blog",
+  "cases",
+  "techStack",
+  "bento",
   "footer",
 ];

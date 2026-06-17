@@ -10,7 +10,11 @@ import {
   getSiteByDomain,
 } from "@/src/lib/site-queries";
 import { migrateToSections } from "@/app/components/editor/utils/contentUtils";
-import { buildCanonicalUrl, buildPersonJsonLd } from "@/src/lib/seo";
+import {
+  buildCanonicalUrl,
+  buildPersonJsonLd,
+  resolvePageSeo,
+} from "@/src/lib/seo";
 import JsonLd from "@/app/components/JsonLd";
 import type {
   AboutContent,
@@ -67,16 +71,21 @@ export async function generateMetadata({
   const { name, description } = extractIdentity(normalized);
   const baseUrl = await getRequestBaseUrl();
   const canonical = buildCanonicalUrl(baseUrl, "/");
+  const seo = resolvePageSeo(normalized.seo, {
+    title: name || domain,
+    description,
+  });
 
   return {
-    title: name || domain,
-    description: description || undefined,
+    title: seo.title,
+    description: seo.description,
     alternates: { canonical },
     openGraph: {
       type: "website",
-      title: name || domain,
-      description: description || undefined,
+      title: seo.title,
+      description: seo.description,
       url: canonical,
+      ...(seo.ogImage ? { images: [{ url: seo.ogImage }] } : {}),
     },
   };
 }

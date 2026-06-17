@@ -7,7 +7,7 @@ import type { SiteId } from "@/src/lib/types";
 
 type FormBlockProps = {
   content: FormContent;
-  theme: { primaryColor: string };
+  theme: { primaryColor: string; appearance?: "light" | "dark" };
   siteId: SiteId;
   isPreview?: boolean;
   hero?: HeroContent;
@@ -47,6 +47,16 @@ export default function FormBlock({
   hero,
 }: FormBlockProps) {
   const primaryColor = theme.primaryColor || "#3B82F6";
+  const isDark = theme.appearance === "dark";
+  const cardClass = isDark
+    ? "rounded-2xl bg-card p-8 shadow-xl ring-1 ring-border"
+    : "rounded-2xl bg-white p-8 shadow-xl ring-1 ring-gray-900/10";
+  const labelClass = isDark
+    ? "block text-sm font-medium text-muted-foreground mb-2"
+    : "block text-sm font-medium text-gray-700 mb-2";
+  const inputClass = isDark
+    ? "w-full rounded-md border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted-foreground/70 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+    : "w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed";
   const [isPending, startTransition] = useTransition();
   const [formStatus, setFormStatus] = useState<"idle" | "success" | "error">(
     "idle",
@@ -104,11 +114,16 @@ export default function FormBlock({
   };
 
   return (
-    <section className="py-16">
+    <section id="yhteys" className="py-16 sm:py-24">
       <div className="mx-auto max-w-md px-6 lg:px-8">
-        <div className="rounded-2xl bg-white p-8 shadow-xl ring-1 ring-gray-900/10">
+        <div className={cardClass}>
           {content.formTitle && (
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            <h2
+              className={`text-2xl font-bold mb-6 ${
+                isDark ? "text-foreground" : "text-gray-900"
+              }`}
+              style={{ fontFamily: "var(--heading-font, inherit)" }}
+            >
               {content.formTitle}
             </h2>
           )}
@@ -154,7 +169,10 @@ export default function FormBlock({
                       disabled={isPending}
                       className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
                     />
-                    <label htmlFor={field.id} className="text-sm text-gray-600">
+                    <label
+                      htmlFor={field.id}
+                      className={`text-sm ${isDark ? "text-muted-foreground" : "text-gray-600"}`}
+                    >
                       {field.label}
                     </label>
                   </div>
@@ -164,10 +182,7 @@ export default function FormBlock({
               if (field.type === "textarea") {
                 return (
                   <div key={field.id}>
-                    <label
-                      htmlFor={field.id}
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
+                    <label htmlFor={field.id} className={labelClass}>
                       {field.label}
                       {field.required && (
                         <span className="text-red-500 ml-1">*</span>
@@ -180,7 +195,7 @@ export default function FormBlock({
                       disabled={isPending}
                       placeholder={field.placeholder}
                       rows={3}
-                      className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={inputClass}
                     />
                   </div>
                 );
@@ -188,10 +203,7 @@ export default function FormBlock({
 
               return (
                 <div key={field.id}>
-                  <label
-                    htmlFor={field.id}
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
+                  <label htmlFor={field.id} className={labelClass}>
                     {field.label}
                     {field.required && (
                       <span className="text-red-500 ml-1">*</span>
@@ -204,7 +216,7 @@ export default function FormBlock({
                     required={field.required}
                     disabled={isPending}
                     placeholder={field.placeholder}
-                    className="w-full rounded-md border border-gray-300 px-4 py-3 text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={inputClass}
                   />
                 </div>
               );
@@ -217,7 +229,9 @@ export default function FormBlock({
             >
               {isPending ? "Lähetetään..." : submitButtonText}
             </button>
-            <p className="text-xs text-center text-gray-500 mt-2">
+            <p
+              className={`text-xs text-center mt-2 ${isDark ? "text-muted-foreground/70" : "text-gray-500"}`}
+            >
               Emme koskaan jaa tietojasi kolmansien osapuolten kanssa.
             </p>
           </form>

@@ -135,7 +135,7 @@ export default async function AnalyticsPage({ params }: PageProps) {
               </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-white">
+                <thead className="bg-card">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-brand-dark/70">
                       Tapahtuma
@@ -150,7 +150,7 @@ export default async function AnalyticsPage({ params }: PageProps) {
                 </thead>
                 <tbody className="divide-y divide-brand-dark/10 bg-brand-beige">
                   {events.map((event) => (
-                    <tr key={event.id} className="hover:bg-white/50">
+                    <tr key={event.id} className="hover:bg-card/50">
                       <td className="whitespace-nowrap px-6 py-4 text-sm">
                         <span
                           className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
@@ -158,7 +158,7 @@ export default async function AnalyticsPage({ params }: PageProps) {
                               ? "bg-blue-100 text-blue-800"
                               : event.event_type === "cta_click"
                                 ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
+                                : "bg-muted text-muted-foreground"
                           }`}
                         >
                           {event.event_type === "page_view"

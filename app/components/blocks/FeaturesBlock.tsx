@@ -3,17 +3,23 @@
 import type { ReactNode } from "react";
 import type { FeatureItem } from "@/src/lib/templates";
 import type { SiteId } from "@/src/lib/types";
+import { surfaceTokens, type SurfaceTokens } from "./appearance";
+import { cardThumbClassName } from "@/src/lib/image-display";
 
 type FeaturesBlockProps = {
   content: FeatureItem[];
-  theme: { primaryColor: string };
+  theme: { primaryColor: string; appearance?: "light" | "dark" };
   siteId: SiteId;
   isPreview?: boolean;
 };
 
 const DEFAULT_FEATURE_ORDER = ["icon", "image", "title", "description"];
 
-function renderFeatureField(feature: FeatureItem, fieldKey: string): ReactNode {
+function renderFeatureField(
+  feature: FeatureItem,
+  fieldKey: string,
+  t: SurfaceTokens,
+): ReactNode {
   switch (fieldKey) {
     case "icon":
       if (feature.image) return null;
@@ -22,16 +28,21 @@ function renderFeatureField(feature: FeatureItem, fieldKey: string): ReactNode {
       ) : null;
     case "image":
       return feature.image ? (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={feature.image}
           alt={feature.title}
-          className="h-16 w-16 rounded-xl object-cover mb-4"
+          className={`mb-4 ${
+            feature.imageDisplay
+              ? cardThumbClassName(feature.imageDisplay)
+              : "h-16 w-16 rounded-xl object-cover"
+          }`}
         />
       ) : null;
     case "title":
       return (
         <h3
-          className="text-xl font-semibold text-gray-900 mb-2"
+          className={`text-xl font-semibold mb-2 ${t.heading}`}
           style={{ fontFamily: "var(--heading-font, inherit)" }}
         >
           {feature.title}
@@ -40,7 +51,7 @@ function renderFeatureField(feature: FeatureItem, fieldKey: string): ReactNode {
     case "description":
       return (
         <p
-          className="text-gray-600 leading-relaxed"
+          className={`leading-relaxed ${t.body}`}
           style={{ fontFamily: "var(--body-font, inherit)" }}
         >
           {feature.description}
@@ -54,18 +65,20 @@ function renderFeatureField(feature: FeatureItem, fieldKey: string): ReactNode {
 export default function FeaturesBlock({ content }: FeaturesBlockProps) {
   if (!content || content.length === 0) return null;
 
+  const t = surfaceTokens();
+
   return (
     <section className="py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2
-            className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
+            className={`text-3xl font-bold tracking-tight sm:text-4xl ${t.heading}`}
             style={{ fontFamily: "var(--heading-font, inherit)" }}
           >
             Ominaisuudet
           </h2>
           <p
-            className="mt-2 text-lg leading-8 text-gray-600"
+            className={`mt-2 text-lg leading-8 ${t.body}`}
             style={{ fontFamily: "var(--body-font, inherit)" }}
           >
             Tutustu tarjoamiimme ratkaisuihin
@@ -77,13 +90,11 @@ export default function FeaturesBlock({ content }: FeaturesBlockProps) {
             return (
               <div
                 key={index}
-                className="flex flex-col items-start rounded-2xl bg-gray-50 p-8 shadow-sm hover:shadow-md transition-shadow"
+                className={`flex flex-col items-start rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow ${t.card}`}
               >
                 {order.map((fieldKey) => {
-                  const rendered = renderFeatureField(feature, fieldKey);
-                  return rendered ? (
-                    <div key={fieldKey}>{rendered}</div>
-                  ) : null;
+                  const rendered = renderFeatureField(feature, fieldKey, t);
+                  return rendered ? <div key={fieldKey}>{rendered}</div> : null;
                 })}
               </div>
             );

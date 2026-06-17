@@ -3,15 +3,33 @@
 import { useState, useTransition } from "react";
 import type { ReactNode } from "react";
 import type { HeroContent, FormField } from "@/src/lib/templates";
+import { cva } from "class-variance-authority";
 import { AnalyticsLink } from "@/app/components/AnalyticsLink";
+import EditableText from "./EditableText";
+import {
+  imageBoxClassName,
+  imagePosition,
+  isBoxMode,
+} from "@/src/lib/image-display";
 import { submitLead } from "@/app/actions/submit-lead";
 import type { SiteId } from "@/src/lib/types";
 
+const heroContentVariants = cva("", {
+  variants: {
+    layout: {
+      centered: "mx-auto max-w-2xl text-center",
+      left: "max-w-2xl text-left",
+    },
+  },
+  defaultVariants: { layout: "centered" },
+});
+
 type HeroBlockProps = {
   content: HeroContent;
-  theme: { primaryColor: string };
+  theme: { primaryColor: string; appearance?: "light" | "dark" };
   siteId: SiteId;
   isPreview?: boolean;
+  templateId?: string;
 };
 
 const DEFAULT_HERO_FIELDS: FormField[] = [
@@ -45,8 +63,11 @@ export default function HeroBlock({
   theme,
   siteId,
   isPreview = false,
+  templateId,
 }: HeroBlockProps) {
   const primaryColor = theme.primaryColor || "#3B82F6";
+  const isDark = theme.appearance === "dark";
+  const isLightPortfolio = !isDark && templateId === "portfolio";
   const [isPending, startTransition] = useTransition();
   const [formStatus, setFormStatus] = useState<"idle" | "success" | "error">(
     "idle",
@@ -107,34 +128,99 @@ export default function HeroBlock({
   const defaultOrder = ["title", "subtitle", "cta", "image"];
   const order = content.fieldOrder || defaultOrder;
 
+  // In box mode the image renders as a contained column beside the text, so it
+  // must not also paint the section background. The form column takes priority.
+  const boxImage =
+    isBoxMode(content.imageDisplay) && !!content.image && !hasForm;
+  const imageOnLeft = imagePosition(content.imageDisplay) === "left";
+  const bgImage = boxImage ? undefined : content.image;
+
+  const isPortfolioHero = isDark || isLightPortfolio;
+
   const renderHeroField = (fieldKey: string): ReactNode => {
     switch (fieldKey) {
       case "title":
         return (
-          <h1
-            className="text-4xl font-bold tracking-tight sm:text-6xl"
-            style={{ fontFamily: "var(--heading-font, inherit)" }}
-          >
-            {content.title}
-          </h1>
+          <div>
+            {isPortfolioHero && (
+              <div className="portfolio-fade mb-6 flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className="h-px w-8"
+                  style={{
+                    backgroundImage: `linear-gradient(90deg, ${primaryColor}, transparent)`,
+                  }}
+                />
+                <span
+                  className="text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground"
+                  style={{ fontFamily: "var(--body-font, inherit)" }}
+                >
+                  {content.eyebrow || "Portfolio"}
+                </span>
+              </div>
+            )}
+            <EditableText
+              as="h1"
+              field="title"
+              value={content.title}
+              className={
+                isPortfolioHero
+                  ? "portfolio-fade text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
+                  : "text-4xl font-bold tracking-tight sm:text-6xl"
+              }
+              style={{
+                fontFamily: "var(--heading-font, inherit)",
+                ...(isDark && {
+                  backgroundImage: `linear-gradient(180deg, #f5f5f7 0%, #f5f5f7 55%, ${primaryColor} 130%)`,
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                }),
+                ...(isLightPortfolio && {
+                  backgroundImage: `linear-gradient(180deg, #18181b 0%, #18181b 55%, ${primaryColor} 135%)`,
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                }),
+              }}
+            />
+          </div>
         );
       case "subtitle":
         return (
-          <p
-            className="mt-6 text-lg leading-8 text-white/90"
+          <EditableText
+            as="p"
+            field="subtitle"
+            value={content.subtitle}
+            className={
+              isPortfolioHero
+                ? "portfolio-fade portfolio-fade-delay-1 mt-7 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl"
+                : "mt-6 text-lg leading-8 text-white/90"
+            }
             style={{ fontFamily: "var(--body-font, inherit)" }}
-          >
-            {content.subtitle}
-          </p>
+          />
         );
       case "cta":
         if (hasForm || !content.ctaText) return null;
         return (
-          <div className="mt-10 flex items-center gap-x-6 justify-center">
+          <div
+            className={`mt-10 flex items-center gap-x-6 ${
+              isPortfolioHero
+                ? "portfolio-fade portfolio-fade-delay-2 justify-start"
+                : "justify-center"
+            }`}
+          >
             <AnalyticsLink
               siteId={siteId}
               href={content.ctaLink}
-              className="rounded-md bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors"
+              className={
+                isPortfolioHero
+                  ? "rounded-lg px-6 py-3 text-base font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+                  : "rounded-md bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-colors"
+              }
+              style={
+                isPortfolioHero ? { backgroundColor: primaryColor } : undefined
+              }
               eventMetadata={{ location: "hero_cta" }}
             >
               {content.ctaText}
@@ -148,29 +234,94 @@ export default function HeroBlock({
     }
   };
 
+  const sectionStyle: React.CSSProperties = isDark
+    ? bgImage
+      ? {
+          backgroundImage: `linear-gradient(rgba(10,10,11,0.72), rgba(10,10,11,0.72)), url(${bgImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }
+      : {}
+    : isLightPortfolio
+      ? bgImage
+        ? {
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.78), rgba(255,255,255,0.78)), url(${bgImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }
+        : {}
+      : {
+          backgroundImage: bgImage
+            ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${bgImage})`
+            : `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        };
+
   return (
     <section
-      className="relative overflow-hidden text-white"
-      style={{
-        backgroundImage: content.image
-          ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${content.image})`
-          : `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%)`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
+      className={
+        isPortfolioHero
+          ? "relative flex min-h-[88vh] items-center overflow-hidden"
+          : "relative overflow-hidden text-white"
+      }
+      style={sectionStyle}
     >
-      <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+      {isPortfolioHero && !bgImage && (
         <div
-          className={`mx-auto ${hasForm ? "grid lg:grid-cols-2 gap-12 items-center" : "max-w-2xl text-center"}`}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: isDark
+              ? `radial-gradient(60% 55% at 20% 20%, ${primaryColor}1f, transparent 70%)`
+              : `radial-gradient(55% 50% at 18% 18%, ${primaryColor}14, transparent 70%)`,
+          }}
+        />
+      )}
+      <div
+        className={
+          isPortfolioHero
+            ? "relative mx-auto w-full max-w-7xl px-6 py-28 sm:py-36 lg:px-8"
+            : "mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8"
+        }
+      >
+        <div
+          className={
+            hasForm || boxImage
+              ? "mx-auto grid items-center gap-12 lg:grid-cols-2"
+              : isPortfolioHero
+                ? "mx-auto max-w-3xl text-left"
+                : heroContentVariants({ layout: content.layout })
+          }
         >
+          {boxImage && imageOnLeft && (
+            <div className="flex justify-center lg:justify-start">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={content.image}
+                alt={content.title || ""}
+                className={imageBoxClassName(content.imageDisplay)}
+              />
+            </div>
+          )}
+
           <div>
             {order.map((fieldKey) => {
               const rendered = renderHeroField(fieldKey);
-              return rendered ? (
-                <div key={fieldKey}>{rendered}</div>
-              ) : null;
+              return rendered ? <div key={fieldKey}>{rendered}</div> : null;
             })}
           </div>
+
+          {boxImage && !imageOnLeft && (
+            <div className="flex justify-center lg:justify-end">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={content.image}
+                alt={content.title || ""}
+                className={imageBoxClassName(content.imageDisplay)}
+              />
+            </div>
+          )}
 
           {hasForm && (
             <div className="rounded-2xl bg-white p-8 shadow-2xl">

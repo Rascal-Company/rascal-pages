@@ -60,6 +60,7 @@ export default async function SettingsPage({ params }: PageProps) {
       siteId={createSiteId(id)}
       subdomain={site.subdomain}
       rootDomain={rootDomain}
+      customDomain={site.custom_domain ?? null}
       initialSettings={initialSettings}
     />
   );

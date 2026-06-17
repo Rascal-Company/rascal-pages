@@ -5,7 +5,6 @@ import type {
   SectionContentMap,
   SectionType,
 } from "@/src/lib/templates";
-import { SECTION_TYPE_LABELS } from "@/src/lib/templates";
 import {
   HeroBlockEditor,
   FeaturesBlockEditor,
@@ -16,6 +15,9 @@ import {
   FormBlockEditor,
   LogosBlockEditor,
   BlogBlockEditor,
+  CasesBlockEditor,
+  TechStackBlockEditor,
+  BentoBlockEditor,
   FooterBlockEditor,
 } from "./blocks";
 
@@ -32,9 +34,6 @@ export default function BlockEditor({
 }: BlockEditorProps) {
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">
-        {SECTION_TYPE_LABELS[section.type]}
-      </h3>
       {(() => {
         switch (section.type) {
           case "hero":
@@ -99,6 +98,27 @@ export default function BlockEditor({
             return (
               <BlogBlockEditor
                 content={section.content as SectionContentMap["blog"]}
+                onUpdate={onUpdate}
+              />
+            );
+          case "cases":
+            return (
+              <CasesBlockEditor
+                content={section.content as SectionContentMap["cases"]}
+                onUpdate={onUpdate}
+              />
+            );
+          case "techStack":
+            return (
+              <TechStackBlockEditor
+                content={section.content as SectionContentMap["techStack"]}
+                onUpdate={onUpdate}
+              />
+            );
+          case "bento":
+            return (
+              <BentoBlockEditor
+                content={section.content as SectionContentMap["bento"]}
                 onUpdate={onUpdate}
               />
             );

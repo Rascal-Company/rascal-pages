@@ -61,7 +61,7 @@ function SortableFieldItem({
           {...attributes}
           {...listeners}
           type="button"
-          className="cursor-grab touch-none p-1 text-gray-400 hover:text-gray-600"
+          className="cursor-grab touch-none p-1 text-muted-foreground hover:text-foreground"
           aria-label={`Raahaa: ${label}`}
         >
           <svg
@@ -78,7 +78,7 @@ function SortableFieldItem({
             />
           </svg>
         </button>
-        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
           {label}
         </span>
       </div>
