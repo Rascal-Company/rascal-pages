@@ -55,6 +55,22 @@ export default async function SettingsPage({ params }: PageProps) {
     metaPixelId: (siteSettings.metaPixelId as string) || "",
   };
 
+  // Hae organisaation API-avaimet (ei key_hash:ia clientille)
+  const { data: keyRows } = await supabase
+    .from("api_keys")
+    .select("id, name, key_prefix, created_at, last_used_at, revoked_at")
+    .eq("org_id", orgMember.org_id)
+    .order("created_at", { ascending: false });
+
+  const apiKeys = (keyRows ?? []).map((row) => ({
+    id: row.id as string,
+    name: row.name as string,
+    keyPrefix: row.key_prefix as string,
+    createdAt: row.created_at as string,
+    lastUsedAt: (row.last_used_at as string | null) ?? null,
+    revokedAt: (row.revoked_at as string | null) ?? null,
+  }));
+
   return (
     <SettingsClient
       siteId={createSiteId(id)}
@@ -62,6 +78,7 @@ export default async function SettingsPage({ params }: PageProps) {
       rootDomain={rootDomain}
       customDomain={site.custom_domain ?? null}
       initialSettings={initialSettings}
+      initialApiKeys={apiKeys}
     />
   );
 }

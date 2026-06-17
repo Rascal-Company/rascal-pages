@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/src/utils/supabase/client";
 import LoginModal from "./LoginModal";
 import CreateAiSiteModal from "./CreateAiSiteModal";
+import SitePreview from "./SitePreview";
 import { useRouter } from "next/navigation";
 import { togglePagePublish } from "@/app/actions/toggle-publish";
 import { deleteSite } from "@/app/actions";
@@ -252,22 +253,12 @@ export default function DashboardClient({
                   key={site.id}
                   className="group relative overflow-hidden rounded-lg border border-foreground/10 bg-card shadow-sm transition-shadow hover:shadow-md"
                 >
-                  {/* Placeholder-kuvake */}
-                  <div className="h-48 w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                    <svg
-                      className="h-16 w-16 text-muted-foreground"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
+                  {/* Saitti-esikatselu */}
+                  <SitePreview
+                    url={`https://${site.subdomain}.rascalpages.fi`}
+                    published={site.published}
+                    title={site.subdomain}
+                  />
                   <div className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -364,7 +355,22 @@ export default function DashboardClient({
                       </div>
                     </div>
 
-                    <div className="mt-4 flex gap-2">
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <Link
+                        href={`/app/dashboard/${site.id}/posts`}
+                        className="rounded-md border border-foreground/20 bg-card px-3 py-1.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-background"
+                      >
+                        Blogi
+                      </Link>
+                      <Link
+                        href={`/app/dashboard/${site.id}/settings`}
+                        className="rounded-md border border-foreground/20 bg-card px-3 py-1.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-background"
+                      >
+                        Asetukset
+                      </Link>
+                    </div>
+
+                    <div className="mt-2 flex gap-2">
                       <Link
                         href={`/app/dashboard/${site.id}`}
                         className="flex-1 rounded-md border border-foreground/20 bg-card px-3 py-1.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-background"
