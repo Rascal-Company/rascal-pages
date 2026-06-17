@@ -33,15 +33,16 @@ export default function EditorHeader({
           <Button variant="outline" size="sm" onClick={onSettingsClick}>
             Asetukset
           </Button>
+          <div aria-hidden="true" className="mx-0.5 h-6 w-px bg-border" />
           <button
             type="button"
             onClick={onHideSidebar}
             title="Piilota sivupalkki"
             aria-label="Piilota sivupalkki"
-            className="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
             <svg
-              className="h-4 w-4"
+              className="h-5 w-5"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -50,7 +51,13 @@ export default function EditorHeader({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M11 19l-7-7 7-7M18 19l-7-7 7-7"
+                d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 4v16M16 9l-3 3 3 3"
               />
             </svg>
           </button>
