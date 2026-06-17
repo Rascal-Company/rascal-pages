@@ -16,6 +16,7 @@ type FloatingSectionEditorProps = {
   onUpdateContent: (content: SectionContentMap[SectionType]) => void;
   onUpdateStyle: (patch: Partial<SectionStyle>) => void;
   onClose: () => void;
+  crmEnabled: boolean;
 };
 
 const DEFAULT_POSITION = { x: 16, y: 16 };
@@ -32,6 +33,7 @@ export default function FloatingSectionEditor({
   onUpdateContent,
   onUpdateStyle,
   onClose,
+  crmEnabled,
 }: FloatingSectionEditorProps) {
   const [position, setPosition] = useState(DEFAULT_POSITION);
   const [collapsed, setCollapsed] = useState(false);
@@ -162,7 +164,11 @@ export default function FloatingSectionEditor({
             style={section.style}
             onChange={onUpdateStyle}
           />
-          <BlockEditor section={section} onUpdate={onUpdateContent} />
+          <BlockEditor
+            section={section}
+            onUpdate={onUpdateContent}
+            crmEnabled={crmEnabled}
+          />
         </div>
       )}
     </div>

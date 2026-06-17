@@ -67,6 +67,7 @@ type EditorProps = {
     googleAnalyticsId?: string;
     metaPixelId?: string;
   };
+  crmEnabled: boolean;
 };
 
 export default function Editor({
@@ -77,6 +78,7 @@ export default function Editor({
   initialContent,
   initialPublished = false,
   initialSettings = {},
+  crmEnabled,
 }: EditorProps) {
   const { showToast, showConfirm } = useToast();
   const {
@@ -545,6 +547,7 @@ export default function Editor({
                 setContent(updateSectionStyle(activeSection.id, patch))
               }
               onClose={() => setActiveSectionId(null)}
+              crmEnabled={crmEnabled}
             />
           )}
         </div>

@@ -11,6 +11,7 @@ import type {
 type FormBlockEditorProps = {
   content: FormContent;
   onUpdate: (content: FormContent) => void;
+  crmEnabled: boolean;
 };
 
 const FIELD_TYPE_LABELS: Record<FormFieldType, string> = {
@@ -23,6 +24,7 @@ const FIELD_TYPE_LABELS: Record<FormFieldType, string> = {
 export default function FormBlockEditor({
   content,
   onUpdate,
+  crmEnabled,
 }: FormBlockEditorProps) {
   const [expandedFieldId, setExpandedFieldId] = useState<string | null>(null);
 
@@ -375,6 +377,51 @@ export default function FormBlockEditor({
           Lomakkeen tiedot lähetetään tähän URL:iin JSON-muodossa.
         </p>
       </div>
+
+      {/* CRM export */}
+      {crmEnabled && (
+        <div className="pt-4 border-t border-gray-200 space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700">
+              Vie kontaktit CRM:ään
+            </label>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={content.exportToCrm ?? false}
+              onClick={() =>
+                onUpdate({ ...content, exportToCrm: !content.exportToCrm })
+              }
+              className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                content.exportToCrm ? "bg-blue-600" : "bg-gray-200"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  content.exportToCrm ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+
+          {content.exportToCrm && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                CRM-tagi
+              </label>
+              <input
+                type="text"
+                value={content.crmTag || ""}
+                onChange={(e) =>
+                  onUpdate({ ...content, crmTag: e.target.value })
+                }
+                placeholder="Esim. Lander X"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:border-brand-accent focus:outline-none focus:ring-brand-accent sm:text-sm"
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Success message */}
       <div className="pt-4 border-t border-border">
