@@ -6,7 +6,8 @@ import {
   getRequestBaseUrl,
   getSiteByDomain,
 } from "@/src/lib/site-queries";
-import { deriveExcerpt, formatPostDate, splitParagraphs } from "@/src/lib/posts";
+import { deriveExcerpt, formatPostDate } from "@/src/lib/posts";
+import MarkdownContent from "@/app/components/MarkdownContent";
 import {
   buildArticleJsonLd,
   buildBreadcrumbJsonLd,
@@ -81,8 +82,6 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
     { name: post.title, url: canonical },
   ]);
 
-  const paragraphs = splitParagraphs(post.content);
-
   return (
     <div className="min-h-screen bg-white">
       <JsonLd data={articleJsonLd} />
@@ -113,10 +112,8 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
           />
         )}
 
-        <div className="mt-8 space-y-6 text-lg leading-8 text-gray-700">
-          {paragraphs.map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
-          ))}
+        <div className="mt-8">
+          <MarkdownContent content={post.content} />
         </div>
       </article>
     </div>
