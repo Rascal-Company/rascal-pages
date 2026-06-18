@@ -186,7 +186,7 @@ export default function PagesClient({
           {pages.map((page) => (
             <li
               key={page.slug}
-              className="flex items-center justify-between rounded-lg border border-brand-dark/10 bg-card p-4 shadow-sm"
+              className="flex items-center justify-between gap-3 rounded-lg border border-brand-dark/10 bg-card p-4 shadow-sm"
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">

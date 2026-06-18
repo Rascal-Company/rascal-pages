@@ -41,13 +41,13 @@ export default function SiteHeader({
       <nav className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4 lg:px-8">
         <Link
           href={homeLink?.href ?? "/"}
-          className="truncate text-lg font-semibold text-foreground"
+          className="shrink-0 truncate text-lg font-semibold text-foreground"
           style={{ fontFamily: "var(--heading-font, inherit)" }}
         >
           {brand || homeLink?.label || "Etusivu"}
         </Link>
 
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden flex-wrap items-center justify-end gap-x-6 gap-y-2 md:flex">
           {links.map((link) => (
             <Link
               key={link.href}
