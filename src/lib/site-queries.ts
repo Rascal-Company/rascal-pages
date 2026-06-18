@@ -7,6 +7,13 @@
 import { headers } from "next/headers";
 import { createClient } from "@/src/utils/supabase/server";
 import { mapPostRow, sortPostsByPublishedAt, type Post, type PostRow } from "./posts";
+import { migrateToSections } from "@/app/components/editor/utils/contentUtils";
+import type {
+  HeroContent,
+  TemplateConfig,
+  ThemeConfig,
+} from "./templates";
+import type { SiteNavLink } from "./site-nav";
 
 export type SiteRecord = {
   id: string;
@@ -14,6 +21,92 @@ export type SiteRecord = {
   custom_domain: string | null;
   settings: Record<string, unknown> | null;
 };
+
+/**
+ * Shared "chrome" for a tenant site: the theme and navigation that must stay
+ * consistent across the home page, subpages and the blog. `navLinks` lists the
+ * site's published pages (home + subpages) plus the blog when posts exist;
+ * `showNav` is true only when there is more than one destination, so single
+ * landing pages keep their header-less look.
+ */
+export type SiteChrome = {
+  brand: string;
+  theme: ThemeConfig;
+  templateId: string;
+  navLinks: SiteNavLink[];
+  showNav: boolean;
+};
+
+type PublishedPageRow = {
+  slug: string;
+  title: string;
+  content: unknown;
+};
+
+/**
+ * Resolve the shared header/theme for a site from its published pages. The home
+ * page supplies the brand name (hero title), theme and template; subpages and
+ * the blog contribute navigation links.
+ */
+export async function getSiteChrome(siteId: string): Promise<SiteChrome> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("pages")
+    .select("slug, title, content")
+    .eq("site_id", siteId)
+    .eq("published", true)
+    .order("created_at", { ascending: true });
+
+  const pages = (data as PublishedPageRow[] | null) ?? [];
+  const home = pages.find((p) => p.slug === "home");
+  const homeConfig = migrateToSections(
+    (home?.content as TemplateConfig | null) ?? undefined,
+  );
+  const hero = homeConfig.sections.find((s) => s.type === "hero")?.content as
+    | HeroContent
+    | undefined;
+
+  const navLinks: SiteNavLink[] = [];
+  if (home) navLinks.push({ label: "Etusivu", href: "/" });
+  for (const page of pages) {
+    if (page.slug === "home") continue;
+    navLinks.push({ label: page.title || page.slug, href: `/${page.slug}` });
+  }
+
+  const latestPosts = await getPublishedPosts(siteId, 1);
+  if (latestPosts.length > 0) navLinks.push({ label: "Blogi", href: "/blog" });
+
+  return {
+    brand: hero?.title?.trim() || "",
+    theme: homeConfig.theme,
+    templateId: homeConfig.templateId,
+    navLinks,
+    showNav: navLinks.length > 1,
+  };
+}
+
+/**
+ * Fetch a single published page (subpage) by slug within a site.
+ */
+export async function getPublishedPageBySlug(
+  siteId: string,
+  slug: string,
+): Promise<{ title: string; content: TemplateConfig } | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("pages")
+    .select("title, content")
+    .eq("site_id", siteId)
+    .eq("slug", slug)
+    .eq("published", true)
+    .maybeSingle();
+
+  if (!data) return null;
+  return {
+    title: (data as PublishedPageRow).title,
+    content: (data as PublishedPageRow).content as TemplateConfig,
+  };
+}
 
 /**
  * Look up a site by its subdomain or custom domain.

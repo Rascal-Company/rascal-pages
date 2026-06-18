@@ -33,6 +33,8 @@ import {
   FooterBlock,
 } from "@/app/components/blocks";
 import type { PortfolioNavItem } from "@/app/components/blocks/PortfolioNav";
+import SiteHeader from "@/app/components/site/SiteHeader";
+import type { SiteNavLink } from "@/src/lib/site-nav";
 import type { CasesContent, TechStackContent } from "@/src/lib/templates";
 
 type SiteRendererProps = {
@@ -40,6 +42,13 @@ type SiteRendererProps = {
   siteId: SiteId;
   isPreview?: boolean;
   posts?: Post[];
+  /** Cross-page navigation (home + subpages + blog). Renders a shared header
+   * when more than one destination exists. */
+  siteNav?: SiteNavLink[];
+  /** Brand label for the shared header; falls back to the hero title. */
+  siteBrand?: string;
+  /** Current public path, used to mark the active nav link. */
+  currentPath?: string;
   /** Enables on-canvas section selection affordances (editor only). */
   editable?: boolean;
   activeSectionId?: SectionId | null;
@@ -62,6 +71,9 @@ export default function SiteRenderer({
   siteId,
   isPreview = false,
   posts,
+  siteNav,
+  siteBrand,
+  currentPath,
   editable = false,
   activeSectionId = null,
   onSelectSection,
@@ -83,6 +95,7 @@ export default function SiteRenderer({
   const isDark = isDarkAppearance(theme);
   const isPortfolio = normalizedContent.templateId === "portfolio";
   const hasPosts = (posts?.length ?? 0) > 0;
+  const showSiteHeader = (siteNav?.length ?? 0) > 1;
 
   const visibleSections = sections.filter((section) => section.isVisible);
 
@@ -139,7 +152,15 @@ export default function SiteRenderer({
       )}
       <div className="relative">
         {!isPreview && <PageViewTracker siteId={siteId} />}
-        {isPortfolio && heroContent && (
+        {showSiteHeader && (
+          <SiteHeader
+            brand={siteBrand || heroContent?.title || ""}
+            links={siteNav ?? []}
+            theme={theme}
+            currentPath={currentPath}
+          />
+        )}
+        {!showSiteHeader && isPortfolio && heroContent && (
           <PortfolioNav
             name={heroContent.title || "Portfolio"}
             items={navItems}

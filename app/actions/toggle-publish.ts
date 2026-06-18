@@ -6,7 +6,8 @@ import type { SiteId } from '@/src/lib/types';
 
 export async function togglePagePublish(
   siteId: SiteId,
-  published: boolean
+  published: boolean,
+  pageSlug: string = 'home'
 ): Promise<{ error?: string } | void> {
   const supabase = await createClient();
 
@@ -45,12 +46,12 @@ export async function togglePagePublish(
     };
   }
 
-  // 4. Hae sivuston 'home' sivu
+  // 4. Hae sivuston sivu pyydetyllä slugilla (oletus 'home')
   const { data: page, error: pageError } = await supabase
     .from('pages')
     .select('id')
     .eq('site_id', siteId)
-    .eq('slug', 'home')
+    .eq('slug', pageSlug)
     .maybeSingle();
 
   if (pageError) {

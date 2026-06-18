@@ -9,22 +9,22 @@ import remarkGfm from "remark-gfm";
  */
 export default function MarkdownContent({ content }: { content: string }) {
   return (
-    <div className="space-y-6 text-lg leading-8 text-gray-700">
+    <div className="space-y-6 text-lg leading-8 text-foreground/80">
       <Markdown
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
-            <h2 className="mt-10 text-3xl font-bold text-gray-900">
+            <h2 className="mt-10 text-3xl font-bold text-foreground">
               {children}
             </h2>
           ),
           h2: ({ children }) => (
-            <h2 className="mt-10 text-2xl font-bold text-gray-900">
+            <h2 className="mt-10 text-2xl font-bold text-foreground">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="mt-8 text-xl font-semibold text-gray-900">
+            <h3 className="mt-8 text-xl font-semibold text-foreground">
               {children}
             </h3>
           ),
@@ -32,7 +32,7 @@ export default function MarkdownContent({ content }: { content: string }) {
           a: ({ href, children }) => (
             <a
               href={href}
-              className="text-blue-600 underline hover:text-blue-800"
+              className="text-primary underline hover:opacity-80"
               target="_blank"
               rel="noopener noreferrer nofollow"
             >
@@ -47,16 +47,18 @@ export default function MarkdownContent({ content }: { content: string }) {
           ),
           li: ({ children }) => <li className="leading-7">{children}</li>,
           strong: ({ children }) => (
-            <strong className="font-semibold text-gray-900">{children}</strong>
+            <strong className="font-semibold text-foreground">
+              {children}
+            </strong>
           ),
           em: ({ children }) => <em className="italic">{children}</em>,
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-gray-200 pl-4 italic text-gray-600">
+            <blockquote className="border-l-4 border-border pl-4 italic text-muted-foreground">
               {children}
             </blockquote>
           ),
           code: ({ children }) => (
-            <code className="rounded bg-gray-100 px-1.5 py-0.5 text-base text-gray-800">
+            <code className="rounded bg-muted px-1.5 py-0.5 text-base text-foreground">
               {children}
             </code>
           ),
@@ -65,7 +67,7 @@ export default function MarkdownContent({ content }: { content: string }) {
               {children}
             </pre>
           ),
-          hr: () => <hr className="border-gray-200" />,
+          hr: () => <hr className="border-border" />,
           img: ({ src, alt }) =>
             typeof src === "string" ? (
               // eslint-disable-next-line @next/next/no-img-element

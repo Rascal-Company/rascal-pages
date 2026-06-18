@@ -5,6 +5,7 @@ import {
   getPostBySlug,
   getRequestBaseUrl,
   getSiteByDomain,
+  getSiteChrome,
 } from "@/src/lib/site-queries";
 import { deriveExcerpt, formatPostDate } from "@/src/lib/posts";
 import MarkdownContent from "@/app/components/MarkdownContent";
@@ -14,6 +15,10 @@ import {
   buildCanonicalUrl,
 } from "@/src/lib/seo";
 import JsonLd from "@/app/components/JsonLd";
+import SiteThemeRoot from "@/app/components/site/SiteThemeRoot";
+import SiteHeader from "@/app/components/site/SiteHeader";
+import { FooterBlock } from "@/app/components/blocks";
+import { createSiteId } from "@/src/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +66,10 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
   const post = await getPostBySlug(site.id, slug);
   if (!post) notFound();
 
-  const baseUrl = await getRequestBaseUrl();
+  const [chrome, baseUrl] = await Promise.all([
+    getSiteChrome(site.id),
+    getRequestBaseUrl(),
+  ]);
   const canonical = buildCanonicalUrl(baseUrl, `/blog/${post.slug}`);
   const description =
     post.seoDescription || post.excerpt || deriveExcerpt(post.content);
@@ -83,23 +91,34 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
   ]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <SiteThemeRoot theme={chrome.theme} templateId={chrome.templateId}>
       <JsonLd data={articleJsonLd} />
       <JsonLd data={breadcrumb} />
+      {chrome.showNav && (
+        <SiteHeader
+          brand={chrome.brand}
+          links={chrome.navLinks}
+          theme={chrome.theme}
+          currentPath="/blog"
+        />
+      )}
       <article className="mx-auto max-w-2xl px-6 py-16 lg:px-8">
-        <Link href="/blog" className="text-sm text-gray-500 hover:underline">
+        <Link
+          href="/blog"
+          className="text-sm text-muted-foreground hover:underline"
+        >
           ← Blogiin
         </Link>
 
         {post.publishedAt && (
           <time
             dateTime={post.publishedAt}
-            className="mt-6 block text-sm text-gray-500"
+            className="mt-6 block text-sm text-muted-foreground"
           >
             {formatPostDate(post.publishedAt)}
           </time>
         )}
-        <h1 className="mt-2 text-4xl font-bold tracking-tight text-gray-900">
+        <h1 className="mt-2 text-4xl font-bold tracking-tight text-foreground">
           {post.title}
         </h1>
 
@@ -116,6 +135,12 @@ export default async function BlogPostPage({ params }: BlogPostProps) {
           <MarkdownContent content={post.content} />
         </div>
       </article>
-    </div>
+      <FooterBlock
+        content={null}
+        theme={chrome.theme}
+        siteId={createSiteId(site.id)}
+        templateId={chrome.templateId}
+      />
+    </SiteThemeRoot>
   );
 }
