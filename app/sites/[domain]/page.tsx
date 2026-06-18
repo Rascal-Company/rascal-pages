@@ -8,6 +8,7 @@ import {
   getPublishedPosts,
   getRequestBaseUrl,
   getSiteByDomain,
+  getSiteChrome,
 } from "@/src/lib/site-queries";
 import { migrateToSections } from "@/app/components/editor/utils/contentUtils";
 import {
@@ -152,6 +153,9 @@ export default async function PublicSitePage({ params }: PageProps) {
   // Hae julkaistut blogikirjoitukset (henkilöbrändi-templaatin blogiosiolle)
   const posts = await getPublishedPosts(site.id);
 
+  // Hae jaettu navigaatio (etusivu + alasivut + blogi)
+  const chrome = await getSiteChrome(site.id);
+
   // Rakenna Person-strukturoitu data SEO:ta varten
   const normalized = migrateToSections(content as TemplateConfig);
   const { name, description } = extractIdentity(normalized);
@@ -183,6 +187,9 @@ export default async function PublicSitePage({ params }: PageProps) {
         content={content}
         siteId={createSiteId(site.id)}
         posts={posts}
+        siteNav={chrome.navLinks}
+        siteBrand={chrome.brand}
+        currentPath="/"
       />
     </>
   );

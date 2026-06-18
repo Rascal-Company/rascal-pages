@@ -9,10 +9,16 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
-export default async function SiteEditorPage({ params }: PageProps) {
+export default async function SiteEditorPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { id } = await params;
+  const { page: pageParam } = await searchParams;
+  const pageSlug = pageParam?.trim() || "home";
   const supabase = await createClient();
 
   // 1. Tarkista käyttäjä
@@ -58,13 +64,18 @@ export default async function SiteEditorPage({ params }: PageProps) {
     redirect("/app/dashboard");
   }
 
-  // 4. Hae sivuston 'home' sivu tai luo oletusrakenne
-  const { data: page, error: pageError } = await supabase
+  // 4. Hae muokattava sivu (oletus 'home', tai ?page=<slug> alasivulle)
+  const { data: page } = await supabase
     .from("pages")
     .select("*")
     .eq("site_id", id)
-    .eq("slug", "home")
+    .eq("slug", pageSlug)
     .maybeSingle();
+
+  // Alasivun pitää olla olemassa; 'home' luodaan ensimmäisellä tallennuksella.
+  if (!page && pageSlug !== "home") {
+    redirect(`/app/dashboard/${id}/pages`);
+  }
 
   // Oletussisältö jos sivua ei ole - käytä oletustemplatea
   const { getDefaultTemplate } = await import("@/src/lib/templates");
@@ -75,6 +86,7 @@ export default async function SiteEditorPage({ params }: PageProps) {
   const pageContent = page?.content || defaultContent;
   const pageId = page?.id || null;
   const initialPublished = page?.published ?? false;
+  const pageTitle = page?.title || "Etusivu";
 
   // Hae analytiikka-asetukset
   const siteSettings = (site.settings as Record<string, unknown>) || {};
@@ -88,6 +100,8 @@ export default async function SiteEditorPage({ params }: PageProps) {
     <Editor
       siteId={createSiteId(id)}
       pageId={pageId}
+      pageSlug={pageSlug}
+      pageTitle={pageTitle}
       siteSubdomain={site.subdomain}
       siteCustomDomain={site.custom_domain ?? null}
       initialContent={pageContent}

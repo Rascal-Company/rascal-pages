@@ -3,19 +3,30 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/app/components/ui/button";
 import ThemeToggle from "@/app/components/ThemeToggle";
+import type { SiteId } from "@/src/lib/types";
 
 interface EditorHeaderProps {
   siteSubdomain: string;
+  pageTitle?: string;
+  pageSlug?: string;
+  siteId?: SiteId;
   onSettingsClick: () => void;
   onHideSidebar: () => void;
 }
 
 export default function EditorHeader({
   siteSubdomain,
+  pageTitle,
+  pageSlug = "home",
+  siteId,
   onSettingsClick,
   onHideSidebar,
 }: EditorHeaderProps) {
   const router = useRouter();
+  const backHref =
+    pageSlug === "home" || !siteId
+      ? "/app/dashboard"
+      : `/app/dashboard/${siteId}/pages`;
 
   return (
     <div>
@@ -23,7 +34,7 @@ export default function EditorHeader({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.push("/app/dashboard")}
+          onClick={() => router.push(backHref)}
           className="-ml-2 h-auto px-2 text-muted-foreground hover:text-foreground"
         >
           ← Takaisin
@@ -65,6 +76,7 @@ export default function EditorHeader({
       </div>
       <p className="mt-1 truncate text-xs text-muted-foreground">
         {siteSubdomain}.rascalpages.fi
+        {pageTitle ? ` · ${pageTitle}` : ""}
       </p>
     </div>
   );

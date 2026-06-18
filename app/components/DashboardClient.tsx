@@ -355,16 +355,22 @@ export default function DashboardClient({
                       </div>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-2 gap-2">
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                      <Link
+                        href={`/app/dashboard/${site.id}/pages`}
+                        className="rounded-md border border-foreground/20 bg-card px-2 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:bg-background sm:px-3 sm:text-sm"
+                      >
+                        Sivut
+                      </Link>
                       <Link
                         href={`/app/dashboard/${site.id}/posts`}
-                        className="rounded-md border border-foreground/20 bg-card px-3 py-1.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-background"
+                        className="rounded-md border border-foreground/20 bg-card px-2 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:bg-background sm:px-3 sm:text-sm"
                       >
                         Blogi
                       </Link>
                       <Link
                         href={`/app/dashboard/${site.id}/settings`}
-                        className="rounded-md border border-foreground/20 bg-card px-3 py-1.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-background"
+                        className="rounded-md border border-foreground/20 bg-card px-2 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:bg-background sm:px-3 sm:text-sm"
                       >
                         Asetukset
                       </Link>

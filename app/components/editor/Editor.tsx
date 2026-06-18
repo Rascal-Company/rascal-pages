@@ -58,6 +58,8 @@ import { useAutosave } from "./hooks/useAutosave";
 type EditorProps = {
   siteId: SiteId;
   pageId: string | null;
+  pageSlug?: string;
+  pageTitle?: string;
   siteSubdomain: string;
   siteCustomDomain?: string | null;
   initialContent: TemplateConfig | Record<string, unknown>;
@@ -73,6 +75,8 @@ type EditorProps = {
 export default function Editor({
   siteId,
   pageId: _pageId,
+  pageSlug = "home",
+  pageTitle = "Etusivu",
   siteSubdomain,
   siteCustomDomain = null,
   initialContent,
@@ -124,8 +128,8 @@ export default function Editor({
 
   const persist = useCallback(
     (data: { content: TemplateConfig; published: boolean }) =>
-      updatePageContent(siteId, data.content, data.published),
-    [siteId],
+      updatePageContent(siteId, data.content, data.published, pageSlug),
+    [siteId, pageSlug],
   );
 
   const {
@@ -250,6 +254,9 @@ export default function Editor({
             <div className="border-b border-border p-4">
               <EditorHeader
                 siteSubdomain={siteSubdomain}
+                pageTitle={pageTitle}
+                pageSlug={pageSlug}
+                siteId={siteId}
                 onSettingsClick={() => setIsSettingsOpen(true)}
                 onHideSidebar={() => setIsSidebarOpen(false)}
               />

@@ -3,11 +3,13 @@
 import { createClient } from '@/src/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { SiteId } from '@/src/lib/types';
+import type { TemplateConfig } from '@/src/lib/templates';
 
 export async function updatePageContent(
   siteId: SiteId,
-  content: any,
-  published: boolean = false
+  content: TemplateConfig | Record<string, unknown>,
+  published: boolean = false,
+  pageSlug: string = 'home'
 ): Promise<{ error?: string } | void> {
   const supabase = await createClient();
 
@@ -46,12 +48,12 @@ export async function updatePageContent(
     };
   }
 
-  // 4. Hae tai luo 'home' sivu
+  // 4. Hae tai luo sivu pyydetyllä slugilla (oletus 'home')
   const { data: existingPage, error: pageCheckError } = await supabase
     .from('pages')
     .select('id')
     .eq('site_id', siteId)
-    .eq('slug', 'home')
+    .eq('slug', pageSlug)
     .maybeSingle();
 
   if (pageCheckError) {
@@ -84,8 +86,8 @@ export async function updatePageContent(
       .from('pages')
       .insert({
         site_id: siteId,
-        slug: 'home',
-        title: 'Etusivu',
+        slug: pageSlug,
+        title: pageSlug === 'home' ? 'Etusivu' : pageSlug,
         content: content,
         published: published,
       });
