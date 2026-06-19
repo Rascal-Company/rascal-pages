@@ -18,6 +18,7 @@ import {
   CasesBlockEditor,
   TechStackBlockEditor,
   BentoBlockEditor,
+  PricingBlockEditor,
   FooterBlockEditor,
 } from "./blocks";
 
@@ -119,6 +120,13 @@ export default function BlockEditor({
             return (
               <BentoBlockEditor
                 content={section.content as SectionContentMap["bento"]}
+                onUpdate={onUpdate}
+              />
+            );
+          case "pricing":
+            return (
+              <PricingBlockEditor
+                content={section.content as SectionContentMap["pricing"]}
                 onUpdate={onUpdate}
               />
             );

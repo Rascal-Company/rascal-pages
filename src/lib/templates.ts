@@ -18,6 +18,7 @@ export type SectionType =
   | "cases"
   | "techStack"
   | "bento"
+  | "pricing"
   | "footer";
 
 /**
@@ -246,6 +247,35 @@ export type BentoContent = {
   imageDisplay?: ImageDisplay;
 };
 
+/**
+ * One pricing plan shown as a card in the `pricing` section. `price` is free
+ * text ("0 €", "29", "Sopimuksen mukaan") so it works for any currency/model;
+ * `period` is the small suffix ("/kk"). `highlighted` raises one tier as the
+ * recommended option.
+ */
+export type PricingTier = {
+  name: string;
+  price: string;
+  period?: string;
+  description?: string;
+  features: string[];
+  ctaText?: string;
+  ctaLink?: string;
+  highlighted?: boolean;
+};
+
+/**
+ * Pricing section: heading + a row of plan cards. Profession-agnostic — works
+ * for SaaS, app subscriptions or service packages.
+ */
+export type PricingContent = {
+  heading: string;
+  subheading?: string;
+  tiers: PricingTier[];
+  /** Number of columns for the tier grid on large screens. Defaults to 3. */
+  columns?: 2 | 3;
+};
+
 export type SectionContentMap = {
   hero: HeroContent;
   features: FeatureItem[];
@@ -259,6 +289,7 @@ export type SectionContentMap = {
   cases: CasesContent;
   techStack: TechStackContent;
   bento: BentoContent;
+  pricing: PricingContent;
   footer: FooterContent;
 };
 
@@ -839,6 +870,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   cases: "Projektit",
   techStack: "Osaaminen",
   bento: "Ruudukko",
+  pricing: "Hinnoittelu",
   footer: "Alapalkki",
 };
 
@@ -858,5 +890,6 @@ export const ADDABLE_SECTION_TYPES: SectionType[] = [
   "cases",
   "techStack",
   "bento",
+  "pricing",
   "footer",
 ];
