@@ -295,6 +295,63 @@ export function getDefaultSectionContent<T extends SectionType>(
         { group: "Erikoisalat", items: ["Strategia", "Sisältö"] },
       ],
     },
+    pricing: {
+      heading: "Hinnoittelu",
+      subheading: "Valitse sinulle sopiva paketti.",
+      columns: 3,
+      tiers: [
+        {
+          name: "Perus",
+          price: "0 €",
+          period: "/kk",
+          description: "Aloita ilmaiseksi.",
+          features: ["Perusominaisuudet", "1 käyttäjä", "Sähköpostituki"],
+          ctaText: "Aloita",
+          ctaLink: "#",
+        },
+        {
+          name: "Pro",
+          price: "29 €",
+          period: "/kk",
+          description: "Kasvaville tarpeille.",
+          features: [
+            "Kaikki Perus-ominaisuudet",
+            "5 käyttäjää",
+            "Prioriteettituki",
+          ],
+          ctaText: "Valitse Pro",
+          ctaLink: "#",
+          highlighted: true,
+        },
+        {
+          name: "Yritys",
+          price: "Sopimuksen mukaan",
+          description: "Suuremmille organisaatioille.",
+          features: ["Rajaton käyttö", "Oma yhteyshenkilö", "SLA"],
+          ctaText: "Ota yhteyttä",
+          ctaLink: "#",
+        },
+      ],
+    },
+    gallery: {
+      heading: "Galleria",
+      subheading: "Kuvia töistä ja hetkistä.",
+      columns: 3,
+      images: [
+        { url: "", caption: "" },
+        { url: "", caption: "" },
+        { url: "", caption: "" },
+      ],
+    },
+    cta: {
+      heading: "Valmis aloittamaan?",
+      text: "Ota yhteyttä tai kokeile palvelua jo tänään.",
+      primaryCtaText: "Ota yhteyttä",
+      primaryCtaLink: "#",
+      secondaryCtaText: "",
+      secondaryCtaLink: "",
+      filled: true,
+    },
     bento: {
       items: [
         {

@@ -18,6 +18,9 @@ export type SectionType =
   | "cases"
   | "techStack"
   | "bento"
+  | "pricing"
+  | "gallery"
+  | "cta"
   | "footer";
 
 /**
@@ -246,6 +249,68 @@ export type BentoContent = {
   imageDisplay?: ImageDisplay;
 };
 
+/**
+ * One pricing plan shown as a card in the `pricing` section. `price` is free
+ * text ("0 €", "29", "Sopimuksen mukaan") so it works for any currency/model;
+ * `period` is the small suffix ("/kk"). `highlighted` raises one tier as the
+ * recommended option.
+ */
+export type PricingTier = {
+  name: string;
+  price: string;
+  period?: string;
+  description?: string;
+  features: string[];
+  ctaText?: string;
+  ctaLink?: string;
+  highlighted?: boolean;
+};
+
+/**
+ * Pricing section: heading + a row of plan cards. Profession-agnostic — works
+ * for SaaS, app subscriptions or service packages.
+ */
+export type PricingContent = {
+  heading: string;
+  subheading?: string;
+  tiers: PricingTier[];
+  /** Number of columns for the tier grid on large screens. Defaults to 3. */
+  columns?: 2 | 3;
+};
+
+/** One image in a `gallery` grid. `url` empty = slot not yet filled (skipped). */
+export type GalleryImage = {
+  url: string;
+  caption?: string;
+  alt?: string;
+};
+
+/**
+ * Image grid section. Profession-agnostic — product shots, portfolio work,
+ * event photos. Optional heading; the grid column count is shared.
+ */
+export type GalleryContent = {
+  heading?: string;
+  subheading?: string;
+  images: GalleryImage[];
+  /** Number of columns on large screens. Defaults to 3. */
+  columns?: 2 | 3 | 4;
+};
+
+/**
+ * Call-to-action banner: heading + optional copy + up to two buttons. `filled`
+ * paints the band with the site primary color for a high-emphasis CTA.
+ */
+export type CtaContent = {
+  heading: string;
+  text?: string;
+  primaryCtaText?: string;
+  primaryCtaLink?: string;
+  secondaryCtaText?: string;
+  secondaryCtaLink?: string;
+  filled?: boolean;
+};
+
 export type SectionContentMap = {
   hero: HeroContent;
   features: FeatureItem[];
@@ -259,6 +324,9 @@ export type SectionContentMap = {
   cases: CasesContent;
   techStack: TechStackContent;
   bento: BentoContent;
+  pricing: PricingContent;
+  gallery: GalleryContent;
+  cta: CtaContent;
   footer: FooterContent;
 };
 
@@ -784,6 +852,126 @@ export const TEMPLATES: Template[] = [
       ],
     },
   },
+  {
+    id: "mobile-app",
+    name: "Mobiilisovellus / Tuote",
+    description:
+      "Tuote-/sovelluslanding: hero kuvalla, ominaisuudet, kuvakaappaukset, hinnoittelu, UKK ja toimintakehote.",
+    defaultContent: {
+      templateId: "mobile-app",
+      theme: { primaryColor: "#6366F1" },
+      sections: [
+        createSection("ma-hero-1", "hero", {
+          eyebrow: "Uusi sovellus",
+          title: "Sovelluksesi, taskussasi",
+          subtitle:
+            "Lyhyt, myyvä lupaus tuotteesta. Kerro mitä se tekee ja kenelle — ja näytä se heti kuvana vieressä.",
+          ctaText: "Lataa nyt",
+          ctaLink: "#hinnoittelu",
+          image: "",
+          imageDisplay: {
+            mode: "box",
+            position: "right",
+            size: "lg",
+            rounding: "rounded",
+          },
+          layout: "left",
+        }),
+        createSection("ma-features-1", "features", [
+          {
+            icon: "⚡",
+            title: "Nopea ja kevyt",
+            description:
+              "Toimii sulavasti jokaisella laitteella. Ei turhaa odottelua.",
+          },
+          {
+            icon: "🔒",
+            title: "Yksityisyys edellä",
+            description: "Tietosi pysyvät sinun hallinnassasi. Salattu päästä päähän.",
+          },
+          {
+            icon: "🔔",
+            title: "Älykkäät ilmoitukset",
+            description: "Saat juuri oikeat muistutukset oikeaan aikaan.",
+          },
+          {
+            icon: "☁️",
+            title: "Synkronointi",
+            description: "Kaikki laitteesi ajan tasalla automaattisesti.",
+          },
+        ]),
+        createSection("ma-gallery-1", "gallery", {
+          heading: "Katso miltä se näyttää",
+          subheading: "Kuvakaappauksia sovelluksesta.",
+          columns: 3,
+          images: [
+            { url: "", caption: "" },
+            { url: "", caption: "" },
+            { url: "", caption: "" },
+          ],
+        }),
+        createSection("ma-pricing-1", "pricing", {
+          heading: "Hinnoittelu",
+          subheading: "Aloita ilmaiseksi, päivitä kun olet valmis.",
+          columns: 3,
+          tiers: [
+            {
+              name: "Ilmainen",
+              price: "0 €",
+              period: "/kk",
+              description: "Kokeile rajattomasti perusominaisuuksia.",
+              features: ["Perusominaisuudet", "1 laite", "Yhteisötuki"],
+              ctaText: "Lataa",
+              ctaLink: "#",
+            },
+            {
+              name: "Pro",
+              price: "9,99 €",
+              period: "/kk",
+              description: "Kaikki irti sovelluksesta.",
+              features: ["Kaikki ominaisuudet", "Rajaton synkronointi", "Prioriteettituki"],
+              ctaText: "Hanki Pro",
+              ctaLink: "#",
+              highlighted: true,
+            },
+            {
+              name: "Tiimi",
+              price: "Sopimuksen mukaan",
+              description: "Organisaatioille ja tiimeille.",
+              features: ["Tiiminhallinta", "Oma yhteyshenkilö", "SLA"],
+              ctaText: "Ota yhteyttä",
+              ctaLink: "#",
+            },
+          ],
+        }),
+        createSection("ma-faq-1", "faq", [
+          {
+            question: "Mille laitteille sovellus on saatavilla?",
+            answer: "iOS- ja Android-laitteille. Lataa sovelluskaupasta.",
+          },
+          {
+            question: "Onko ilmaisversio oikeasti ilmainen?",
+            answer:
+              "Kyllä. Voit käyttää perusominaisuuksia rajattomasti ilman maksua.",
+          },
+          {
+            question: "Voinko peruuttaa milloin tahansa?",
+            answer: "Kyllä, tilauksen voi peruuttaa koska tahansa.",
+          },
+        ]),
+        createSection("ma-cta-1", "cta", {
+          heading: "Valmis aloittamaan?",
+          text: "Lataa sovellus tänään ja kokeile ilmaiseksi.",
+          primaryCtaText: "Lataa nyt",
+          primaryCtaLink: "#",
+          secondaryCtaText: "",
+          secondaryCtaLink: "",
+          filled: true,
+        }),
+        createSection("ma-footer-1", "footer", null),
+      ],
+    },
+  },
 ];
 
 /**
@@ -839,6 +1027,9 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   cases: "Projektit",
   techStack: "Osaaminen",
   bento: "Ruudukko",
+  pricing: "Hinnoittelu",
+  gallery: "Galleria",
+  cta: "Toimintakehote",
   footer: "Alapalkki",
 };
 
@@ -858,5 +1049,8 @@ export const ADDABLE_SECTION_TYPES: SectionType[] = [
   "cases",
   "techStack",
   "bento",
+  "pricing",
+  "gallery",
+  "cta",
   "footer",
 ];

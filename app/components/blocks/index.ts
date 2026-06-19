@@ -10,5 +10,8 @@ export { default as BlogListBlock } from "./BlogListBlock";
 export { default as CasesBlock } from "./CasesBlock";
 export { default as TechStackBlock } from "./TechStackBlock";
 export { default as BentoBlock } from "./BentoBlock";
+export { default as PricingBlock } from "./PricingBlock";
+export { default as GalleryBlock } from "./GalleryBlock";
+export { default as CtaBlock } from "./CtaBlock";
 export { default as PortfolioNav } from "./PortfolioNav";
 export { default as FooterBlock } from "./FooterBlock";

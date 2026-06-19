@@ -71,6 +71,28 @@ export default function PagesClient({
     }
   };
 
+  const quickCreate = async (presetTitle: string) => {
+    setIsSaving(true);
+    try {
+      const result = await createPage(siteId, { title: presetTitle });
+      if (result.success) {
+        showToast("Sivu luotu!", "success");
+        router.push(editHref(result.slug));
+      } else {
+        showToast(result.error, "error");
+      }
+    } catch {
+      showToast("Odottamaton virhe. Yritä uudelleen.", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const existingTitles = new Set(pages.map((p) => p.title.toLowerCase()));
+  const quickPages = ["Palvelut", "Tietoa", "Yhteystiedot"].filter(
+    (title) => !existingTitles.has(title.toLowerCase()),
+  );
+
   const handleDelete = async (pageSlug: string) => {
     setDeletingSlug(pageSlug);
     try {
@@ -179,6 +201,22 @@ export default function PagesClient({
                 </Button>
               </div>
             </div>
+          </div>
+        )}
+
+        {!creating && quickPages.length > 0 && (
+          <div className="mb-6 flex flex-wrap items-center gap-2">
+            <span className="text-sm text-brand-dark/60">Pikaluonti:</span>
+            {quickPages.map((title) => (
+              <button
+                key={title}
+                onClick={() => quickCreate(title)}
+                disabled={isSaving}
+                className="rounded-full border border-brand-dark/20 bg-card px-3 py-1 text-sm font-medium text-brand-dark hover:bg-brand-light disabled:opacity-50"
+              >
+                + {title}
+              </button>
+            ))}
           </div>
         )}
 

@@ -52,6 +52,7 @@ import SectionPicker from "./SectionPicker";
 import SettingsModal from "./SettingsModal";
 import SaveStatusIndicator from "./SaveStatusIndicator";
 import { EditorSiteProvider } from "./EditorSiteContext";
+import { SitePagesProvider } from "./SitePagesContext";
 import { useHistoryState } from "./hooks/useHistoryState";
 import { useAutosave } from "./hooks/useAutosave";
 
@@ -247,6 +248,7 @@ export default function Editor({
 
   return (
     <EditorSiteProvider siteId={siteId}>
+      <SitePagesProvider siteId={siteId}>
       <div className="flex h-screen bg-background">
         {/* Sidebar */}
         {!isFullPreview && isSidebarOpen && (
@@ -575,6 +577,7 @@ export default function Editor({
           onPick={handleInsertSection}
         />
       </div>
+      </SitePagesProvider>
     </EditorSiteProvider>
   );
 }
