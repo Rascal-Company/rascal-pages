@@ -1,6 +1,7 @@
 "use client";
 
 import type { CtaContent } from "@/src/lib/templates";
+import LinkField from "../fields/LinkField";
 
 type CtaBlockEditorProps = {
   content: CtaContent;
@@ -50,44 +51,34 @@ export default function CtaBlockEditor({
         <label className="mb-1 block text-sm font-medium text-foreground">
           Ensisijainen nappi
         </label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={content.primaryCtaText || ""}
-            onChange={(e) => updateField("primaryCtaText", e.target.value)}
-            placeholder="Napin teksti"
-            className={`${inputClass} w-1/3`}
-          />
-          <input
-            type="text"
-            value={content.primaryCtaLink || ""}
-            onChange={(e) => updateField("primaryCtaLink", e.target.value)}
-            placeholder="#tai https://..."
-            className={inputClass}
-          />
-        </div>
+        <input
+          type="text"
+          value={content.primaryCtaText || ""}
+          onChange={(e) => updateField("primaryCtaText", e.target.value)}
+          placeholder="Napin teksti"
+          className={`${inputClass} mb-2`}
+        />
+        <LinkField
+          value={content.primaryCtaLink || ""}
+          onChange={(value) => updateField("primaryCtaLink", value)}
+        />
       </div>
 
       <div>
         <label className="mb-1 block text-sm font-medium text-foreground">
           Toissijainen nappi (valinnainen)
         </label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={content.secondaryCtaText || ""}
-            onChange={(e) => updateField("secondaryCtaText", e.target.value)}
-            placeholder="Napin teksti"
-            className={`${inputClass} w-1/3`}
-          />
-          <input
-            type="text"
-            value={content.secondaryCtaLink || ""}
-            onChange={(e) => updateField("secondaryCtaLink", e.target.value)}
-            placeholder="#tai https://..."
-            className={inputClass}
-          />
-        </div>
+        <input
+          type="text"
+          value={content.secondaryCtaText || ""}
+          onChange={(e) => updateField("secondaryCtaText", e.target.value)}
+          placeholder="Napin teksti"
+          className={`${inputClass} mb-2`}
+        />
+        <LinkField
+          value={content.secondaryCtaLink || ""}
+          onChange={(value) => updateField("secondaryCtaLink", value)}
+        />
       </div>
 
       <label className="flex items-center gap-2 text-sm text-foreground">

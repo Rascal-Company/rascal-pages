@@ -2,6 +2,7 @@
 
 import type { PricingContent, PricingTier } from "@/src/lib/templates";
 import { parseTagList, formatTagList } from "@/src/lib/templates";
+import LinkField from "../fields/LinkField";
 
 type PricingBlockEditorProps = {
   content: PricingContent;
@@ -169,22 +170,17 @@ export default function PricingBlockEditor({
               />
             </div>
 
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={tier.ctaText || ""}
-                onChange={(e) => updateTier(index, { ctaText: e.target.value })}
-                placeholder="Napin teksti"
-                className={`${inputClass} w-1/3`}
-              />
-              <input
-                type="text"
-                value={tier.ctaLink || ""}
-                onChange={(e) => updateTier(index, { ctaLink: e.target.value })}
-                placeholder="#tai https://..."
-                className={inputClass}
-              />
-            </div>
+            <input
+              type="text"
+              value={tier.ctaText || ""}
+              onChange={(e) => updateTier(index, { ctaText: e.target.value })}
+              placeholder="Napin teksti"
+              className={inputClass}
+            />
+            <LinkField
+              value={tier.ctaLink || ""}
+              onChange={(value) => updateTier(index, { ctaLink: value })}
+            />
 
             <label className="flex items-center gap-2 text-sm text-foreground">
               <input

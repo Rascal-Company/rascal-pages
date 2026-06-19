@@ -10,6 +10,7 @@ import type {
 import SortableFieldList from "../fields/SortableFieldList";
 import ImageUploadField from "../fields/ImageUploadField";
 import ImageDisplayControls from "../fields/ImageDisplayControls";
+import LinkField from "../fields/LinkField";
 
 type HeroBlockEditorProps = {
   content: HeroContent;
@@ -578,16 +579,12 @@ export default function HeroBlockEditor({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground">
+                  <label className="mb-1 block text-sm font-medium text-foreground">
                     CTA-linkki
                   </label>
-                  <input
-                    type="text"
+                  <LinkField
                     value={content?.ctaLink || ""}
-                    onChange={(e) =>
-                      handleFieldUpdate("ctaLink", e.target.value)
-                    }
-                    className="block w-full rounded-md border border-input px-3 py-2 text-foreground focus:border-ring focus:outline-none focus:ring-ring sm:text-sm"
+                    onChange={(value) => handleFieldUpdate("ctaLink", value)}
                   />
                 </div>
               </div>

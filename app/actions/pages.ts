@@ -143,3 +143,26 @@ export async function deletePage(
   revalidatePath(`/app/dashboard/${siteId}/pages`);
   return { success: true };
 }
+
+export type SitePageRef = { slug: string; title: string };
+
+/**
+ * List a site's pages (slug + title) for the editor's link picker. Ownership
+ * checked; returns an empty list on any failure so the picker degrades to a
+ * plain URL input.
+ */
+export async function listSitePages(siteId: string): Promise<SitePageRef[]> {
+  const supabase = await createClient();
+  const org = await resolveOrgId(supabase);
+  if ("error" in org) return [];
+
+  if (!(await assertSiteOwnership(supabase, siteId, org.orgId))) return [];
+
+  const { data } = await supabase
+    .from("pages")
+    .select("slug, title")
+    .eq("site_id", siteId)
+    .order("created_at", { ascending: true });
+
+  return (data as SitePageRef[] | null) ?? [];
+}
