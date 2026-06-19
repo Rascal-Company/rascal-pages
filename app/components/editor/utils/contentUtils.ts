@@ -333,6 +333,25 @@ export function getDefaultSectionContent<T extends SectionType>(
         },
       ],
     },
+    gallery: {
+      heading: "Galleria",
+      subheading: "Kuvia töistä ja hetkistä.",
+      columns: 3,
+      images: [
+        { url: "", caption: "" },
+        { url: "", caption: "" },
+        { url: "", caption: "" },
+      ],
+    },
+    cta: {
+      heading: "Valmis aloittamaan?",
+      text: "Ota yhteyttä tai kokeile palvelua jo tänään.",
+      primaryCtaText: "Ota yhteyttä",
+      primaryCtaLink: "#",
+      secondaryCtaText: "",
+      secondaryCtaLink: "",
+      filled: true,
+    },
     bento: {
       items: [
         {

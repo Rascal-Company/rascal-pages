@@ -19,6 +19,8 @@ export type SectionType =
   | "techStack"
   | "bento"
   | "pricing"
+  | "gallery"
+  | "cta"
   | "footer";
 
 /**
@@ -276,6 +278,39 @@ export type PricingContent = {
   columns?: 2 | 3;
 };
 
+/** One image in a `gallery` grid. `url` empty = slot not yet filled (skipped). */
+export type GalleryImage = {
+  url: string;
+  caption?: string;
+  alt?: string;
+};
+
+/**
+ * Image grid section. Profession-agnostic — product shots, portfolio work,
+ * event photos. Optional heading; the grid column count is shared.
+ */
+export type GalleryContent = {
+  heading?: string;
+  subheading?: string;
+  images: GalleryImage[];
+  /** Number of columns on large screens. Defaults to 3. */
+  columns?: 2 | 3 | 4;
+};
+
+/**
+ * Call-to-action banner: heading + optional copy + up to two buttons. `filled`
+ * paints the band with the site primary color for a high-emphasis CTA.
+ */
+export type CtaContent = {
+  heading: string;
+  text?: string;
+  primaryCtaText?: string;
+  primaryCtaLink?: string;
+  secondaryCtaText?: string;
+  secondaryCtaLink?: string;
+  filled?: boolean;
+};
+
 export type SectionContentMap = {
   hero: HeroContent;
   features: FeatureItem[];
@@ -290,6 +325,8 @@ export type SectionContentMap = {
   techStack: TechStackContent;
   bento: BentoContent;
   pricing: PricingContent;
+  gallery: GalleryContent;
+  cta: CtaContent;
   footer: FooterContent;
 };
 
@@ -871,6 +908,8 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   techStack: "Osaaminen",
   bento: "Ruudukko",
   pricing: "Hinnoittelu",
+  gallery: "Galleria",
+  cta: "Toimintakehote",
   footer: "Alapalkki",
 };
 
@@ -891,5 +930,7 @@ export const ADDABLE_SECTION_TYPES: SectionType[] = [
   "techStack",
   "bento",
   "pricing",
+  "gallery",
+  "cta",
   "footer",
 ];

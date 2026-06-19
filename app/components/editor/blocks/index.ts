@@ -11,4 +11,6 @@ export { default as CasesBlockEditor } from "./CasesBlockEditor";
 export { default as TechStackBlockEditor } from "./TechStackBlockEditor";
 export { default as BentoBlockEditor } from "./BentoBlockEditor";
 export { default as PricingBlockEditor } from "./PricingBlockEditor";
+export { default as GalleryBlockEditor } from "./GalleryBlockEditor";
+export { default as CtaBlockEditor } from "./CtaBlockEditor";
 export { default as FooterBlockEditor } from "./FooterBlockEditor";
