@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { startLogin } from "@/src/lib/oidc";
+import { getAppUrl } from "@/app/lib/navigation";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -9,7 +9,9 @@ interface LoginModalProps {
 }
 
 // Kirjautuminen kulkee keskitetysti Rascal ID:n (id.rascalai.fi) kautta.
-// Ei omaa salasana-UI:ta — nappi ohjaa OIDC-flowhun (ks. src/lib/oidc.ts).
+// Ei omaa salasana-UI:ta. Ohjaa app-hostille (/app/login), jossa OIDC-flow
+// käynnistyy — koko flow (PKCE + callback + sessio) tapahtuu samalla originilla
+// kuin dashboard (www ≠ app subdomain, ks. proxy.ts).
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [loading, setLoading] = useState(false);
 
@@ -17,7 +19,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   const handleLogin = () => {
     setLoading(true);
-    void startLogin();
+    window.location.assign(getAppUrl("/login"));
   };
 
   return (
