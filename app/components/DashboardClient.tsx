@@ -12,7 +12,7 @@ import { deleteSite } from "@/app/actions";
 import { useToast } from "@/app/components/ui/ToastContainer";
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { createSiteId } from "@/src/lib/types";
-import { getHomeUrl } from "@/app/lib/navigation";
+import { logout } from "@/src/lib/oidc";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { useMutation } from "@tanstack/react-query";
 
@@ -124,10 +124,9 @@ export default function DashboardClient({
   }, [router, userId]);
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    // Ohjaa etusivulle (root domain, ei app subdomain)
-    window.location.href = getHomeUrl();
+    // Jaettu @rascal/auth-logout: local signOut + ohjaus Rascal ID:n logout-
+    // reittiin (katkaisee master-session) = täysi uloskirjautuminen.
+    await logout();
   };
 
   const handleTogglePublish = (siteId: string, currentPublished: boolean) => {
