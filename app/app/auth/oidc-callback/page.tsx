@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { handleCallback } from "@/src/lib/oidc";
 
-// OIDC-callback (client): vaihtaa Rascal ID:ltä saadun koodin sessioksi
-// (code + PKCE). Full-page-navigointi /app/dashboardiin, jotta server-
-// komponentit näkevät uuden sessio-cookien.
+// OIDC-callback (client). Ajetaan app-hostilla (app.rascalpages.fi → proxy
+// /app/*), jotta PKCE-verifier (sessionStorage) ja sessio-cookie ovat samalla
+// originilla kuin dashboard. Full-page-navigointi /app/dashboardiin, jotta
+// server-komponentti näkee uuden sessio-cookien.
 export default function OidcCallbackPage() {
   const [errored, setErrored] = useState(false);
   const startedRef = useRef(false);
@@ -32,8 +33,8 @@ export default function OidcCallbackPage() {
             <p className="mb-4 text-sm text-red-800">
               Kirjautuminen epäonnistui. Yritä uudelleen.
             </p>
-            <a href="/home" className="text-brand-dark underline">
-              Takaisin etusivulle
+            <a href="/app/login" className="text-brand-dark underline">
+              Yritä uudelleen
             </a>
           </>
         ) : (

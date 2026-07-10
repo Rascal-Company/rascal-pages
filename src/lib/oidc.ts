@@ -16,7 +16,10 @@ function auth() {
       anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       clientId: process.env.NEXT_PUBLIC_OAUTH_CLIENT_ID!,
       supabase: createSupabaseBrowserClient(),
-      redirectUri: () => `${window.location.origin}/auth/oidc-callback`,
+      // /app/-prefix: proxy.ts päästää /app/* läpi kaikilla hosteilla (app-host
+      // rewritettää muut /app/*:ksi, www vain /home/*:ksi). Login ajetaan aina
+      // app-hostilla, joten origin = app.rascalpages.fi (tai localhost:3000).
+      redirectUri: () => `${window.location.origin}/app/auth/oidc-callback`,
     });
   }
   return instance;
