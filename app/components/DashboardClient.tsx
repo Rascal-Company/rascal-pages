@@ -12,7 +12,7 @@ import { deleteSite } from "@/app/actions";
 import { useToast } from "@/app/components/ui/ToastContainer";
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { createSiteId } from "@/src/lib/types";
-import { logout } from "@/src/lib/oidc";
+import { AccountMenu } from "./AccountMenu";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { useMutation } from "@tanstack/react-query";
 
@@ -123,12 +123,6 @@ export default function DashboardClient({
     };
   }, [router, userId]);
 
-  const handleLogout = async () => {
-    // Jaettu @rascal/auth-logout: local signOut + ohjaus Rascal ID:n logout-
-    // reittiin (katkaisee master-session) = täysi uloskirjautuminen.
-    await logout();
-  };
-
   const handleTogglePublish = (siteId: string, currentPublished: boolean) => {
     togglePublishMutation.mutate({
       siteId,
@@ -201,13 +195,7 @@ export default function DashboardClient({
               >
                 + Uusi sivusto
               </Link>
-              <button
-                onClick={handleLogout}
-                type="button"
-                className="rounded-lg border border-foreground/20 bg-card px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-card/80"
-              >
-                Kirjaudu ulos
-              </button>
+              <AccountMenu />
             </div>
           </div>
 
