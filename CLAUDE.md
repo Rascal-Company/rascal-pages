@@ -391,3 +391,70 @@ Kaikki työkalut ovat prefiksillä `mcp__claude_ai_Linear__`.
 - **L-3 (SHOULD)** Päivitä issuen status työn edetessä (In Progress → In Review → Done), älä jätä Todoon.
 - **L-4 (SHOULD)** Liitä työ oikeaan initiativeen (tuote) ja, jos sopii, ShapeUp-projektiin sekä aktiiviseen cycleen.
 - **L-5 (SHOULD NOT)** Älä kovakoodaa assigneeta yhdelle henkilölle — oletus on tekijä itse (`"me"`).
+
+## Testaus — pakollinen framework (`/testing`)
+
+> **Jokaiselle devaustyölle luodaan aina testaussuunnitelma.** Testaus ei ole valinnaista: työ ei ole "Done" ennen kuin sillä on testaussuunnitelma ja vähintään dev-kerros on läpi. Framework asuu Rascal HQ:n **`/testing`**-sivulla (sisäiset roolit: admin/superadmin/moderator) ja tallentaa Supabaseen.
+>
+> **Eri kastia kuin koodin automaattitestit.** Tämä framework koskee **ihmistestausta**: sisäinen testaaja (Julia) ja hänen tiiminsä (myyjät). Sen pohjalta kirjataan työt devaajalle, testaajalle ja tiimille. Koodin unit-/integraatiotestit ovat oma asiansa — tämän frameworkin säännöt ovat **`TP-1…TP-5`**.
+
+### Miksi
+
+Testaus jää muuten tekemättä: ei omistajuutta, epämääräistä, löydökset katoavat. Framework pakottaa omistajan, tavoitteen, aikaikkunan ja kirjatut palautteet.
+
+### Milloin luodaan (MUST)
+
+- **Aina** kun tehdään uusi feature, migraatio, workflow-muutos tai fiksi joka voi mennä rikki tai asiakkaalle.
+- Suunnitelma luodaan **ennen** kuin työ merkitään valmiiksi. "Done" ≠ done ennen kuin dev-kerros on läpi.
+
+### Miten testaussuunnitelma luodaan
+
+`/testing` → **"Uusi suunnitelma"**. Täytä:
+
+- **Otsikko** (pakollinen) — mitä testataan
+- **Tavoite** — mitä halutaan varmistaa ("valmis kun…")
+- **Scope** — mitä kuuluu / ei kuulu
+- **Alue / moduuli**, **ympäristö** (Tuotanto/Staging)
+- **Vastuuhenkilö**, **aloitus + deadline** (sidottu cycleen kun mahdollista)
+- **Portaisuus (1–3)** — kuinka monta kerrosta:
+  - **1** = pelkkä dev
+  - **2** = dev → testaaja (Julia)
+  - **3** = dev → testaaja → ryhmätestit (myyjät). Valitse 3 kun muutos näkyy asiakkaalle / myyjille.
+
+Suunnitelman avaa oma sivu (`/testing/:id`), jossa kaikki on muokattavissa.
+
+### Kolme kerrosta
+
+1. **Dev** (kehittäjä) — **checklist-tyyppinen** (checkbox) gate: e2e-testit, build/lint, n8n-workflow validoitu, migraatiot & RLS testattu, manuaalinen läpiklikkaus. Käytä **"+ oletustarkistukset"** -nappia dev-kerroksessa saadaksesi vakiokohdat, ja lisää työkohtaiset. Kaikki ruksit vihreänä ennen kuin viet eteenpäin.
+2. **Testaaja (Julia)** — käy caset läpi. Kun valmis, painaa **"Pyydä hyväksyntää"** → kerros menee tilaan *Odottaa hyväksyntää*.
+3. **Ryhmätestit (myyjät)** — jaettava dokkari (ks. julkinen jako).
+
+### Testicaset
+
+Suunnitelman alle luodaan **testicaset** (mitä konkreettisesti testataan). Jokaiselle:
+
+- **Testiaskeleet** (toistettavuus), **odotettu tulos**, **toteutunut tulos**
+- **Status**: Testaamatta / Toimii / Ei toimi / Estynyt
+- **Palaute**: kirjaa **"mikä ei toimi JA miten se ei toimi"** — ei nappien nimiä, vaan logiikka. Fail-caseen **vakavuus** + **Linear-issue-linkki** (löydös ei saa kadota).
+- **Media**: liitä kuvia/videoita validointievidenssiksi. (Jos `VITE_N8N_IMAGE_VALIDATION_URL` on asetettu, "Validoi (AI)" vertaa kuvaa scopeen GPT-4o visionilla.)
+
+### Hyväksyntä (MUST)
+
+- **Vain superadmin** voi kuitata **tason 2 (testaaja-kerros)** hyväksytyksi. Pakotettu DB-triggerillä (`enforce_stage_approval`), ei pelkkä UI-esto.
+- Virta: Julia → *Pyydä hyväksyntää* → superadmin **Hyväksy / Hylkää** + perustelu Kommentit-kenttään.
+
+### Julkinen jako (ryhmätestit)
+
+Detail-sivun **"Julkaise linkki"** → syntyy kirjautumaton read-only-URL `…/jaettu/testi/:token`, jaettavaksi myyjille. "Sulje jako" peruuttaa heti. Turvallinen: `SECURITY DEFINER` -RPC palauttaa vain julkaistun suunnitelman, ei avaa tauluja anon-roolille.
+
+### Tietokantataulut
+
+`test_plans`, `test_cases`, `test_stages` (sis. `checklist` jsonb), `test_attachments` (+ `ai_validation`). RLS: `is_internal_staff()`. Migraatiot `supabase/migrations/`. Kaikki additiivista.
+
+### Säännöt
+
+- **TP-1 (MUST)** Jokaisella devaustyöllä on testaussuunnitelma ennen "Done".
+- **TP-2 (MUST)** Dev-kerroksen checklist täydellä ruksilla ennen kuin työ viedään testaaja-kerrokselle.
+- **TP-3 (MUST)** Tason 2 hyväksyy vain superadmin.
+- **TP-4 (SHOULD)** Asiakkaalle/myyjille näkyvä muutos → 3-portainen + julkaistu jako.
+- **TP-5 (SHOULD)** Fail-löydös → Linear-issue linkitettynä caseen, älä jätä pelkkään palautekenttään.
