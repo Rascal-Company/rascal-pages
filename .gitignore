@@ -41,5 +41,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Claude Code local state (agent worktrees, settings)
-.claude/
+# Claude Code: local state ignored, but skills/commands are versioned team workflows
+.claude/*
+!.claude/skills/
+!.claude/commands/
