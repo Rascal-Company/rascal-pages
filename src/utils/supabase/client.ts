@@ -1,5 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 
+import { createAuthFetch } from "@/src/lib/supabase/auth-fetch";
+
 let clientInstance: ReturnType<typeof createBrowserClient> | null = null;
 
 export function createClient() {
@@ -18,6 +20,8 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // OAuth-sessio ei uusiudu legacy-endpointissa — ks. lib/supabase/auth-fetch.ts.
+      global: { fetch: createAuthFetch() },
       auth: {
         // Estä automaattinen token refresh -silmukka
         autoRefreshToken: true,

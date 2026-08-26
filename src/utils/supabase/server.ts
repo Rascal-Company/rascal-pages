@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+import { createAuthFetch } from "@/src/lib/supabase/auth-fetch";
+
 export async function createClient() {
   const cookieStore = await cookies();
 
@@ -8,6 +10,8 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // OAuth-sessio ei uusiudu legacy-endpointissa — ks. lib/supabase/auth-fetch.ts.
+      global: { fetch: createAuthFetch() },
       cookies: {
         getAll() {
           return cookieStore.getAll();
