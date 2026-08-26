@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { createAuthFetch } from "@/src/lib/supabase/auth-fetch";
+
 export const config = {
   matcher: [
     /*
@@ -157,6 +159,8 @@ async function updateSupabaseSession(req: NextRequest, rewriteUrl?: URL) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // OAuth-sessio ei uusiudu legacy-endpointissa — ks. src/lib/supabase/auth-fetch.ts.
+      global: { fetch: createAuthFetch() },
       cookies: {
         getAll() {
           return req.cookies.getAll();
