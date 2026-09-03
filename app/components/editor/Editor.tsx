@@ -1,28 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { updatePageContent } from "@/app/actions/save-page";
 import type { TemplateConfig, SectionType, Section } from "@/src/lib/templates";
+import { SECTION_TYPE_LABELS } from "@/src/lib/templates";
 import { normalizeContent, mergeTemplateContent } from "./utils/contentUtils";
 import {
   reorderSections,
   updateSectionContent,
   toggleSectionVisibility,
   addSection,
+  insertSectionAt,
   removeSection,
   duplicateSection,
   moveSection,
@@ -34,23 +22,21 @@ import {
   applyThemePreset,
   updateThemeRadius,
 } from "./utils/sectionUpdaters";
+import { isTypingTarget, resolveShortcut } from "./utils/shortcuts";
 import type { SiteId, SectionId } from "@/src/lib/types";
 import { useToast } from "@/app/components/ui/ToastContainer";
-import EditorHeader from "./EditorHeader";
-import StatusMessages from "./StatusMessages";
+import { Button } from "@/app/components/ui/button";
+import EditorTopBar, { type PreviewMode } from "./EditorTopBar";
 import TemplateSelector from "./TemplateSelector";
 import ThemeFields from "./fields/ThemeFields";
 import StyleFields from "./fields/StyleFields";
 import SeoFields from "./fields/SeoFields";
-import { Button } from "@/app/components/ui/button";
 import EditorPreview from "./EditorPreview";
-import PublishedToggle from "./PublishedToggle";
-import SortableSectionItem from "./SortableSectionItem";
 import FloatingSectionEditor from "./FloatingSectionEditor";
-import AddSectionButton from "./AddSectionButton";
 import SectionPicker from "./SectionPicker";
+import SectionsPanel from "./SectionsPanel";
 import SettingsModal from "./SettingsModal";
-import SaveStatusIndicator from "./SaveStatusIndicator";
+import ShortcutHelpDialog from "./ShortcutHelpDialog";
 import { EditorSiteProvider } from "./EditorSiteContext";
 import { SitePagesProvider } from "./SitePagesContext";
 import { useHistoryState } from "./hooks/useHistoryState";
@@ -72,6 +58,19 @@ type EditorProps = {
   };
   crmEnabled: boolean;
 };
+
+type SidebarTab = "sections" | "design" | "seo";
+
+const SIDEBAR_TABS: { id: SidebarTab; label: string }[] = [
+  { id: "sections", label: "Osiot" },
+  { id: "design", label: "Ulkoasu" },
+  { id: "seo", label: "SEO" },
+];
+
+/** Where a picked section goes: after a given section, or at the page end. */
+type InsertTarget = { afterId: SectionId | null };
+
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "rascalpages.fi";
 
 export default function Editor({
   siteId,
@@ -95,32 +94,18 @@ export default function Editor({
     canRedo,
   } = useHistoryState<TemplateConfig>(normalizeContent(initialContent));
   const [published, setPublished] = useState<boolean>(initialPublished);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [activeSectionId, setActiveSectionId] = useState<SectionId | null>(
-    content.sections[0]?.id || null,
+    null,
   );
   const [isFullPreview, setIsFullPreview] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">(
-    "desktop",
-  );
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
+  const [sidebarTab, setSidebarTab] = useState<SidebarTab>("sections");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [insertAfterId, setInsertAfterId] = useState<SectionId | null>(null);
-
-  const selectSection = (id: SectionId | null) => {
-    setActiveSectionId(id);
-  };
-
-  const rootDomain = "rascalpages.fi";
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [insertTarget, setInsertTarget] = useState<InsertTarget | null>(null);
+  const previewScrollRef = useRef<HTMLDivElement>(null);
 
   const pageState = useMemo(
     () => ({ content, published }),
@@ -136,51 +121,150 @@ export default function Editor({
   const {
     status: saveStatus,
     lastSavedAt,
+    isDirty,
+    saveNow,
     markSaved,
   } = useAutosave({ data: pageState, onSave: persist });
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    setError(null);
-    setSuccess(false);
+  useEffect(() => {
+    if (!isDirty && saveStatus !== "saving") return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty, saveStatus]);
 
+  const liveUrl = useMemo(() => {
+    const host = siteCustomDomain || `${siteSubdomain}.${ROOT_DOMAIN}`;
+    return `https://${host}${pageSlug === "home" ? "" : `/${pageSlug}`}`;
+  }, [siteCustomDomain, siteSubdomain, pageSlug]);
+
+  const scrollToSection = useCallback((id: SectionId) => {
+    const container = previewScrollRef.current;
+    if (!container) return;
+    const target = container.querySelector<HTMLElement>(
+      `[data-section-id="${CSS.escape(id)}"]`,
+    );
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
+  const selectFromSidebar = (id: SectionId) => {
+    setActiveSectionId(id);
+    requestAnimationFrame(() => scrollToSection(id));
+  };
+
+  const structural = useCallback(
+    (updater: Parameters<typeof setContent>[0]) =>
+      setContent(updater, { coalesce: false }),
+    [setContent],
+  );
+
+  const handleRemoveSection = useCallback(
+    (sectionId: SectionId) => {
+      const index = content.sections.findIndex((s) => s.id === sectionId);
+      if (index === -1) return;
+      const removed = content.sections[index];
+      structural(removeSection(sectionId));
+      setActiveSectionId((current) => (current === sectionId ? null : current));
+      showToast(`${SECTION_TYPE_LABELS[removed.type]} poistettu`, "info", {
+        action: {
+          label: "Kumoa",
+          onClick: () => {
+            structural(insertSectionAt(removed, index));
+            setActiveSectionId(removed.id);
+          },
+        },
+      });
+    },
+    [content.sections, structural, showToast],
+  );
+
+  const handleTogglePublished = async () => {
+    const next = !published;
+    if (next) {
+      const confirmed = await showConfirm(
+        `Julkaistaanko sivu? Se näkyy heti osoitteessa ${liveUrl}`,
+        () => {},
+      );
+      if (!confirmed) return;
+    }
+    setIsPublishing(true);
     try {
-      const result = await persist(pageState);
+      const result = await persist({ content, published: next });
       if (result?.error) {
-        setError(result.error);
         showToast(result.error, "error");
-      } else {
-        setSuccess(true);
-        markSaved(pageState);
-        showToast("Muutokset tallennettu onnistuneesti!", "success");
-        setTimeout(() => setSuccess(false), 3000);
+        return;
       }
+      setPublished(next);
+      markSaved({ content, published: next });
+      showToast(next ? "Sivu julkaistu" : "Sivu piilotettu", "success");
     } catch {
-      const errorMessage = "Tallennus epäonnistui. Yritä uudelleen.";
-      setError(errorMessage);
-      showToast(errorMessage, "error");
+      showToast("Julkaisu epäonnistui. Yritä uudelleen.", "error");
     } finally {
-      setIsSaving(false);
+      setIsPublishing(false);
     }
   };
 
-  // Undo/redo keyboard shortcuts (Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z, Ctrl+Y)
+  const dialogOpen = isSettingsOpen || isHelpOpen || insertTarget !== null;
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const mod = e.metaKey || e.ctrlKey;
-      if (!mod) return;
-      const key = e.key.toLowerCase();
-      if (key === "z" && !e.shiftKey) {
-        e.preventDefault();
-        undo();
-      } else if ((key === "z" && e.shiftKey) || key === "y") {
-        e.preventDefault();
-        redo();
+      const shortcut = resolveShortcut(e, isTypingTarget(e.target));
+      if (!shortcut) return;
+      if (dialogOpen && shortcut !== "deselect") return;
+
+      switch (shortcut) {
+        case "undo":
+          e.preventDefault();
+          undo();
+          return;
+        case "redo":
+          e.preventDefault();
+          redo();
+          return;
+        case "save":
+          e.preventDefault();
+          void saveNow();
+          return;
+        case "help":
+          e.preventDefault();
+          setIsHelpOpen(true);
+          return;
+        case "deselect":
+          if (dialogOpen) return;
+          setActiveSectionId(null);
+          return;
+      }
+
+      if (!activeSectionId) return;
+      e.preventDefault();
+      switch (shortcut) {
+        case "remove":
+          handleRemoveSection(activeSectionId);
+          return;
+        case "duplicate":
+          structural(duplicateSection(activeSectionId));
+          return;
+        case "moveUp":
+          structural(moveSection(activeSectionId, "up"));
+          return;
+        case "moveDown":
+          structural(moveSection(activeSectionId, "down"));
+          return;
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [undo, redo]);
+  }, [
+    activeSectionId,
+    dialogOpen,
+    undo,
+    redo,
+    saveNow,
+    structural,
+    handleRemoveSection,
+  ]);
 
   const handleTemplateChange = async (newTemplateId: string) => {
     if (newTemplateId === content.templateId) return;
@@ -193,17 +277,10 @@ export default function Editor({
     if (confirmed) {
       const mergedContent = mergeTemplateContent(content, newTemplateId);
       if (mergedContent) {
-        setContent(mergedContent);
-        setActiveSectionId(mergedContent.sections[0]?.id || null);
-        showToast("Template vaihdettu onnistuneesti!", "success");
+        structural(mergedContent);
+        setActiveSectionId(null);
+        showToast("Template vaihdettu", "success");
       }
-    }
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      setContent(reorderSections(active.id as SectionId, over.id as SectionId));
     }
   };
 
@@ -213,14 +290,10 @@ export default function Editor({
     }
   };
 
-  const handleAddSection = (type: SectionType) => {
-    setContent(addSection(type, activeSectionId || undefined));
-  };
-
-  const handleInsertSection = (type: SectionType) => {
-    if (insertAfterId === null) return;
-    setContent(addSection(type, insertAfterId));
-    setInsertAfterId(null);
+  const handlePickSection = (type: SectionType) => {
+    if (!insertTarget) return;
+    structural(addSection(type, insertTarget.afterId ?? undefined));
+    setInsertTarget(null);
   };
 
   const handleInlineFieldUpdate = (
@@ -237,346 +310,221 @@ export default function Editor({
     setContent(updateSectionContent(sectionId, nextContent));
   };
 
-  const handleRemoveSection = (sectionId: SectionId) => {
-    setContent(removeSection(sectionId));
-    if (activeSectionId === sectionId) {
-      setActiveSectionId(content.sections[0]?.id || null);
-    }
-  };
-
   const activeSection = content.sections.find((s) => s.id === activeSectionId);
+  const showSidebar = !isFullPreview && isSidebarOpen;
 
   return (
     <EditorSiteProvider siteId={siteId}>
       <SitePagesProvider siteId={siteId}>
-      <div className="flex h-screen bg-background">
-        {/* Sidebar */}
-        {!isFullPreview && isSidebarOpen && (
-          <aside className="flex w-[360px] min-w-[320px] max-w-[420px] flex-col border-r border-border bg-card">
-            <div className="border-b border-border p-4">
-              <EditorHeader
-                siteSubdomain={siteSubdomain}
-                pageTitle={pageTitle}
-                pageSlug={pageSlug}
-                siteId={siteId}
-                onSettingsClick={() => setIsSettingsOpen(true)}
-                onHideSidebar={() => setIsSidebarOpen(false)}
-              />
-            </div>
+        <div className="flex h-screen flex-col bg-background">
+          <EditorTopBar
+            siteId={siteId}
+            pageSlug={pageSlug}
+            pageTitle={pageTitle}
+            liveUrl={liveUrl}
+            published={published}
+            isPublishing={isPublishing}
+            onTogglePublished={handleTogglePublished}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onUndo={undo}
+            onRedo={redo}
+            saveStatus={saveStatus}
+            lastSavedAt={lastSavedAt}
+            isDirty={isDirty}
+            previewMode={previewMode}
+            onPreviewModeChange={setPreviewMode}
+            isFullPreview={isFullPreview}
+            onToggleFullPreview={() => setIsFullPreview((v) => !v)}
+            isSidebarOpen={isSidebarOpen}
+            onToggleSidebar={() => setIsSidebarOpen((v) => !v)}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenHelp={() => setIsHelpOpen(true)}
+          />
 
-            <div className="flex-1 overflow-y-auto p-4">
-              <StatusMessages error={error} success={success} />
-
-              <div className="space-y-4">
-                <TemplateSelector
-                  currentTemplateId={content.templateId || "saas-modern"}
-                  onTemplateChange={handleTemplateChange}
-                />
-
-                <PublishedToggle
-                  published={published}
-                  onToggle={setPublished}
-                  isSaving={isSaving}
-                />
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-foreground">
-                      Osiot
-                    </h3>
-                    <div className="flex items-center gap-1">
+          <div className="flex min-h-0 flex-1">
+            {showSidebar && (
+              <aside className="flex w-[340px] shrink-0 flex-col border-r border-border bg-card">
+                <div
+                  role="tablist"
+                  aria-label="Sivun asetukset"
+                  className="flex shrink-0 border-b border-border px-2"
+                >
+                  {SIDEBAR_TABS.map((tab) => {
+                    const active = sidebarTab === tab.id;
+                    return (
                       <button
+                        key={tab.id}
                         type="button"
-                        onClick={undo}
-                        disabled={!canUndo}
-                        title="Kumoa (Ctrl/Cmd+Z)"
-                        aria-label="Kumoa"
-                        className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+                        role="tab"
+                        aria-selected={active}
+                        onClick={() => setSidebarTab(tab.id)}
+                        className={`-mb-px border-b-2 px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                          active
+                            ? "border-primary text-foreground"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                        }`}
                       >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 14L4 9l5-5M4 9h11a5 5 0 015 5v0a5 5 0 01-5 5h-1"
-                          />
-                        </svg>
+                        {tab.label}
                       </button>
-                      <button
-                        type="button"
-                        onClick={redo}
-                        disabled={!canRedo}
-                        title="Tee uudelleen (Ctrl/Cmd+Shift+Z)"
-                        aria-label="Tee uudelleen"
-                        className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 14l5-5-5-5m5 5H9a5 5 0 00-5 5v0a5 5 0 005 5h1"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext
-                      items={content.sections.map((s) => s.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      <div className="space-y-2">
-                        {content.sections.map((section) => (
-                          <SortableSectionItem
-                            key={section.id}
-                            section={section}
-                            isActive={section.id === activeSectionId}
-                            onClick={() => selectSection(section.id)}
-                            onToggleVisibility={() =>
-                              setContent(toggleSectionVisibility(section.id))
-                            }
-                            onRemove={() => handleRemoveSection(section.id)}
-                            onDuplicate={() =>
-                              setContent(duplicateSection(section.id))
-                            }
-                          />
-                        ))}
-                      </div>
-                    </SortableContext>
-                  </DndContext>
-                  <AddSectionButton onAdd={handleAddSection} />
+                    );
+                  })}
                 </div>
 
-                <StyleFields
-                  radius={content.theme?.radius}
-                  onPreset={(preset) => setContent(applyThemePreset(preset))}
-                  onRadiusUpdate={(radius) =>
-                    setContent(updateThemeRadius(radius))
-                  }
-                />
-
-                <ThemeFields
-                  primaryColor={content.theme?.primaryColor}
-                  headingFont={content.theme?.headingFont}
-                  bodyFont={content.theme?.bodyFont}
-                  appearance={content.theme?.appearance}
-                  onColorUpdate={(value) => setContent(updateThemeColor(value))}
-                  onFontUpdate={(field, fontName) =>
-                    setContent(updateThemeFont(field, fontName))
-                  }
-                  onAppearanceUpdate={(appearance) =>
-                    setContent(updateThemeAppearance(appearance))
-                  }
-                />
-
-                <SeoFields
-                  metaTitle={content.seo?.metaTitle}
-                  metaDescription={content.seo?.metaDescription}
-                  ogImage={content.seo?.ogImage}
-                  onUpdate={(field, value) =>
-                    setContent(updateSeoField(field, value))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-2 border-t border-border p-3">
-              <SaveStatusIndicator
-                status={saveStatus}
-                lastSavedAt={lastSavedAt}
-              />
-              <Button onClick={handleSave} disabled={isSaving} size="sm">
-                {isSaving ? "Tallennetaan..." : "Tallenna"}
-              </Button>
-            </div>
-          </aside>
-        )}
-
-        {/* Right Side - Preview */}
-        <div className="relative flex-1 overflow-hidden">
-          {/* Preview Controls */}
-          <div
-            className={`absolute top-4 z-10 flex items-center gap-2 ${
-              isFullPreview ? "left-4" : "right-4"
-            }`}
-          >
-            {/* Device Toggle */}
-            <div className="flex rounded-lg border border-border bg-card shadow-sm">
-              <button
-                onClick={() => setPreviewMode("desktop")}
-                className={`flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors ${
-                  previewMode === "desktop"
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                } rounded-l-lg`}
-                title="Desktop"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={() => setPreviewMode("mobile")}
-                className={`flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors ${
-                  previewMode === "mobile"
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                } rounded-r-lg border-l border-border`}
-                title="Mobile"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Full Preview Toggle */}
-            <button
-              onClick={() => setIsFullPreview(!isFullPreview)}
-              className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
-              title={isFullPreview ? "Näytä editori" : "Koko näytön esikatselu"}
-            >
-              {isFullPreview ? (
-                <>
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                <div role="tabpanel" className="flex-1 overflow-y-auto p-4">
+                  {sidebarTab === "sections" && (
+                    <SectionsPanel
+                      sections={content.sections}
+                      activeSectionId={activeSectionId}
+                      onSelect={selectFromSidebar}
+                      onToggleVisibility={(id) =>
+                        structural(toggleSectionVisibility(id))
+                      }
+                      onRemove={handleRemoveSection}
+                      onDuplicate={(id) => structural(duplicateSection(id))}
+                      onReorder={(draggedId, targetId) =>
+                        structural(reorderSections(draggedId, targetId))
+                      }
+                      onAdd={(type) =>
+                        structural(
+                          addSection(type, activeSectionId || undefined),
+                        )
+                      }
                     />
-                  </svg>
-                  Editori
-                </>
-              ) : (
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-                  />
-                </svg>
-              )}
-            </button>
-          </div>
+                  )}
 
-          {/* Reveal sidebar — tab on the left edge it slides out from */}
-          {!isFullPreview && !isSidebarOpen && (
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              title="Näytä sivupalkki"
-              aria-label="Näytä sivupalkki"
-              className="absolute left-0 top-1/2 z-20 flex h-14 w-7 -translate-y-1/2 items-center justify-center rounded-r-xl border border-l-0 border-border bg-card text-muted-foreground shadow-md transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+                  {sidebarTab === "design" && (
+                    <div className="space-y-4">
+                      <StyleFields
+                        radius={content.theme?.radius}
+                        onPreset={(preset) =>
+                          setContent(applyThemePreset(preset))
+                        }
+                        onRadiusUpdate={(radius) =>
+                          setContent(updateThemeRadius(radius))
+                        }
+                      />
+                      <ThemeFields
+                        primaryColor={content.theme?.primaryColor}
+                        headingFont={content.theme?.headingFont}
+                        bodyFont={content.theme?.bodyFont}
+                        appearance={content.theme?.appearance}
+                        onColorUpdate={(value) =>
+                          setContent(updateThemeColor(value))
+                        }
+                        onFontUpdate={(field, fontName) =>
+                          setContent(updateThemeFont(field, fontName))
+                        }
+                        onAppearanceUpdate={(appearance) =>
+                          setContent(updateThemeAppearance(appearance))
+                        }
+                      />
+                      <TemplateSelector
+                        currentTemplateId={content.templateId || "saas-modern"}
+                        onTemplateChange={handleTemplateChange}
+                      />
+                    </div>
+                  )}
+
+                  {sidebarTab === "seo" && (
+                    <SeoFields
+                      metaTitle={content.seo?.metaTitle}
+                      metaDescription={content.seo?.metaDescription}
+                      ogImage={content.seo?.ogImage}
+                      onUpdate={(field, value) =>
+                        setContent(updateSeoField(field, value))
+                      }
+                    />
+                  )}
+                </div>
+              </aside>
+            )}
+
+            <div className="relative min-w-0 flex-1 overflow-hidden">
+              <div
+                ref={previewScrollRef}
+                className="h-full w-full overflow-y-auto"
+                onClick={() => setActiveSectionId(null)}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          )}
+                {content.sections.length === 0 ? (
+                  <div className="flex h-full items-center justify-center bg-muted p-8">
+                    <div className="max-w-sm rounded-xl border border-dashed border-border bg-card p-8 text-center">
+                      <h2 className="text-lg font-semibold text-foreground">
+                        Sivu on tyhjä
+                      </h2>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Lisää ensimmäinen osio, niin näet sen heti tässä.
+                      </p>
+                      <Button
+                        className="mt-4"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInsertTarget({ afterId: null });
+                        }}
+                      >
+                        Lisää osio
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <EditorPreview
+                    content={content}
+                    siteId={siteId}
+                    previewMode={previewMode}
+                    editable={!isFullPreview}
+                    activeSectionId={activeSectionId}
+                    onSelectSection={setActiveSectionId}
+                    onMoveSection={(id, dir) =>
+                      structural(moveSection(id, dir))
+                    }
+                    onDuplicateSection={(id) =>
+                      structural(duplicateSection(id))
+                    }
+                    onRemoveSection={handleRemoveSection}
+                    onRequestInsert={(afterId) => setInsertTarget({ afterId })}
+                    onReorderSections={(draggedId, targetId) =>
+                      structural(reorderSections(draggedId, targetId))
+                    }
+                    onUpdateSectionField={handleInlineFieldUpdate}
+                  />
+                )}
+              </div>
 
-          <div className="h-full w-full overflow-y-auto">
-            <EditorPreview
-              content={content}
-              siteId={siteId}
-              previewMode={previewMode}
-              activeSectionId={activeSectionId}
-              onSelectSection={selectSection}
-              onMoveSection={(id, dir) => setContent(moveSection(id, dir))}
-              onDuplicateSection={(id) => setContent(duplicateSection(id))}
-              onRemoveSection={handleRemoveSection}
-              onRequestInsert={(afterId) => setInsertAfterId(afterId)}
-              onReorderSections={(draggedId, targetId) =>
-                setContent(reorderSections(draggedId, targetId))
-              }
-              onUpdateSectionField={handleInlineFieldUpdate}
-            />
+              {!isFullPreview && activeSection && (
+                <FloatingSectionEditor
+                  section={activeSection}
+                  onUpdateContent={handleSectionUpdate}
+                  onUpdateStyle={(patch) =>
+                    setContent(updateSectionStyle(activeSection.id, patch))
+                  }
+                  onClose={() => setActiveSectionId(null)}
+                  crmEnabled={crmEnabled}
+                />
+              )}
+            </div>
           </div>
 
-          {!isFullPreview && activeSection && (
-            <FloatingSectionEditor
-              section={activeSection}
-              onUpdateContent={handleSectionUpdate}
-              onUpdateStyle={(patch) =>
-                setContent(updateSectionStyle(activeSection.id, patch))
-              }
-              onClose={() => setActiveSectionId(null)}
-              crmEnabled={crmEnabled}
-            />
-          )}
+          <SettingsModal
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            siteId={siteId}
+            subdomain={siteSubdomain}
+            rootDomain={ROOT_DOMAIN}
+            customDomain={siteCustomDomain}
+            initialSettings={initialSettings}
+          />
+
+          <SectionPicker
+            open={insertTarget !== null}
+            onClose={() => setInsertTarget(null)}
+            onPick={handlePickSection}
+          />
+
+          <ShortcutHelpDialog
+            open={isHelpOpen}
+            onClose={() => setIsHelpOpen(false)}
+          />
         </div>
-
-        <SettingsModal
-          isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
-          siteId={siteId}
-          subdomain={siteSubdomain}
-          rootDomain={rootDomain}
-          customDomain={siteCustomDomain}
-          initialSettings={initialSettings}
-        />
-
-        <SectionPicker
-          open={insertAfterId !== null}
-          onClose={() => setInsertAfterId(null)}
-          onPick={handleInsertSection}
-        />
-      </div>
       </SitePagesProvider>
     </EditorSiteProvider>
   );

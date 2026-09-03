@@ -8,6 +8,8 @@ interface EditorPreviewProps {
   content: TemplateConfig;
   siteId: SiteId;
   previewMode?: "desktop" | "mobile";
+  /** False renders the page exactly as published, without editing affordances. */
+  editable?: boolean;
   activeSectionId?: SectionId | null;
   onSelectSection?: (sectionId: SectionId) => void;
   onMoveSection?: (sectionId: SectionId, direction: "up" | "down") => void;
@@ -26,6 +28,7 @@ export default function EditorPreview({
   content,
   siteId,
   previewMode = "desktop",
+  editable = true,
   activeSectionId = null,
   onSelectSection,
   onMoveSection,
@@ -38,28 +41,28 @@ export default function EditorPreview({
   const isMobile = previewMode === "mobile";
 
   return (
-    <div className="h-full w-full bg-muted p-8 pt-16">
+    <div className="min-h-full w-full bg-muted p-6 lg:p-8">
       <div
         className={`mx-auto transition-all duration-300 ${
           isMobile ? "max-w-[375px]" : "max-w-full"
         }`}
       >
         <div
-          className={`rounded-lg border bg-card shadow-lg overflow-hidden ${
-            isMobile ? "border-gray-400 border-4" : "border-input"
+          className={`overflow-hidden rounded-lg border bg-card shadow-lg ${
+            isMobile ? "border-4 border-foreground/70" : "border-input"
           }`}
         >
           {isMobile && (
-            <div className="bg-gray-800 px-4 py-2 flex items-center justify-center">
-              <div className="w-16 h-1 bg-gray-600 rounded-full" />
+            <div className="flex items-center justify-center bg-foreground/80 px-4 py-2">
+              <div className="h-1 w-16 rounded-full bg-background/40" />
             </div>
           )}
           <SiteRenderer
             content={content}
             siteId={siteId}
             isPreview={true}
-            editable={true}
-            activeSectionId={activeSectionId}
+            editable={editable}
+            activeSectionId={editable ? activeSectionId : null}
             onSelectSection={onSelectSection}
             onMoveSection={onMoveSection}
             onDuplicateSection={onDuplicateSection}
@@ -69,8 +72,8 @@ export default function EditorPreview({
             onUpdateSectionField={onUpdateSectionField}
           />
           {isMobile && (
-            <div className="bg-gray-800 px-4 py-3 flex items-center justify-center">
-              <div className="w-10 h-10 border-2 border-gray-600 rounded-full" />
+            <div className="flex items-center justify-center bg-foreground/80 px-4 py-3">
+              <div className="h-10 w-10 rounded-full border-2 border-background/40" />
             </div>
           )}
         </div>

@@ -1,5 +1,6 @@
 import type {
   TemplateConfig,
+  Section,
   SectionType,
   SectionContentMap,
   SeoConfig,
@@ -133,6 +134,24 @@ export function removeSection(sectionId: SectionId): ContentUpdater {
     ...prev,
     sections: prev.sections.filter((s) => s.id !== sectionId),
   });
+}
+
+/**
+ * Put a previously removed section back at its old index. Later structural
+ * edits are preserved: the index is clamped to the current list, and an
+ * identical id already present is left alone.
+ */
+export function insertSectionAt(
+  section: Section,
+  index: number,
+): ContentUpdater {
+  return (prev) => {
+    if (prev.sections.some((s) => s.id === section.id)) return prev;
+    const sections = [...prev.sections];
+    const at = Math.min(Math.max(0, index), sections.length);
+    sections.splice(at, 0, section);
+    return { ...prev, sections };
+  };
 }
 
 /**

@@ -1034,6 +1034,29 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
 };
 
 /**
+ * One-line purpose of each section type, shown in the section picker so
+ * authors choose by what a block does rather than by its name.
+ */
+export const SECTION_TYPE_DESCRIPTIONS: Record<SectionType, string> = {
+  hero: "Iso otsikko, lupaus ja toimintakehote heti sivun alussa.",
+  features: "Palvelut tai hyödyt korttiruudukkona.",
+  faq: "Usein kysytyt kysymykset avattavina riveinä.",
+  testimonials: "Asiakkaiden lainaukset ja nimet.",
+  about: "Esittely, kuva ja tarina.",
+  video: "Upotettu video YouTubesta tai Vimeosta.",
+  form: "Yhteydenotto- tai liidilomake.",
+  logos: "Asiakkaiden tai kumppanien logot rivissä.",
+  blog: "Uusimmat blogikirjoitukset automaattisesti.",
+  cases: "Projektit tai referenssit kortteina.",
+  techStack: "Osaamisalueet tai työkalut listana.",
+  bento: "Vapaasti aseteltava ruudukko tekstille ja kuville.",
+  pricing: "Hinnat ja paketit vertailtavina.",
+  gallery: "Kuvagalleria.",
+  cta: "Erillinen toimintakehote napilla.",
+  footer: "Alapalkki yhteystiedoille ja linkeille.",
+};
+
+/**
  * Section types that can be added by users
  */
 export const ADDABLE_SECTION_TYPES: SectionType[] = [

@@ -2,8 +2,10 @@ import { describe, expect, test } from "vitest";
 import type { TemplateConfig } from "@/src/lib/templates";
 import type { SectionId } from "@/src/lib/types";
 import type { ThemePreset } from "@/src/lib/site-theme";
+import { createSection, getDefaultSectionContent } from "./contentUtils";
 import {
   applyThemePreset,
+  insertSectionAt,
   moveSection,
   updateSectionStyle,
   updateSeoField,
@@ -88,28 +90,47 @@ describe(moveSection, () => {
     templateId: "saas-modern",
     theme: { primaryColor: "#3B82F6" },
     sections: [
-      { id: "a" as SectionId, type: "hero", content: {} as never, isVisible: true },
-      { id: "b" as SectionId, type: "features", content: {} as never, isVisible: true },
-      { id: "c" as SectionId, type: "footer", content: {} as never, isVisible: true },
+      {
+        id: "a" as SectionId,
+        type: "hero",
+        content: {} as never,
+        isVisible: true,
+      },
+      {
+        id: "b" as SectionId,
+        type: "features",
+        content: {} as never,
+        isVisible: true,
+      },
+      {
+        id: "c" as SectionId,
+        type: "footer",
+        content: {} as never,
+        isVisible: true,
+      },
     ],
   };
 
   test("moves a section down by one position", () => {
-    const order = moveSection("a" as SectionId, "down")(threeSections).sections.map(
-      (s) => s.id,
-    );
+    const order = moveSection(
+      "a" as SectionId,
+      "down",
+    )(threeSections).sections.map((s) => s.id);
     expect(order).toEqual(["b", "a", "c"]);
   });
 
   test("moves a section up by one position", () => {
-    const order = moveSection("c" as SectionId, "up")(threeSections).sections.map(
-      (s) => s.id,
-    );
+    const order = moveSection(
+      "c" as SectionId,
+      "up",
+    )(threeSections).sections.map((s) => s.id);
     expect(order).toEqual(["a", "c", "b"]);
   });
 
   test("is a no-op at the boundary", () => {
-    expect(moveSection("a" as SectionId, "up")(threeSections)).toBe(threeSections);
+    expect(moveSection("a" as SectionId, "up")(threeSections)).toBe(
+      threeSections,
+    );
   });
 });
 
@@ -118,7 +139,12 @@ describe(updateSectionStyle, () => {
     templateId: "saas-modern",
     theme: { primaryColor: "#3B82F6" },
     sections: [
-      { id: "a" as SectionId, type: "hero", content: {} as never, isVisible: true },
+      {
+        id: "a" as SectionId,
+        type: "hero",
+        content: {} as never,
+        isVisible: true,
+      },
     ],
   };
 
@@ -148,5 +174,38 @@ describe(updateThemeRadius, () => {
     expect(withRadius.theme.radius).toBe("0.75rem");
 
     expect(updateThemeRadius("")(withRadius).theme.radius).toBeUndefined();
+  });
+});
+
+describe(insertSectionAt, () => {
+  const first = createSection("hero", getDefaultSectionContent("hero"));
+  const second = createSection("faq", getDefaultSectionContent("faq"));
+  const removed = createSection("cta", getDefaultSectionContent("cta"));
+  const content: TemplateConfig = {
+    ...baseContent,
+    sections: [first, second],
+  };
+
+  test("restores the section at its former index", () => {
+    const result = insertSectionAt(removed, 1)(content);
+    expect(result.sections.map((s) => s.id)).toEqual([
+      first.id,
+      removed.id,
+      second.id,
+    ]);
+  });
+
+  test("clamps an index past the end when later sections were removed", () => {
+    const result = insertSectionAt(removed, 10)(content);
+    expect(result.sections.map((s) => s.id)).toEqual([
+      first.id,
+      second.id,
+      removed.id,
+    ]);
+  });
+
+  test("does nothing when the section is already back in the page", () => {
+    const restored = insertSectionAt(removed, 0)(content);
+    expect(insertSectionAt(removed, 2)(restored)).toBe(restored);
   });
 });

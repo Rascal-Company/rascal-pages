@@ -61,6 +61,7 @@ function renderAboutField(
           <EditableText
             as="p"
             field="bio"
+            multiline
             value={content.bio}
             className={`text-lg leading-8 whitespace-pre-line ${
               options.forceLight

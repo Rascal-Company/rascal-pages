@@ -8,10 +8,23 @@ import {
   ReactNode,
   useEffect,
 } from "react";
-import Toast, { ToastType, Toast as ToastTypeDef } from "./Toast";
+import Toast, {
+  ToastType,
+  Toast as ToastTypeDef,
+  type ToastAction,
+} from "./Toast";
+
+export type ShowToastOptions = {
+  action?: ToastAction;
+  duration?: number;
+};
 
 interface ToastContextType {
-  showToast: (message: string, type?: ToastType) => void;
+  showToast: (
+    message: string,
+    type?: ToastType,
+    options?: ShowToastOptions,
+  ) => void;
   showConfirm: (
     message: string,
     onConfirm: () => void,
@@ -57,11 +70,18 @@ export function ToastProvider({ children }: ToastProviderProps) {
     return () => window.removeEventListener("keydown", handleEscape);
   }, [confirmDialog]);
 
-  const showToast = useCallback((message: string, type: ToastType = "info") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    const newToast: ToastTypeDef = { id, message, type };
-    setToasts((prev) => [...prev, newToast]);
-  }, []);
+  const showToast = useCallback(
+    (
+      message: string,
+      type: ToastType = "info",
+      options: ShowToastOptions = {},
+    ) => {
+      const id = Math.random().toString(36).substring(2, 9);
+      const newToast: ToastTypeDef = { id, message, type, ...options };
+      setToasts((prev) => [...prev, newToast]);
+    },
+    [],
+  );
 
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));

@@ -8,7 +8,7 @@ type ContentUpdater = (prev: TemplateConfig) => TemplateConfig;
 export function updateField(
   section: string,
   key: string,
-  value: any
+  value: unknown
 ): ContentUpdater {
   return (prev: TemplateConfig) => {
     if (section === 'root') {

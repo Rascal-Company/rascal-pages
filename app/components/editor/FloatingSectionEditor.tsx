@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronDown, ChevronUp, GripVertical, X } from "lucide-react";
 import type {
   Section,
   SectionContentMap,
@@ -10,6 +11,7 @@ import type {
 import { SECTION_TYPE_LABELS } from "@/src/lib/templates";
 import BlockEditor from "./BlockEditor";
 import SectionStyleInspector from "./SectionStyleInspector";
+import { clampPanelPosition, type Point } from "./utils/panelPosition";
 
 type FloatingSectionEditorProps = {
   section: Section;
@@ -19,14 +21,21 @@ type FloatingSectionEditorProps = {
   crmEnabled: boolean;
 };
 
-const DEFAULT_POSITION = { x: 16, y: 16 };
+type PanelTab = "content" | "style";
+
+const DEFAULT_POSITION: Point = { x: 16, y: 16 };
+
+const TABS: { id: PanelTab; label: string }[] = [
+  { id: "content", label: "Sisältö" },
+  { id: "style", label: "Tyyli" },
+];
 
 /**
- * Squarespace-style floating editor that docks over the canvas. Replaces the
- * sidebar section tab: selecting a section opens this panel with that section's
- * style + content controls. Draggable by its header, collapsible to the title
- * bar, and vertically resizable. Position/size persist while switching sections
- * because the component stays mounted (no remount key).
+ * Floating editor that docks over the canvas for the selected section.
+ * Draggable by its header, collapsible, resizable, and always kept inside the
+ * canvas so it can never be dragged out of reach. Content comes first because
+ * it is edited far more often than style; the chosen tab and position persist
+ * while switching sections because the component stays mounted.
  */
 export default function FloatingSectionEditor({
   section,
@@ -35,8 +44,10 @@ export default function FloatingSectionEditor({
   onClose,
   crmEnabled,
 }: FloatingSectionEditorProps) {
-  const [position, setPosition] = useState(DEFAULT_POSITION);
+  const [position, setPosition] = useState<Point>(DEFAULT_POSITION);
   const [collapsed, setCollapsed] = useState(false);
+  const [tab, setTab] = useState<PanelTab>("content");
+  const panelRef = useRef<HTMLDivElement>(null);
   const dragOrigin = useRef<{
     pointerX: number;
     pointerY: number;
@@ -44,14 +55,30 @@ export default function FloatingSectionEditor({
     y: number;
   } | null>(null);
 
-  const handlePointerMove = useCallback((e: PointerEvent) => {
-    const origin = dragOrigin.current;
-    if (!origin) return;
-    setPosition({
-      x: Math.max(0, origin.x + e.clientX - origin.pointerX),
-      y: Math.max(0, origin.y + e.clientY - origin.pointerY),
-    });
+  const clampToCanvas = useCallback((next: Point): Point => {
+    const panel = panelRef.current;
+    const canvas = panel?.parentElement;
+    if (!panel || !canvas) return next;
+    return clampPanelPosition(
+      next,
+      { width: panel.offsetWidth, height: panel.offsetHeight },
+      { width: canvas.clientWidth, height: canvas.clientHeight },
+    );
   }, []);
+
+  const handlePointerMove = useCallback(
+    (e: PointerEvent) => {
+      const origin = dragOrigin.current;
+      if (!origin) return;
+      setPosition(
+        clampToCanvas({
+          x: origin.x + e.clientX - origin.pointerX,
+          y: origin.y + e.clientY - origin.pointerY,
+        }),
+      );
+    },
+    [clampToCanvas],
+  );
 
   const handlePointerUp = useCallback(() => {
     dragOrigin.current = null;
@@ -66,6 +93,12 @@ export default function FloatingSectionEditor({
     };
   }, [handlePointerMove, handlePointerUp]);
 
+  useEffect(() => {
+    const reclamp = () => setPosition((current) => clampToCanvas(current));
+    window.addEventListener("resize", reclamp);
+    return () => window.removeEventListener("resize", reclamp);
+  }, [clampToCanvas]);
+
   const startDrag = (e: React.PointerEvent) => {
     dragOrigin.current = {
       pointerX: e.clientX,
@@ -76,9 +109,13 @@ export default function FloatingSectionEditor({
   };
 
   const stopDragStart = (e: React.PointerEvent) => e.stopPropagation();
+  const title = SECTION_TYPE_LABELS[section.type];
 
   return (
     <div
+      ref={panelRef}
+      role="dialog"
+      aria-label={`Muokkaa osiota: ${title}`}
       className="absolute z-40 flex w-[360px] max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl ring-1 ring-black/5"
       style={{ left: position.x, top: position.y }}
       onClick={(e) => e.stopPropagation()}
@@ -88,20 +125,11 @@ export default function FloatingSectionEditor({
         className="flex cursor-grab touch-none items-center justify-between gap-2 border-b border-border bg-muted/40 px-3 py-2 active:cursor-grabbing"
       >
         <div className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
-          <svg
+          <GripVertical
             aria-hidden="true"
             className="h-4 w-4 shrink-0 text-muted-foreground"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-          >
-            <circle cx="9" cy="6" r="1.5" />
-            <circle cx="15" cy="6" r="1.5" />
-            <circle cx="9" cy="12" r="1.5" />
-            <circle cx="15" cy="12" r="1.5" />
-            <circle cx="9" cy="18" r="1.5" />
-            <circle cx="15" cy="18" r="1.5" />
-          </svg>
-          <span className="truncate">{SECTION_TYPE_LABELS[section.type]}</span>
+          />
+          <span className="truncate">{title}</span>
         </div>
         <div className="flex shrink-0 items-center gap-0.5">
           <button
@@ -111,65 +139,76 @@ export default function FloatingSectionEditor({
             aria-label={collapsed ? "Laajenna" : "Pienennä"}
             aria-expanded={!collapsed}
             title={collapsed ? "Laajenna" : "Pienennä"}
-            className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d={collapsed ? "M19 9l-7 7-7-7" : "M5 15l7-7 7 7"}
-              />
-            </svg>
+            {collapsed ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronUp className="h-4 w-4" />
+            )}
           </button>
           <button
             type="button"
             onPointerDown={stopDragStart}
             onClick={onClose}
             aria-label="Sulje muokkain"
-            title="Sulje"
-            className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            title="Sulje (Esc)"
+            className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="h-4 w-4" />
           </button>
         </div>
       </div>
       {!collapsed && (
-        <div
-          className="resize-y space-y-4 overflow-y-auto overflow-x-hidden p-4"
-          style={{
-            height: 440,
-            minHeight: 160,
-            maxHeight: "calc(100vh - 7rem)",
-          }}
-        >
-          <SectionStyleInspector
-            style={section.style}
-            onChange={onUpdateStyle}
-          />
-          <BlockEditor
-            section={section}
-            onUpdate={onUpdateContent}
-            crmEnabled={crmEnabled}
-          />
-        </div>
+        <>
+          <div
+            role="tablist"
+            aria-label="Osion asetukset"
+            className="flex border-b border-border px-2"
+          >
+            {TABS.map((item) => {
+              const active = tab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setTab(item.id)}
+                  className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    active
+                      ? "border-primary text-foreground"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+          <div
+            role="tabpanel"
+            className="resize-y overflow-y-auto overflow-x-hidden p-4"
+            style={{
+              height: 440,
+              minHeight: 160,
+              maxHeight: "calc(100vh - 9rem)",
+            }}
+          >
+            {tab === "content" ? (
+              <BlockEditor
+                section={section}
+                onUpdate={onUpdateContent}
+                crmEnabled={crmEnabled}
+              />
+            ) : (
+              <SectionStyleInspector
+                style={section.style}
+                onChange={onUpdateStyle}
+              />
+            )}
+          </div>
+        </>
       )}
     </div>
   );

@@ -20,6 +20,14 @@ const COALESCE_MS = 600;
 
 type Updater<T> = T | ((prev: T) => T);
 
+type SetOptions = {
+  /**
+   * Set to false for structural changes (add, remove, reorder) so they always
+   * get their own undo step instead of merging into a preceding text edit.
+   */
+  coalesce?: boolean;
+};
+
 function applyUpdater<T>(updater: Updater<T>, prev: T): T {
   return typeof updater === "function"
     ? (updater as (prev: T) => T)(prev)
@@ -28,7 +36,7 @@ function applyUpdater<T>(updater: Updater<T>, prev: T): T {
 
 export type HistoryState<T> = {
   state: T;
-  set: (updater: Updater<T>) => void;
+  set: (updater: Updater<T>, options?: SetOptions) => void;
   undo: () => void;
   redo: () => void;
   reset: (value: T) => void;
@@ -46,10 +54,11 @@ export function useHistoryState<T>(initial: T): HistoryState<T> {
   );
   const lastChangeRef = useRef(0);
 
-  const set = useCallback((updater: Updater<T>) => {
+  const set = useCallback((updater: Updater<T>, options?: SetOptions) => {
     const now = Date.now();
-    const coalesce = now - lastChangeRef.current < COALESCE_MS;
-    lastChangeRef.current = now;
+    const coalesce =
+      options?.coalesce !== false && now - lastChangeRef.current < COALESCE_MS;
+    lastChangeRef.current = options?.coalesce === false ? 0 : now;
 
     setHistory((current) => {
       const next = applyUpdater(updater, current.present);

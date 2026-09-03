@@ -4,10 +4,19 @@ import { useEffect } from "react";
 
 export type ToastType = "success" | "error" | "info" | "warning";
 
+export type ToastAction = {
+  label: string;
+  onClick: () => void;
+};
+
 export interface Toast {
   id: string;
   message: string;
   type: ToastType;
+  /** Optional inline action, e.g. "Kumoa" after a destructive change. */
+  action?: ToastAction;
+  /** Auto-dismiss delay in ms. Toasts with an action default to a longer one. */
+  duration?: number;
 }
 
 interface ToastProps {
@@ -15,14 +24,20 @@ interface ToastProps {
   onClose: (id: string) => void;
 }
 
+const DEFAULT_DURATION = 3000;
+const ACTION_DURATION = 6000;
+
 export default function Toast({ toast, onClose }: ToastProps) {
+  const duration =
+    toast.duration ?? (toast.action ? ACTION_DURATION : DEFAULT_DURATION);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose(toast.id);
-    }, 3000);
+    }, duration);
 
     return () => clearTimeout(timer);
-  }, [toast.id, onClose]);
+  }, [toast.id, duration, onClose]);
 
   const bgColors = {
     success: "bg-green-50 border-green-200 text-green-800",
@@ -40,6 +55,7 @@ export default function Toast({ toast, onClose }: ToastProps) {
 
   return (
     <div
+      role="status"
       className={`flex items-center gap-3 rounded-lg border p-4 shadow-lg transition-all ${bgColors[toast.type]}`}
     >
       <div className={`flex-shrink-0 ${iconColors[toast.type]}`}>
@@ -81,8 +97,21 @@ export default function Toast({ toast, onClose }: ToastProps) {
         )}
       </div>
       <p className="flex-1 text-sm font-medium">{toast.message}</p>
+      {toast.action && (
+        <button
+          type="button"
+          onClick={() => {
+            toast.action?.onClick();
+            onClose(toast.id);
+          }}
+          className="flex-shrink-0 rounded-md px-2 py-1 text-sm font-semibold underline underline-offset-2 hover:bg-black/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-current"
+        >
+          {toast.action.label}
+        </button>
+      )}
       <button
         onClick={() => onClose(toast.id)}
+        aria-label="Sulje ilmoitus"
         className="flex-shrink-0 rounded-md p-1 hover:bg-black/10 focus:outline-none"
       >
         <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
