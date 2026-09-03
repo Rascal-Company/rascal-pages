@@ -177,12 +177,12 @@ Ei uusia ominaisuuksia, mutta ilman näitä mitään ei voi myydä firman alusta
 ### Batch 1 — Build 21.9.–18.10.: "Priima-viipale"
 **Ongelma:** Pages tekee landereita promptista, ja lopputulos on samaa tasoa kuin Durablella. Ei kannata generoida viittä sivua, jos yksikään ei ole priimaa.
 **Appetite:** 6 viikkoa (A+B).
-**Scope:** yksi pystysuora viipale koko laatuketjusta: **yksi look** (editorial) tummana ja vaaleana, copy-säännöt promptitiedostoina + eval-setti, editoripassi, kuvatyyli, laatuportti (3 ehdokasta → paras), monisivuinen generaattori perustasta, Organization/Service/FAQ-skeema, OG-kuvat. Dogfood: Rascalin oma sivu ja Samin sivu.
-**Ei scopessa:** muut lookit, WP-import, Search Console, keskustelumuokkaus, Stripe.
+**Scope:** yksi pystysuora viipale koko laatuketjusta: **yksi look** (editorial) tummana ja vaaleana, copy-säännöt promptitiedostoina + eval-setti, editoripassi, kuvatyyli, laatuportti (3 ehdokasta → paras), monisivuinen generaattori perustasta, Organization/Service/FAQ-skeema, OG-kuvat. Firmasivun perusehdot: evästesuostumus ennen GTM/GA4/Pixel-latausta (nyt ladataan ilman), lookin mukainen 404-sivu, globaali header/footer editoitavina. Dogfood: Rascalin oma sivu ja Samin sivu.
+**Ei scopessa:** muut lookit, WP-import, Search Console, keskustelumuokkaus, monikielisyys, Stripe.
 **Valmis kun:** Rascalin oma sivu pyörii Pagesilla ja Sami julkaisisi sen häpeämättä; kolme Rascal AI -asiakasta saa "Luo sivusto" -napista 5-sivuisen firmasivun alle 15 minuutissa, ja ulkopuolinen suunnittelija arvioi sokkona vähintään kaksi kolmesta toimistotasoiseksi; Lighthouse mobile ≥ 95; copy-eval läpi ilman sääntörikkeitä.
 
 ### Batch 1b — seuraava build: "Kolme lookia ja keskustelu"
-**Scope:** kaksi lookia lisää (luotettava, kirkas), 3–4 varianttia per blokki, kompositiosäännöt, keskustelumuokkaus, globaali header/footer-editori, SEO-paneeli avainsanadatalla.
+**Scope:** kaksi lookia lisää (luotettava, kirkas), 3–4 varianttia per blokki, kompositiosäännöt, keskustelumuokkaus, mediakirjasto, monikielisyys fi/en hreflangilla (moni pk-yritys tarvitsee, nykyinen malli ei tue lainkaan), saavutettavuustarkistus laatuporttiin, SEO-paneeli avainsanadatalla.
 **Valmis kun:** priima-testi 3/5 läpi.
 
 ### Batch 2 — seuraava build: "WP-muutto"
