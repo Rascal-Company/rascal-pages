@@ -118,6 +118,41 @@ Asiakasta ei kannata pyytää heti hylkäämään WP-sivuaan. Kiila on:
 
 ---
 
+## 4b. Priima: mikä erottaa killerin Durablesta
+
+Kaikki AI-builderit tuottavat sivun minuutissa, ja kaikki näyttävät samalta ja lukevat kuin AI. Priima ei synny nopeudesta vaan neljästä asiasta, joissa geneeriset epäonnistuvat joka kerta. Rima ei ole "parempi kuin Durable" vaan **sivu, jota suomalainen toimisto laskuttaisi 8–15 tuhatta ja jota suunnittelija ei häpeäisi.**
+
+**Reunaehto: yksi tekijä.** Pages tehdään yhden hengen voimin Claude Coden kanssa. Siksi jokainen laadun osa on koodia, promptitiedosto tai automaattinen tarkistus, ei manuaalinen suunnittelu- tai reviewvaihe. Look-kirjasto rakennetaan koodina ja iteroidaan screenshoteilla referenssisivuja vasten, ei Figmassa.
+
+### Ulkoasu: art direction datana, ei templateina
+- **Look** = yksi TS-tiedosto: kirjasinpari, palettilogiikka, välistysasteikko, kulmat, kuvakäsittely, kompositiosäännöt ja per-blokki varianttivalinnat. Renderöidään nykyisellä tokenimoottorilla (`src/lib/site-theme.ts`). Templatet katoavat; jää look × sivurakenne.
+- AI valitsee lookin toimialasta ja ToV:sta. Käyttäjä ei valitse fonttia pudotusvalikosta.
+- Kompositiosäännöt: kaksi peräkkäistä sektiota ei jaa rytmiä, hero ei ole aina keskitetty, kuva ei ole aina oikealla. Blokkien cva-varianttimalli (RAS-40) on pohja, mutta variantteja pitää olla 3–4 per blokki.
+- Aloitetaan **kolmella lookilla**, ei kymmenellä: yksi luotettava (rakentaminen, teollisuus), yksi editorial (konsultointi, asiantuntija), yksi kirkas (palvelu, kauppa). Jokainen tumma ja vaalea.
+
+### Teksti: tässä 90 % AI-sivuista paljastuu
+- Perusta (ICP, ToV, palvelut, pilarit) syötteenä, mutta lisäksi **sektiokohtaiset suomenkieliset copy-säännöt** versioituina promptitiedostoina `prompts/`-kansiossa: hero-otsikko 5–9 sanaa ja konkreettinen lopputulos, ei "Tervetuloa sivuillemme", ei kolmea adjektiivia peräkkäin, ei käännössuomea. Jokaiselle blokille oma briiffi, ei yhtä isoa promptia.
+- **Ei koskaan keksittyjä asiakastarinoita.** Testimonial-lohko täyttyy vain oikeasta datasta (CRM, Google-arvostelut, haastattelu) tai jää pois.
+- Editoripassi: toinen mallikutsu lukee sivun kokonaisuutena ja korjaa toiston, rytmin ja jargonin.
+- Copy-säännöt testataan eval-setillä (20 perustaa → generoitu copy → sääntötarkistus), jotta promptin muutos ei hiljaa huononna laatua.
+
+### Kuvat: ei stockia, ei geneeristä AI-kuvaa
+- Per-sivusto **kuvatyyli**: yksi tyylikuvaus (valo, väri, rajaus), jolla kaikki sivun kuvat, OG-kuvat ja blogien kannet generoidaan. Rascal AI:n `preferred_image_model` ja ad-assets-putki ovat pohja.
+- Asiakkaan omat kuvat ensisijaisia: upload, automaattinen rajaus ja sävytys lookin mukaan. Kymmenen kännykkäkuvaa työmaalta on parempi kuin täydellinen AI-kuva.
+
+### Laatuportti: älä koskaan näytä huonoa
+- Generoi 3 ehdokasta, pisteytä rubriikilla (Lighthouse, copy-säännöt, kontrasti ja saavutettavuus, kompositio, kuvien johdonmukaisuus), näytä vain paras. Jos yksikään ei ylitä rajaa, generoi uudelleen.
+- Sama portti pyörii jatkuvasti: blogin lisäys tai käyttäjän muokkaus pisteytetään, ja SEO-paneeli kertoo mikä heikkeni.
+- Yhden tekijän mallissa portti korvaa reviewerin: Lighthouse CI:ssä, copy-lint, kontrastitarkistus ja visuaalinen regressio (screenshot per look × blokki) jokaisessa PR:ssä.
+
+### Muokkaus keskustelemalla
+- "Tee herosta rohkeampi", "vaihda palvelut kolmeen sarakkeeseen", "kirjoita tämä rennommin". Muutos noudattaa lookia ja copy-sääntöjä. Kanvas jää hienosäätöön. Rakennetaan viimeisenä, koska se on hyödytön ennen kuin kolme ensimmäistä pitävät laadun.
+
+### Priima-testi
+Viisi olemassa olevaa asiakasta, generoidut sivut, ulkopuolinen suunnittelija ja kolme asiakasta arvioivat sokkona toimiston sivua vastaan. Jos Pages ei voita vähintään kolmea viidestä, ei olla killeri vielä. Dogfood ensin: Rascalin oma sivu ja Samin sivu Pagesille ennen yhtään asiakasta.
+
+---
+
 ## 5. Arkkitehtuuripäätös: DB-runtime, git = ulosvientinappi
 
 Repo-per-site (ADR-0001) ja "sivu päivittyy Rascalin putkista automaattisesti" ovat ristiriidassa: jokainen blogijulkaisu, linkkibackfill ja refresh olisi git-commit + Vercel-build per asiakas, N projektia, build-viiveet ja kustannus. Sisältökone tuottaa muutoksia päivittäin, ei kuukausittain.
@@ -139,12 +174,16 @@ Ei uusia ominaisuuksia, mutta ilman näitä mitään ei voi myydä firman alusta
 - **Pages julkaisukohteeksi Rascal AI:hin** (`pages-publish`-edge-funktio + asetuskortti). Pieni, mutta täyttää *Blogi-moduuli*-projektin "Valmis kun" -ehdon yhdellä iskulla ja avaa kiilan.
 - ISR + `next/image` + täysi sitemap. Lighthouse-mittaus kaikilla templateilla lähtötasoksi.
 
-### Batch 1 — Build 21.9.–18.10.: "Firmasivu perustasta"
-**Ongelma:** Pages tekee nyt landereita promptista; firmasivu vaatii käsityötä eikä käytä sitä dataa, joka Rascalissa jo on.
+### Batch 1 — Build 21.9.–18.10.: "Priima-viipale"
+**Ongelma:** Pages tekee landereita promptista, ja lopputulos on samaa tasoa kuin Durablella. Ei kannata generoida viittä sivua, jos yksikään ei ole priimaa.
 **Appetite:** 6 viikkoa (A+B).
-**Scope:** monisivuinen generaattori perustasta (4.1), globaali header/footer/navigaatio-editori, Organization/LocalBusiness/Service/FAQ-skeema, OG-kuvat, SEO-paneeli editorissa avainsanadatalla.
-**Ei scopessa:** WP-import, Search Console, Stripe.
-**Valmis kun:** Rascal AI -asiakas, jolla perusta on pisteytetty, painaa "Luo sivusto" ja saa julkaistun 5-sivuisen firmasivun omalla alidomainilla alle 15 minuutissa ilman tyhjää kanvasta; Lighthouse mobile ≥ 95.
+**Scope:** yksi pystysuora viipale koko laatuketjusta: **yksi look** (editorial) tummana ja vaaleana, copy-säännöt promptitiedostoina + eval-setti, editoripassi, kuvatyyli, laatuportti (3 ehdokasta → paras), monisivuinen generaattori perustasta, Organization/Service/FAQ-skeema, OG-kuvat. Dogfood: Rascalin oma sivu ja Samin sivu.
+**Ei scopessa:** muut lookit, WP-import, Search Console, keskustelumuokkaus, Stripe.
+**Valmis kun:** Rascalin oma sivu pyörii Pagesilla ja Sami julkaisisi sen häpeämättä; kolme Rascal AI -asiakasta saa "Luo sivusto" -napista 5-sivuisen firmasivun alle 15 minuutissa, ja ulkopuolinen suunnittelija arvioi sokkona vähintään kaksi kolmesta toimistotasoiseksi; Lighthouse mobile ≥ 95; copy-eval läpi ilman sääntörikkeitä.
+
+### Batch 1b — seuraava build: "Kolme lookia ja keskustelu"
+**Scope:** kaksi lookia lisää (luotettava, kirkas), 3–4 varianttia per blokki, kompositiosäännöt, keskustelumuokkaus, globaali header/footer-editori, SEO-paneeli avainsanadatalla.
+**Valmis kun:** priima-testi 3/5 läpi.
 
 ### Batch 2 — seuraava build: "WP-muutto"
 **Ongelma:** 12 WP-asiakasta eivät voi siirtyä, koska vanhat sivut ja URL:t katoaisivat.
@@ -162,8 +201,9 @@ Ei uusia ominaisuuksia, mutta ilman näitä mitään ei voi myydä firman alusta
 1. **Runtime:** DB multi-tenant + git-ulosvienti (suositus) vai repo-per-site kaikille?
 2. **Kiila:** blogi ensin, pääsivu myöhemmin (suositus) vai koko sivu heti?
 3. **Kohderyhmä:** vain Rascal AI -asiakkaat (perusta olemassa; suositus) vai myös standalone-Pages ilman Rascal AI:ta? Standalone tarkoittaa, että perusta pitää kerätä Pagesissa erikseen — tuplatyö.
-4. **Appetite Batch 1:lle:** 6 viikkoa vs 2 viikkoa pelkälle generaattorille.
+4. **Appetite Batch 1:lle:** 6 viikkoa priima-viipaleelle vs 2 viikkoa pelkälle generaattorille.
 5. **Omistajuus:** kuka omistaa Pages-initiativen projektit ja kirjoittaa "Valmis kun" -ehdot Lineariin? Nykyiset neljä projektia ovat kaikki "alustava, täydennä".
+6. **Ensimmäinen look:** editorial (konsultointi, asiantuntija; suositus, koska Rascalin oma sivu ja Samin sivu ovat tätä) vai luotettava (rakentaminen, teollisuus; enemmän WP-asiakkaita)?
 
 ---
 
@@ -171,6 +211,8 @@ Ei uusia ominaisuuksia, mutta ilman näitä mitään ei voi myydä firman alusta
 
 | Mittari | Lähtötaso | Tavoite Q4/2026 |
 |---|---|---|
+| Priima-testi (sokkoarvio vs toimiston sivu) | ei tehty | 3 / 5 voittoa |
+| Copy-eval, sääntörikkeet per sivu | ei mitattu | 0 |
 | Aika perustasta julkaistuun firmasivuun | ei mitattu (käsityö) | < 15 min |
 | Lighthouse mobile, kaikki templatet | ei mitattu | ≥ 95 |
 | Rascal AI -blogit, jotka julkaistaan Pagesille | 0 / 345 | 30 % uusista |
