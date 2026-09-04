@@ -58,8 +58,8 @@ Workflow shortcuts (`qnew`, `qplan`, `qcode`, `qcheck`, `qcheckf`, `qcheckt`, `q
   - Rascal CRM — `7b0b6459-9602-464d-a07a-551853dfc5f9`
   - Rascal Pages — `63777f09-3aa0-40cc-af0b-5147cf53fb65` ← **tämä repo**
 - **Project = ShapeUp-batch** (Ongelma / Appetite / Scope / Valmis kun). Liitetään initiativeen, `targetDate` kuukausi-/kvartaalitarkkuudella.
-- **Cycle = 2 viikon devaussykli.** Cycle 1 = 14.6.–28.6.2026, sen jälkeen aina seuraavat 2 vk. Issuet ajastetaan cycleen.
-- **Issue = todo.** Statuspolku: `Backlog → Todo → In Progress → In Review → Done` (lisäksi `Triage`, `Canceled`, `Duplicate`).
+- **Cycle = 2 viikon devaussykli.** Cycle 1 = 14.6.–28.6.2026, sen jälkeen aina seuraavat 2 vk. Issuet ajastetaan cycleen. Cyclet kulkevat kolmen sarjoissa: **Build A → Build B → Cooldown** (ks. Devausrytmi alla).
+- **Issue = todo.** Statuspolku: `Triage → Todo → In Progress → In Review → Done` (lisäksi `Canceled`, `Duplicate`). Huom: tiimillä **ei ole** `Backlog`-tilaa — backlog-tyyppinen tila on nimeltään `Triage`.
 
 ### Oletukset uudelle issuelle (todolle)
 
@@ -72,9 +72,26 @@ Kun luot todon devaustyöstä, käytä näitä oletuksia:
 - `project`: liitä oikeaan ShapeUp-projektiin jos työ kuuluu sellaiseen.
 - `priority`: aseta jos tiedossa (1=Urgent … 4=Low).
 
-Poikkeus: pelkkä ideointi / "joskus myöhemmin" → `state: Backlog`, ei cycleä.
+Poikkeus: pelkkä ideointi / "joskus myöhemmin" → `state: Triage`, ei cycleä.
 
 Linear MCP -työkalujen CRUD-referenssi ja cyclen läpivientiohje: skill `linear-workflow` (`.claude/skills/linear-workflow/SKILL.md`).
+
+### Devausrytmi — 4 vk devausta + 2 vk cooldown
+
+Devaus kulkee kuuden viikon rytmissä: **Build A (2 vk) → Build B (2 vk) → Cooldown (2 vk)**. Kaikki cyclet ovat 2 viikkoa, koska Linearissa cycle-pituus on tiimitason asetus — cooldown on siksi oma nimetty cycle eikä Linearin natiivi cooldown-aukko. Aukkoon ei voi liittää issueita, jolloin bugityö ja groomaus jäisivät seurannan ulkopuolelle.
+
+| Cycle | Aika | Rooli |
+| --- | --- | --- |
+| 7 | 7.9.–20.9.2026 | Cooldown |
+| 8 | 21.9.–4.10.2026 | Build A |
+| 9 | 5.10.–18.10.2026 | Build B |
+| 10 | 19.10.–1.11.2026 | Cooldown |
+
+Siitä eteenpäin joka kolmas cycle on cooldown.
+
+- **Build A — aloitetaan.** Uusi työ, riskipitoisin ensin. Scope on lukittu edellisen cooldownin shaping-vaiheessa.
+- **Build B — suljetaan.** Ei uusia aloituksia ennen kuin oma Build A:ssa aloitettu työ on `Done`. Jos A:sta valui yli puolet, B:n scope leikataan — leikattu palaa `Triage`en eikä siirry eteenpäin.
+- **Cooldown.** Alussa feature freeze: tässä repossa `main` on suoraan live, joten cooldownin ajan mainiin mergetään vain korjauksia. Viikko 1 testauskierros `/testing`-työkalulla, ja löydökset korjataan sitä mukaa kun ne kirjataan. Loppuviikko shaping: `Triage` groomataan ja seuraavan Build A:n lista lukitaan.
 
 ### Säännöt
 
@@ -83,6 +100,10 @@ Linear MCP -työkalujen CRUD-referenssi ja cyclen läpivientiohje: skill `linear
 - **L-3 (SHOULD)** Päivitä issuen status työn edetessä (In Progress → In Review → Done), älä jätä Todoon.
 - **L-4 (SHOULD)** Liitä työ oikeaan initiativeen (tuote) ja, jos sopii, ShapeUp-projektiin sekä aktiiviseen cycleen.
 - **L-5 (SHOULD NOT)** Älä kovakoodaa assigneeta yhdelle henkilölle — oletus on tekijä itse (`"me"`).
+- **L-6 (MUST)** Build-cyclessä scope on lukittu. Uusi havainto → `Triage`, ei cycleen. Poikkeus: tuotanto rikki (Urgent) → hotfix heti, issue kirjataan jälkikäteen.
+- **L-7 (MUST)** Cooldown-cycleen vain bugit, testauslöydökset ja shaping. Ei uusia featureita.
+- **L-8 (MUST)** WIP-katto: enintään 2 issueta `In Progress` per henkilö. Uutta ei aloiteta ennen kuin edellinen sulkeutuu.
+- **L-9 (MUST)** Build B:ssä ei aloiteta uutta ennen kuin oma Build A:ssa aloitettu työ on `Done`.
 
 ## Testaus — pakollinen framework (`/testing`)
 
