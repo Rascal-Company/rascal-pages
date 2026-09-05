@@ -1,40 +1,59 @@
-# The role of `proxy.ts` in the repo-per-site model (Scope 3)
+# The role of `proxy.ts`
 
-## Old model (single-app multi-tenant)
+Rascal Pages is **one Next.js app, one Vercel project, many tenants**. There is
+no per-site repo and no per-site deployment: every customer site is rows in
+Supabase (`sites` + `pages`), rendered on request by this app.
 
-`proxy.ts` (the middleware) inspected the request `Host` and rewrote it to an
-internal route in **one** Next.js deployment:
+That makes `proxy.ts` (the root middleware — note: not `middleware.ts`) the
+single most important routing component in the system. It inspects the request
+`Host` header and rewrites to an internal route:
 
-| Host | Rewrites to |
-|------|-------------|
-| `app.rascalpages.fi` | `/app/*` |
-| `*.rascalpages.fi` | `/sites/[subdomain]` |
-| custom domains | `/sites/[domain]` |
+| Host | Rewrites to | Serves |
+|------|-------------|--------|
+| `rascalpages.fi`, `www.rascalpages.fi` | `/home/*` | Our own marketing site |
+| `app.rascalpages.fi` | `/app/*` | Dashboard / editor (auth required) |
+| `<tenant>.rascalpages.fi` | `/sites/<tenant>` | Customer site on its subdomain |
+| any other host | `/sites/<host>` | Customer site on its own domain |
 
-All tenant sites were served by a single app that fetched content from Supabase
-per request. The middleware was essential: it was the router that mapped a host
-to the right tenant.
+The rewrite is internal — the visitor's URL never changes.
 
-## New model (repo-per-site)
+## How a customer domain reaches us
 
-Each customer site is its **own Vercel project** that owns its domains. Routing
-host → site is done by **Vercel + DNS** (wildcard `*.rascalpages.fi` → Vercel,
-then Vercel matches the host to the project that claimed it). There is no shared
-app rendering tenant sites, so **no host-based rewrite middleware is needed to
-serve customer sites**.
+A customer points DNS at our shared Vercel project and nothing else:
 
-`site-template` therefore ships **without** `proxy.ts` — its `next build` output
-above confirms only the site's own static routes.
+1. The domain is saved on the site (`app/actions/update-domain.ts`), which also
+   registers it with the Vercel project via `src/lib/vercel-domains.ts`.
+2. `recommendedDnsRecord()` tells the customer which record to add at their
+   registrar — an `A` record for an apex domain, a `CNAME` for a subdomain.
+3. Vercel issues TLS once DNS resolves; `proxy.ts` then routes the host to the
+   right tenant.
 
-## What happens to `proxy.ts`
+**Nameservers are never delegated to us.** The customer adds one record and
+keeps full control of the rest of the zone, so they are free to point other
+subdomains (`app.`, `api.`, `mail.`) anywhere they like. This matters: a
+customer can run their marketing and legal pages here on `www.` while their
+actual product lives on `app.` somewhere else entirely.
 
-It stays in the **control-plane** app (`app.rascalpages.fi`) for what that app
-still does — dashboard/editor/auth routing. It is no longer on the path for
-serving published customer sites.
+## Host resolution has two implementations — keep them in sync
 
-| Concern | Old | New |
-|---------|-----|-----|
-| Host → site routing | `proxy.ts` rewrite | Vercel project domains + wildcard DNS |
-| Content fetch | Supabase per request | local markdown at build time |
-| Custom domains | `sites.custom_domain` + middleware | Vercel Domains API per project |
-| Control-plane (dashboard) routing | `proxy.ts` | `proxy.ts` (unchanged) |
+`proxy.ts` does the rewrite, but routes that bypass the rewrite and read the raw
+`Host` header themselves (`sitemap.xml`, `robots.txt`) use
+`hostToSiteDomain()` in `src/lib/domains.ts`. The two must agree on how a host
+maps to a site key. `domains.ts` carries the unit tests; change both together.
+
+The site key resolves through `getSiteByDomain()` in `src/lib/site-queries.ts`,
+which matches the value against **either** `sites.subdomain` or
+`sites.custom_domain`. A host that matches neither renders as not found.
+
+## Why not a repo per site
+
+An earlier proposal (ADR-0001, "Malli B") would have given every customer their
+own GitHub repo and Vercel project, trading operational simplicity for
+portability. It was never approved and has been removed: N sites meant N
+deployments and a rebuild for every content change, and the rendering blocks had
+to be duplicated into a template repo where they immediately drifted from
+`app/components/blocks/`.
+
+The shared-runtime model keeps one copy of the blocks, publishes content changes
+instantly, and still lets a customer use their own domain. If portability is ever
+needed again, solve it with an export rather than by splitting the runtime.

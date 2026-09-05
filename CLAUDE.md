@@ -8,6 +8,8 @@ For subdomain testing locally, use `test.localhost:3000` which maps to `test.ras
 
 ## Architecture
 
+**One repo, one deployment, many tenants.** Every customer site lives in this repo and is served by this single Next.js app from Supabase rows (`sites` + `pages`). Custom domains are pointed here with a single A/CNAME record — nameservers are never delegated, so the customer keeps the rest of their zone (e.g. `app.their-domain.com`) for themselves. Do not reintroduce per-site repos or per-site Vercel projects; that model (ADR-0001) was rejected and removed. See `docs/PROXY_ROLE.md`.
+
 Multi-tenant hostname routing lives in `proxy.ts` at the repo root (not `middleware.ts`).
 
 ### Organization Model
