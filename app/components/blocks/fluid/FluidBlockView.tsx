@@ -1,7 +1,10 @@
+"use client";
+
 import type { CSSProperties } from "react";
 import { ImagePlus } from "lucide-react";
 import type { FluidBlock, FluidTextContent, TextVariant } from "@/src/lib/fluid";
 import { cn } from "@/src/lib/utils";
+import { useComponentRenderer } from "./FluidRenderContext";
 
 const TEXT_STYLE: Record<TextVariant, { tag: "h1" | "h2" | "h3" | "p"; className: string; heading: boolean }> = {
   display: {
@@ -87,6 +90,10 @@ export default function FluidBlockView({
     );
   }
 
+  if (block.type === "component") {
+    return <ComponentView block={block} />;
+  }
+
   const { label, href, variant, align } = block.content;
   return (
     <div className={cn("flex h-full items-center", JUSTIFY[align])}>
@@ -105,4 +112,10 @@ export default function FluidBlockView({
       </a>
     </div>
   );
+}
+
+function ComponentView({ block }: { block: Extract<FluidBlock, { type: "component" }> }) {
+  const render = useComponentRenderer();
+  // Valmiilla osioilla on omat sisäreunuksensa; ruudukko vain sijoittaa ne.
+  return <div className="h-full [&>section]:py-0">{render?.(block) ?? null}</div>;
 }

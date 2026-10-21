@@ -8,6 +8,8 @@ import {
   materializeMobile,
   moveRect,
   newBlock,
+  newComponentBlock,
+  slugifyAnchor,
   readingOrder,
   rectFor,
   resizeRect,
@@ -101,5 +103,18 @@ describe("newBlock / rowCount", () => {
       expect(block.desktop.x + block.desktop.w).toBeLessThanOrEqual(DESKTOP_COLUMNS);
     }
     expect(new Set(content.blocks.map((b) => b.id)).size).toBe(content.blocks.length);
+  });
+});
+
+describe("komponenttilohko ja ankkurit", () => {
+  it("valmis osio täysleveäksi lohkoksi alimman alle", () => {
+    const block = newComponentBlock("faq", [{ question: "K?", answer: "V." }], "c", [text("a", 0, 0, 6, 4)]);
+    expect(block.type).toBe("component");
+    expect(block.desktop).toEqual({ x: 0, y: 4, w: DESKTOP_COLUMNS, h: 12 });
+  });
+
+  it("ankkuri nimestä ilman ääkkösiä ja erikoismerkkejä", () => {
+    expect(slugifyAnchor("Meistä & tiimi")).toBe("meista-tiimi");
+    expect(slugifyAnchor("  Ota yhteyttä! ")).toBe("ota-yhteytta");
   });
 });

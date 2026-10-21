@@ -6,6 +6,7 @@
  * on pinojärjestys (viimeinen päällimmäisenä).
  */
 import type { Brand } from "./types";
+import type { SectionContentMap, SectionType } from "./templates";
 
 export const DESKTOP_COLUMNS = 24;
 export const MOBILE_COLUMNS = 8;
@@ -30,16 +31,30 @@ export type FluidButtonContent = {
   align: FluidAlign;
 };
 
+/** Valmis osio (lomake, UKK, hinnoittelu…) lohkona vapaan osion sisällä. */
+export type ComponentSectionType = Exclude<SectionType, "fluid" | "footer">;
+export type FluidComponentContent = {
+  sectionType: ComponentSectionType;
+  data: SectionContentMap[ComponentSectionType];
+};
+
 type BlockBase = { id: FluidBlockId; desktop: FluidRect; mobile?: FluidRect };
 
 export type FluidBlock =
   | (BlockBase & { type: "text"; content: FluidTextContent })
   | (BlockBase & { type: "image"; content: FluidImageContent })
-  | (BlockBase & { type: "button"; content: FluidButtonContent });
+  | (BlockBase & { type: "button"; content: FluidButtonContent })
+  | (BlockBase & { type: "component"; content: FluidComponentContent });
 
 export type FluidBlockType = FluidBlock["type"];
 
-export type FluidContent = { blocks: FluidBlock[] };
+export type FluidContent = {
+  blocks: FluidBlock[];
+  /** Ankkuri (#id), johon navigaatio voi linkittää. */
+  anchor?: string;
+  /** Nimi sivun navigaatiossa; tyhjä = ei näy navigaatiossa. */
+  navLabel?: string;
+};
 
 export function columnsFor(layout: FluidLayout): number {
   return layout === "desktop" ? DESKTOP_COLUMNS : MOBILE_COLUMNS;
@@ -124,6 +139,7 @@ const DEFAULT_SIZE: Record<FluidBlockType, { w: number; h: number }> = {
   text: { w: 12, h: 3 },
   image: { w: 10, h: 12 },
   button: { w: 5, h: 2 },
+  component: { w: DESKTOP_COLUMNS, h: 12 },
 };
 
 export type FluidContentMap = {
@@ -132,7 +148,7 @@ export type FluidContentMap = {
   button: FluidButtonContent;
 };
 
-export function defaultBlockContent<T extends FluidBlockType>(type: T): FluidContentMap[T] {
+export function defaultBlockContent<T extends keyof FluidContentMap>(type: T): FluidContentMap[T] {
   const contents: FluidContentMap = {
     text: { variant: "body", text: "Kirjoita tähän", align: "left" },
     image: { src: "", alt: "", fit: "cover", radius: 12 },
@@ -146,7 +162,7 @@ export function defaultBlockContent<T extends FluidBlockType>(type: T): FluidCon
  * jatkuu samoin, jos osiolla on jo omat mobiilisijainnit.
  */
 export function newBlock(
-  type: FluidBlockType,
+  type: Exclude<FluidBlockType, "component">,
   id: string,
   blocks: FluidBlock[],
   overrides: Partial<FluidTextContent> = {},
@@ -166,6 +182,42 @@ export function newBlock(
   }
   if (type === "image") return { ...base, type, content: defaultBlockContent("image") };
   return { ...base, type, content: defaultBlockContent("button") };
+}
+
+/** Valmis osio lohkoksi osion alle, koko leveydelle. */
+export function newComponentBlock(
+  sectionType: ComponentSectionType,
+  data: SectionContentMap[ComponentSectionType],
+  id: string,
+  blocks: FluidBlock[],
+): FluidBlock {
+  const desktop = { x: 0, y: rowCount(blocks.map((b) => b.desktop)), ...DEFAULT_SIZE.component };
+  const hasMobile = blocks.some((b) => b.mobile);
+  return {
+    id: id as FluidBlockId,
+    type: "component",
+    desktop,
+    ...(hasMobile && {
+      mobile: {
+        x: 0,
+        y: rowCount(blocks.map((b) => b.mobile ?? b.desktop)) + 1,
+        w: MOBILE_COLUMNS,
+        h: DEFAULT_SIZE.component.h,
+      },
+    }),
+    content: { sectionType, data },
+  };
+}
+
+/** Navigaation ankkuri nimestä: "Meistä & tiimi" → "meista-tiimi". */
+export function slugifyAnchor(label: string): string {
+  return label
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
 }
 
 /** Päivittää lohkon suorakulmion valitussa asettelussa. */

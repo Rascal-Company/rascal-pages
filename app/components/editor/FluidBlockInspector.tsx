@@ -10,6 +10,8 @@ import type { FluidAlign, FluidBlock, TextVariant } from "@/src/lib/fluid";
 import { cn } from "@/src/lib/utils";
 import ImageUploadField from "./fields/ImageUploadField";
 import LinkField from "./fields/LinkField";
+import BlockEditor from "./BlockEditor";
+import type { SectionId } from "@/src/lib/types";
 
 const TEXT_VARIANTS: { value: TextVariant; label: string; preview: string }[] = [
   { value: "display", label: "Näyttävä", preview: "text-lg font-semibold tracking-tight" },
@@ -41,13 +43,30 @@ export default function FluidBlockInspector({
   block,
   onChange,
   onRemove,
+  crmEnabled,
 }: {
   block: FluidBlock;
   onChange: (block: FluidBlock) => void;
   onRemove: () => void;
+  crmEnabled: boolean;
 }) {
   return (
     <div className="space-y-5">
+      {block.type === "component" && (
+        <BlockEditor
+          section={{
+            id: block.id as unknown as SectionId,
+            type: block.content.sectionType,
+            content: block.content.data,
+            isVisible: true,
+          }}
+          crmEnabled={crmEnabled}
+          onUpdate={(data) =>
+            onChange({ ...block, content: { ...block.content, data: data as typeof block.content.data } })
+          }
+        />
+      )}
+
       {block.type === "text" && (
         <>
           <Field label="Tyyli">
@@ -172,8 +191,9 @@ export default function FluidBlockInspector({
       )}
 
       <p className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">
-        Raahaa lohkoa sivulla siirtääksesi sitä ja vedä kulmista muuttaaksesi kokoa. Nuolinäppäimet
-        siirtävät ruudun kerrallaan (Shift = 4).
+        {block.type === "component"
+          ? "Siirrä osiota sen vasemman reunan kahvasta ja muuta kokoa kulmista. Tekstejä voi muokata suoraan sivulla."
+          : "Raahaa lohkoa sivulla siirtääksesi sitä ja vedä kulmista muuttaaksesi kokoa. Nuolinäppäimet siirtävät ruudun kerrallaan (Shift = 4)."}
       </p>
 
       <Button

@@ -16,7 +16,7 @@ import FluidBlockInspector from "./FluidBlockInspector";
 import { useFluidEditor } from "@/app/components/blocks/fluid/FluidEditorContext";
 import type { FluidBlock, FluidContent } from "@/src/lib/fluid";
 
-const BLOCK_LABELS = { text: "Teksti", image: "Kuva", button: "Painike" } as const;
+const BLOCK_LABELS = { text: "Teksti", image: "Kuva", button: "Painike", component: "Valmis osio" } as const;
 
 type SectionInspectorProps = {
   section: Section;
@@ -64,7 +64,11 @@ export default function SectionInspector({
             <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               {SECTION_TYPE_LABELS[section.type]} · lohko
             </p>
-            <h2 className="truncate text-sm font-semibold">{BLOCK_LABELS[selectedBlock.type]}</h2>
+            <h2 className="truncate text-sm font-semibold">
+              {selectedBlock.type === "component"
+                ? SECTION_TYPE_LABELS[selectedBlock.content.sectionType]
+                : BLOCK_LABELS[selectedBlock.type]}
+            </h2>
           </div>
           <button
             type="button"
@@ -78,6 +82,7 @@ export default function SectionInspector({
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4">
           <FluidBlockInspector
             key={selectedBlock.id}
+            crmEnabled={crmEnabled}
             block={selectedBlock}
             onChange={(next) =>
               commitBlocks(fluidContent.blocks.map((b) => (b.id === next.id ? next : b)))

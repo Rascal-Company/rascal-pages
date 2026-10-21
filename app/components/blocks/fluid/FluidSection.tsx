@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { nanoid } from "nanoid";
 import {
   ArrowUpToLine,
+  GripVertical,
+  LayoutTemplate,
   Copy,
   Image as ImageIcon,
   MousePointerClick,
@@ -19,13 +21,14 @@ import {
   materializeMobile,
   moveRect,
   newBlock,
+  newComponentBlock,
   rectFor,
   resizeRect,
   rowCount,
   withRect,
   type FluidBlock,
   type FluidBlockId,
-  type FluidBlockType,
+  type ComponentSectionType,
   type FluidContent,
   type FluidLayout,
   type FluidRect,
@@ -34,7 +37,9 @@ import {
 } from "@/src/lib/fluid";
 import type { SectionId } from "@/src/lib/types";
 import { cn } from "@/src/lib/utils";
-import { useSectionEdit } from "../SectionEditContext";
+import { SECTION_TYPE_LABELS } from "@/src/lib/templates";
+import { getDefaultSectionContent } from "@/app/components/editor/utils/contentUtils";
+import { SectionEditProvider, useSectionEdit } from "../SectionEditContext";
 import FluidBlockView, { textElementProps } from "./FluidBlockView";
 import { useFluidEditor, type FluidEditorApi } from "./FluidEditorContext";
 
@@ -97,7 +102,10 @@ export default function FluidSection({
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-16 lg:px-8">
+    <div
+      id={content?.anchor || undefined}
+      className="mx-auto w-full max-w-7xl scroll-mt-24 px-6 py-16 lg:px-8"
+    >
       <div className="fluid-grid">
         {blocks.map((block, index) => (
           <div key={block.id} className="fluid-block" style={blockStyle(block, index, autoMobile)}>
@@ -127,7 +135,26 @@ const HANDLES: { handle: ResizeHandle; className: string }[] = [
   { handle: "w", className: "-left-1.5 top-1/2 -translate-y-1/2 cursor-ew-resize" },
 ];
 
-const ADD_OPTIONS: { type: FluidBlockType; label: string; icon: typeof Type; variant?: TextVariant; text?: string }[] = [
+/** Valmiit osiot, jotka voi lisätä lohkoina. */
+export const COMPONENT_TYPES: ComponentSectionType[] = [
+  "form",
+  "features",
+  "faq",
+  "testimonials",
+  "pricing",
+  "gallery",
+  "video",
+  "blog",
+  "logos",
+  "cases",
+  "techStack",
+  "bento",
+  "about",
+  "cta",
+  "hero",
+];
+
+const ADD_OPTIONS: { type: "text" | "image" | "button"; label: string; icon: typeof Type; variant?: TextVariant; text?: string }[] = [
   { type: "text", label: "Otsikko", icon: Heading, variant: "h2", text: "Uusi otsikko" },
   { type: "text", label: "Teksti", icon: Type, variant: "body", text: "Kirjoita tähän" },
   { type: "image", label: "Kuva", icon: ImageIcon },
@@ -215,6 +242,18 @@ function EditableFluidSection({
     setMenuOpen(false);
   }
 
+  function addComponent(sectionType: ComponentSectionType) {
+    const block = newComponentBlock(
+      sectionType,
+      getDefaultSectionContent(sectionType),
+      nanoid(10),
+      stateRef.current.blocks,
+    );
+    commitBlocks([...stateRef.current.blocks, block]);
+    editor.select(sectionId, block.id);
+    setMenuOpen(false);
+  }
+
   /** Raahaus ja koon muutos: lohko seuraa osoitinta 1:1 ja kohdistuu ruudukkoon. */
   function startInteraction(
     e: React.PointerEvent,
@@ -224,6 +263,11 @@ function EditableFluidSection({
   ) {
     if (e.button !== 0) return;
     if (mode === "move" && stateRef.current.editingId === block.id) return;
+    // Valmiin osion sisällä voi kirjoittaa ja klikata: siirto vain kahvasta.
+    if (mode === "move" && block.type === "component" && !(e.target as Element).closest("[data-drag-handle]")) {
+      editor.select(sectionId, block.id);
+      return;
+    }
     e.stopPropagation();
     e.preventDefault();
     editor.select(sectionId, block.id);
@@ -355,7 +399,7 @@ function EditableFluidSection({
               key={block.id}
               className={cn(
                 "fluid-block group/block",
-                !editing && "cursor-grab active:cursor-grabbing",
+                !editing && block.type !== "component" && "cursor-grab active:cursor-grabbing",
               )}
               style={{
                 ...style,
@@ -394,6 +438,36 @@ function EditableFluidSection({
                     }
                   }}
                 />
+              ) : block.type === "component" ? (
+                <SectionEditProvider
+                  editable
+                  updateField={(field, value) =>
+                    updateBlock(block.id, (b) =>
+                      b.type === "component"
+                        ? {
+                            ...b,
+                            content: {
+                              ...b.content,
+                              data: { ...(b.content.data as object), [field]: value } as typeof b.content.data,
+                            },
+                          }
+                        : b,
+                    )
+                  }
+                >
+                  <FluidBlockView block={block} editing />
+                  <span
+                    data-drag-handle
+                    title="Raahaa siirtääksesi"
+                    className={cn(
+                      "absolute -left-3 top-3 z-50 flex h-8 w-6 cursor-grab items-center justify-center rounded-md text-white shadow-md transition-opacity active:cursor-grabbing",
+                      selected ? "opacity-100" : "opacity-0 group-hover/block:opacity-100",
+                    )}
+                    style={{ background: EDITOR_ACCENT }}
+                  >
+                    <GripVertical className="size-4" aria-hidden />
+                  </span>
+                </SectionEditProvider>
               ) : (
                 <FluidBlockView block={block} editing />
               )}
@@ -462,20 +536,38 @@ function EditableFluidSection({
           </button>
           {menuOpen && (
             <div
-              className="absolute bottom-full z-50 mb-2 grid w-64 grid-cols-2 gap-1 rounded-xl bg-neutral-900 p-1.5 text-white shadow-2xl"
+              className="absolute bottom-full z-50 mb-2 w-80 rounded-xl bg-neutral-900 p-1.5 text-white shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {ADD_OPTIONS.map((option) => (
-                <button
-                  key={option.label}
-                  type="button"
-                  onClick={() => addBlock(option)}
-                  className="flex flex-col items-center gap-1.5 rounded-lg px-2 py-3 text-xs font-medium hover:bg-white/10"
-                >
-                  <option.icon className="size-5" aria-hidden />
-                  {option.label}
-                </button>
-              ))}
+              <div className="grid grid-cols-4 gap-1">
+                {ADD_OPTIONS.map((option) => (
+                  <button
+                    key={option.label}
+                    type="button"
+                    onClick={() => addBlock(option)}
+                    className="flex flex-col items-center gap-1.5 rounded-lg px-2 py-3 text-xs font-medium hover:bg-white/10"
+                  >
+                    <option.icon className="size-5" aria-hidden />
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 flex items-center gap-1.5 px-2 pt-1.5 text-[11px] font-semibold uppercase tracking-wide text-white/50">
+                <LayoutTemplate className="size-3.5" aria-hidden />
+                Valmiit osiot
+              </p>
+              <div className="grid max-h-48 grid-cols-2 gap-0.5 overflow-y-auto p-1">
+                {COMPONENT_TYPES.map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => addComponent(type)}
+                    className="rounded-md px-2 py-1.5 text-left text-xs hover:bg-white/10"
+                  >
+                    {SECTION_TYPE_LABELS[type]}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>

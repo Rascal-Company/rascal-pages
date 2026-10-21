@@ -2,23 +2,41 @@
 
 import { nanoid } from "nanoid";
 import { Heading, Image as ImageIcon, MousePointerClick, RotateCcw, Type } from "lucide-react";
-import type { SectionContentMap } from "@/src/lib/templates";
+import { SECTION_TYPE_LABELS, type SectionContentMap } from "@/src/lib/templates";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { getDefaultSectionContent } from "../utils/contentUtils";
 import type { SectionId } from "@/src/lib/types";
-import { newBlock, readingOrder, type FluidBlock, type FluidBlockType, type TextVariant } from "@/src/lib/fluid";
+import {
+  newBlock,
+  newComponentBlock,
+  readingOrder,
+  slugifyAnchor,
+  type FluidBlock,
+  type FluidBlockType,
+  type TextVariant,
+} from "@/src/lib/fluid";
+import { COMPONENT_TYPES } from "@/app/components/blocks/fluid/FluidSection";
 import { useFluidEditor } from "@/app/components/blocks/fluid/FluidEditorContext";
 
-const ADD: { type: FluidBlockType; label: string; icon: typeof Type; variant?: TextVariant; text?: string }[] = [
+const ADD: { type: "text" | "image" | "button"; label: string; icon: typeof Type; variant?: TextVariant; text?: string }[] = [
   { type: "text", label: "Otsikko", icon: Heading, variant: "h2", text: "Uusi otsikko" },
   { type: "text", label: "Teksti", icon: Type, variant: "body", text: "Kirjoita tähän" },
   { type: "image", label: "Kuva", icon: ImageIcon },
   { type: "button", label: "Painike", icon: MousePointerClick },
 ];
 
-const TYPE_LABEL: Record<FluidBlockType, string> = { text: "Teksti", image: "Kuva", button: "Painike" };
+const TYPE_LABEL: Record<FluidBlockType, string> = {
+  text: "Teksti",
+  image: "Kuva",
+  button: "Painike",
+  component: "Osio",
+};
 
 function blockSummary(block: FluidBlock): string {
   if (block.type === "text") return block.content.text;
   if (block.type === "button") return block.content.label;
+  if (block.type === "component") return SECTION_TYPE_LABELS[block.content.sectionType];
   return block.content.alt || (block.content.src ? "Kuva" : "Tyhjä kuva");
 }
 
@@ -45,6 +63,12 @@ export default function FluidSectionEditor({
     fluid?.select(sectionId, block.id);
   }
 
+  function addComponent(type: (typeof COMPONENT_TYPES)[number]) {
+    const block = newComponentBlock(type, getDefaultSectionContent(type), nanoid(10), blocks);
+    onUpdate({ ...content, blocks: [...blocks, block] });
+    fluid?.select(sectionId, block.id);
+  }
+
   return (
     <div className="space-y-5">
       <div>
@@ -61,6 +85,58 @@ export default function FluidSectionEditor({
               {option.label}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="mb-2 block text-xs font-medium text-muted-foreground" htmlFor="add-component">
+          Lisää valmis osio
+        </label>
+        <select
+          id="add-component"
+          value=""
+          onChange={(e) => e.target.value && addComponent(e.target.value as (typeof COMPONENT_TYPES)[number])}
+          className="h-9 w-full rounded-md border border-input bg-card px-2 text-sm"
+        >
+          <option value="">Valitse…</option>
+          {COMPONENT_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {SECTION_TYPE_LABELS[type]}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="nav-label" className="text-xs text-muted-foreground">
+            Nimi navigaatiossa (tyhjä = ei näy)
+          </Label>
+          <Input
+            id="nav-label"
+            value={content.navLabel ?? ""}
+            placeholder="Esim. Palvelut"
+            onChange={(e) =>
+              onUpdate({
+                ...content,
+                navLabel: e.target.value,
+                anchor: content.anchor && content.anchor !== slugifyAnchor(content.navLabel ?? "")
+                  ? content.anchor
+                  : slugifyAnchor(e.target.value),
+              })
+            }
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="anchor" className="text-xs text-muted-foreground">
+            Ankkuri (linkki #…)
+          </Label>
+          <Input
+            id="anchor"
+            value={content.anchor ?? ""}
+            placeholder="palvelut"
+            onChange={(e) => onUpdate({ ...content, anchor: slugifyAnchor(e.target.value) })}
+          />
         </div>
       </div>
 
