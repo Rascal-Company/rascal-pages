@@ -47,6 +47,11 @@ import { Button } from "@/app/components/ui/button";
 import EditorPreview, { type PreviewDevice } from "./EditorPreview";
 import SortableSectionItem from "./SortableSectionItem";
 import SectionInspector from "./SectionInspector";
+import {
+  FluidEditorProvider,
+  type FluidEditorApi,
+  type FluidSelection,
+} from "@/app/components/blocks/fluid/FluidEditorContext";
 import AddSectionButton from "./AddSectionButton";
 import SectionPicker from "./SectionPicker";
 import SettingsModal from "./SettingsModal";
@@ -107,8 +112,11 @@ export default function Editor({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [insertAfterId, setInsertAfterId] = useState<SectionId | null>(null);
 
+  const [fluidSelection, setFluidSelection] = useState<FluidSelection | null>(null);
   const selectSection = (id: SectionId | null) => {
     setActiveSectionId(id);
+    // Lohkon valinta säilyy, kun klikataan saman osion sisällä.
+    setFluidSelection((current) => (current?.sectionId === id ? current : null));
   };
 
   const rootDomain = "rascalpages.fi";
@@ -192,6 +200,7 @@ export default function Editor({
       const typing = (e.target as HTMLElement | null)?.closest?.("input, textarea, [contenteditable]");
       if (e.key === "Escape" && !typing) {
         setActiveSectionId(null);
+        setFluidSelection(null);
         return;
       }
       if (!mod) return;
@@ -279,12 +288,26 @@ export default function Editor({
     saveRef.current = handleSave;
   });
 
+  const fluidEditor = useMemo<FluidEditorApi>(
+    () => ({
+      layout: previewMode === "mobile" ? "mobile" : "desktop",
+      selection: fluidSelection,
+      select: (sectionId, blockId) => {
+        setActiveSectionId(sectionId);
+        setFluidSelection(blockId ? { sectionId, blockId } : null);
+      },
+      commit: (sectionId, next) => setContent(updateSectionContent(sectionId, next)),
+    }),
+    [previewMode, fluidSelection, setContent],
+  );
+
   const activeSection = content.sections.find((s) => s.id === activeSectionId);
   const siteUrl = siteCustomDomain
     ? `https://${siteCustomDomain}`
     : `https://${siteSubdomain}.${rootDomain}`;
 
   return (
+    <FluidEditorProvider value={fluidEditor}>
     <EditorSiteProvider siteId={siteId}>
       <SitePagesProvider siteId={siteId}>
         <div className="flex h-dvh flex-col bg-background text-foreground">
@@ -441,7 +464,10 @@ export default function Editor({
                 onUpdateStyle={(patch) =>
                   setContent(updateSectionStyle(activeSection.id, patch))
                 }
-                onClose={() => setActiveSectionId(null)}
+                onClose={() => {
+                  setActiveSectionId(null);
+                  setFluidSelection(null);
+                }}
                 crmEnabled={crmEnabled}
               />
             )}
@@ -464,5 +490,6 @@ export default function Editor({
         </div>
       </SitePagesProvider>
     </EditorSiteProvider>
+    </FluidEditorProvider>
   );
 }

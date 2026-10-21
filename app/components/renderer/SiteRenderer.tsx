@@ -36,6 +36,7 @@ import {
   FooterBlock,
 } from "@/app/components/blocks";
 import type { PortfolioNavItem } from "@/app/components/blocks/PortfolioNav";
+import FluidSection from "@/app/components/blocks/fluid/FluidSection";
 import SiteHeader from "@/app/components/site/SiteHeader";
 import type { SiteNavLink } from "@/src/lib/site-nav";
 import type { CasesContent, TechStackContent } from "@/src/lib/templates";
@@ -181,6 +182,15 @@ export default function SiteRenderer({
 
           const block = (() => {
             switch (section.type) {
+              case "fluid":
+                return (
+                  <FluidSection
+                    key={section.id}
+                    sectionId={section.id}
+                    content={section.content as SectionContentMap["fluid"]}
+                    active={section.id === activeSectionId}
+                  />
+                );
               case "hero":
                 return (
                   <HeroBlock
