@@ -75,11 +75,15 @@ export default function OverlayEditor({
   siteId,
   variantId,
   targetOrigin,
+  appOrigin,
+  previewToken,
   initial,
 }: {
   siteId: SiteId;
   variantId: OverlayVariantId;
   targetOrigin: string;
+  appOrigin: string;
+  previewToken: string;
   initial: VariantState;
 }) {
   const router = useRouter();
@@ -252,7 +256,21 @@ export default function OverlayEditor({
     }
   }
 
-  const previewUrl = useMemo(() => {
+  const [copied, setCopied] = useState(false);
+  const shareUrl = useMemo(() => {
+    const url = new URL("/api/overlay/preview", appOrigin);
+    url.searchParams.set("t", previewToken);
+    url.searchParams.set("path", previewPath);
+    return url.toString();
+  }, [appOrigin, previewToken, previewPath]);
+
+  async function copyShareUrl() {
+    await navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  const productionUrl = useMemo(() => {
     const url = new URL(previewPath, targetOrigin);
     for (const key of OVERLAY_MATCH_KEYS) {
       const value = state.match[key];
@@ -470,12 +488,39 @@ export default function OverlayEditor({
           </section>
 
           <section>
-            <h2 className="text-sm font-semibold text-brand-dark">Linkki mainokseen</h2>
+            <h2 className="text-sm font-semibold text-brand-dark">1. Esikatselulinkki</h2>
             <p className="mt-1 text-xs text-brand-dark/60">
-              Toimii, kun snippet on asennettu ja variantti julkaistu.
+              Toimii heti — ei vaadi snippetiä, kirjautumista eikä julkaisua. Jaa
+              asiakkaalle tai myyjälle. Näyttää tallennetut muutokset.
+            </p>
+            {dirty && (
+              <p className="mt-1 text-xs font-medium text-amber-700">
+                Tallenna, jotta uusimmat muutokset näkyvät linkissä.
+              </p>
+            )}
+            <code className="mt-2 block break-all rounded bg-brand-light px-2 py-1 text-xs text-brand-dark/80">
+              {shareUrl}
+            </code>
+            <div className="mt-2 flex gap-2">
+              <Button size="sm" variant="outline" onClick={copyShareUrl} disabled={!shareUrl}>
+                {copied ? "Kopioitu" : "Kopioi"}
+              </Button>
+              <Button size="sm" variant="outline" asChild>
+                <a href={shareUrl} target="_blank" rel="noopener noreferrer">
+                  Avaa
+                </a>
+              </Button>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-sm font-semibold text-brand-dark">2. Tuotantolinkki mainokseen</h2>
+            <p className="mt-1 text-xs text-brand-dark/60">
+              Asiakkaan oikea sivu. Toimii, kun snippet on asennettu ja variantti
+              julkaistu.
             </p>
             <code className="mt-2 block break-all rounded bg-brand-light px-2 py-1 text-xs text-brand-dark/80">
-              {previewUrl}
+              {productionUrl}
             </code>
           </section>
 

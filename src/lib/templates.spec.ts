@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
+  createBlankContent,
+  getDefaultTemplate,
   parseTagList,
   formatTagList,
   getTemplateById,
@@ -77,5 +79,15 @@ describe("section type registration", () => {
 
   test("labels the expertise section with a profession-neutral name", () => {
     expect(SECTION_TYPE_LABELS.techStack).toBe("Osaaminen");
+  });
+});
+
+describe("createBlankContent", () => {
+  test("palauttaa tyhjän sivun oletusteemalla", () => {
+    const content = createBlankContent();
+    expect(content.sections).toEqual([]);
+    expect(content.templateId).toBe("blank");
+    expect(content.theme).toEqual(getDefaultTemplate().defaultContent.theme);
+    expect(content.theme).not.toBe(getDefaultTemplate().defaultContent.theme);
   });
 });

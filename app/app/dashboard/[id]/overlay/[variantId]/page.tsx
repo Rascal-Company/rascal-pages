@@ -7,6 +7,8 @@ import {
   type OverlayChange,
   type OverlayMatch,
 } from "@/src/lib/overlay";
+import { createPreviewToken, previewSecret } from "@/src/lib/overlay-token";
+import { getAppOrigin } from "../app-origin";
 import OverlayEditor from "./OverlayEditor";
 
 export const dynamic = "force-dynamic";
@@ -55,6 +57,8 @@ export default async function OverlayVariantPage({ params }: PageProps) {
       siteId={createSiteId(id)}
       variantId={createOverlayVariantId(variant.id)}
       targetOrigin={variant.target_origin}
+      appOrigin={await getAppOrigin()}
+      previewToken={createPreviewToken(createOverlayVariantId(variant.id), previewSecret())}
       initial={{
         name: variant.name,
         pathPattern: variant.path_pattern,

@@ -55,6 +55,20 @@ describe("rewriteProxiedHtml", () => {
   });
 });
 
+describe("rewriteProxiedHtml jakolinkissä", () => {
+  it("antaa snippetille tunnisteen ja lisää esikatselumerkinnän bodyyn", () => {
+    const out = rewriteProxiedHtml(
+      `<html><head></head><body class="x"><h1>Hei</h1></body></html>`,
+      "https://asiakas.fi/",
+      "https://app.rascalpages.fi/overlay/o.js",
+      { kind: "share", token: 'abc.def"' },
+    );
+    expect(out).toContain('data-rp-token="abc.def&quot;"');
+    expect(out).not.toContain("data-rp-preview");
+    expect(out).toMatch(/<body class="x"><div[^>]*>Esikatselu · Rascal Pages<\/div><h1>/);
+  });
+});
+
 describe("proxyCsp", () => {
   it("sallii skriptit vain sovelluksen originista", () => {
     expect(proxyCsp("https://app.rascalpages.fi")).toContain(

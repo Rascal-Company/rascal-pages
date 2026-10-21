@@ -1,5 +1,4 @@
 import { createClient } from "@/src/utils/supabase/server";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createSiteId } from "@/src/lib/types";
@@ -7,6 +6,7 @@ import { getHomeUrl } from "@/app/lib/navigation";
 import type { OverlayMatch } from "@/src/lib/overlay";
 import NewVariantForm from "./NewVariantForm";
 import SnippetBox from "./SnippetBox";
+import { getAppOrigin } from "./app-origin";
 
 export const dynamic = "force-dynamic";
 
@@ -63,10 +63,7 @@ export default async function OverlayPage({ params }: PageProps) {
     .eq("site_id", id)
     .order("updated_at", { ascending: false });
 
-  const headerStore = await headers();
-  const host = headerStore.get("host") ?? "app.rascalpages.fi";
-  const proto = host.startsWith("localhost") ? "http" : "https";
-  const snippet = `<script src="${proto}://${host}/overlay/o.js" data-site="${id}"></script>`;
+  const snippet = `<script src="${await getAppOrigin()}/overlay/o.js" data-site="${id}"></script>`;
 
   return (
     <div className="min-h-screen bg-brand-light">

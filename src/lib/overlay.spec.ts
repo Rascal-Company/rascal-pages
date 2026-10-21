@@ -7,6 +7,7 @@ import {
   parseMatch,
   parseTargetUrl,
   pickVariant,
+  subdomainFromOrigin,
   type OverlayVariantRow,
 } from "./overlay";
 
@@ -139,5 +140,22 @@ describe("parseChanges", () => {
     expect(parseChanges([{ ...valid, type: "html" }]).ok).toBe(false);
     expect(parseChanges([{ ...valid, value: "  " }]).ok).toBe(false);
     expect(parseChanges("x").ok).toBe(false);
+  });
+});
+
+describe("subdomainFromOrigin", () => {
+  it("ottaa domainin ensimmäisen osan ilman www:tä ja erikoismerkkejä", () => {
+    expect(subdomainFromOrigin("https://www.my-shop.fi")).toBe("myshop");
+    expect(subdomainFromOrigin("https://Asiakas.co.uk")).toBe("asiakas");
+  });
+
+  it("palauttaa oletuksen, jos nimestä ei jää mitään", () => {
+    expect(subdomainFromOrigin("https://---.fi")).toBe("overlay");
+    expect(subdomainFromOrigin("roskaa")).toBe("overlay");
+  });
+
+  it("ei palauta varattua nimeä", () => {
+    expect(subdomainFromOrigin("https://app.fi")).toBe("appsite");
+    expect(subdomainFromOrigin("https://www.app.fi")).toBe("appsite");
   });
 });

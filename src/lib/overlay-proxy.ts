@@ -125,15 +125,25 @@ function escapeAttr(value: string): string {
     .replace(/</g, "&lt;");
 }
 
+export type ProxyMode =
+  /** Editorin iframe: editori ajaa muutokset itse. */
+  | { kind: "editor" }
+  /** Julkinen esikatselulinkki: snippet hakee variantin muutokset tunnisteella. */
+  | { kind: "share"; token: string };
+
+const PREVIEW_BANNER =
+  '<div style="position:fixed;left:12px;bottom:12px;z-index:2147483647;padding:6px 12px;border-radius:999px;background:rgba(17,17,17,.85);color:#fff;font:500 12px/1.4 system-ui,sans-serif;pointer-events:none">Esikatselu · Rascal Pages</div>';
+
 /**
  * Poistaa skriptit, CSP-/refresh-metat ja base-tagit, ja lisää headin alkuun
- * base-tagin (assetit latautuvat asiakkaan palvelimelta) sekä overlay-skriptin
- * esikatselutilassa.
+ * base-tagin (assetit latautuvat asiakkaan palvelimelta) sekä overlay-skriptin.
+ * Jakolinkissä bodyyn lisätään esikatselumerkintä.
  */
 export function rewriteProxiedHtml(
   html: string,
   baseUrl: string,
   overlayScriptUrl: string,
+  mode: ProxyMode = { kind: "editor" },
 ): string {
   const cleaned = html
     .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, "")
@@ -141,14 +151,58 @@ export function rewriteProxiedHtml(
     .replace(/<meta\b[^>]*http-equiv\s*=\s*["']?(content-security-policy|refresh)[^>]*>/gi, "")
     .replace(/<base\b[^>]*>/gi, "");
 
+  const scriptAttr =
+    mode.kind === "share"
+      ? `data-rp-token="${escapeAttr(mode.token)}"`
+      : "data-rp-preview";
   const inject =
     `<base href="${escapeAttr(baseUrl)}">` +
-    `<script src="${escapeAttr(overlayScriptUrl)}" data-rp-preview></script>`;
+    `<script src="${escapeAttr(overlayScriptUrl)}" ${scriptAttr}></script>`;
 
-  if (/<head\b[^>]*>/i.test(cleaned)) {
-    return cleaned.replace(/<head\b[^>]*>/i, (tag) => tag + inject);
+  let out = /<head\b[^>]*>/i.test(cleaned)
+    ? cleaned.replace(/<head\b[^>]*>/i, (tag) => tag + inject)
+    : inject + cleaned;
+
+  if (mode.kind === "share") {
+    out = /<body\b[^>]*>/i.test(out)
+      ? out.replace(/<body\b[^>]*>/i, (tag) => tag + PREVIEW_BANNER)
+      : out + PREVIEW_BANNER;
   }
-  return inject + cleaned;
+  return out;
+}
+
+/** Hakee sivun ja palauttaa sen proxattuna HTML-vastauksena. */
+export async function proxiedPageResponse(
+  target: URL,
+  appOrigin: string,
+  mode: ProxyMode,
+): Promise<Response> {
+  const { html, finalUrl } = await fetchPublicHtml(target);
+  const body = rewriteProxiedHtml(
+    html,
+    finalUrl.toString(),
+    `${appOrigin}/overlay/o.js`,
+    mode,
+  );
+
+  return new Response(body, {
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Content-Security-Policy": proxyCsp(appOrigin),
+      "X-Frame-Options": "SAMEORIGIN",
+      "X-Robots-Tag": "noindex, nofollow",
+      "Cache-Control": "private, no-store",
+      "Referrer-Policy": "no-referrer",
+    },
+  });
+}
+
+/** Yksinkertainen virhesivu proxyreiteille. */
+export function proxyErrorPage(message: string, status: number): Response {
+  return new Response(
+    `<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;padding:2rem;color:#333"><h2>Sivua ei voitu ladata</h2><p>${message.replace(/</g, "&lt;")}</p></body>`,
+    { status, headers: { "Content-Type": "text/html; charset=utf-8" } },
+  );
 }
 
 /** CSP proxatulle sivulle: tyylit ja kuvat mistä tahansa, skriptit vain meiltä. */

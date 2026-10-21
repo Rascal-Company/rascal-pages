@@ -209,3 +209,24 @@ export function parseChanges(
 
   return { ok: true, changes };
 }
+
+/**
+ * Overlay-sivustolle johdettu subdomain asiakkaan domainista
+ * ("https://www.my-shop.fi" → "myshop"). Pages vaatii sivustolle subdomainin,
+ * vaikka overlay-sivustoa ei julkaista sen kautta.
+ */
+export function subdomainFromOrigin(origin: string): string {
+  let host: string;
+  try {
+    host = new URL(origin).hostname;
+  } catch {
+    return "overlay";
+  }
+  const label = host.replace(/^www\./, "").split(".")[0] ?? "";
+  const clean = label.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 30);
+  if (!clean) return "overlay";
+  // Varatut hostit (app.rascalpages.fi ym.) eivät saa päätyä tenantille.
+  return RESERVED_SUBDOMAINS.includes(clean) ? `${clean}site` : clean;
+}
+
+const RESERVED_SUBDOMAINS = ["app", "www", "api", "admin", "mail", "home"];

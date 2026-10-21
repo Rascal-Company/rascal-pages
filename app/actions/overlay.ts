@@ -3,12 +3,14 @@
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/src/utils/supabase/server";
-import type { SiteId } from "@/src/lib/types";
+import { nanoid } from "nanoid";
+import { createSiteId, type SiteId } from "@/src/lib/types";
 import {
   createOverlayVariantId,
   parseChanges,
   parseMatch,
   parseTargetUrl,
+  subdomainFromOrigin,
   type OverlayVariantId,
 } from "@/src/lib/overlay";
 
@@ -140,6 +142,55 @@ export async function saveOverlayVariantCore(
 
   revalidatePath(`/app/dashboard/${siteId}/overlay`);
   return { success: true };
+}
+
+/**
+ * "Uusi sivusto → Overlay": luo sivuston asiakkaan domainista johdetulla
+ * subdomainilla ja sille ensimmäisen variantin. Palauttaa editorin osoitteen.
+ */
+export async function createOverlaySite(input: {
+  targetUrl: string;
+}): Promise<ActionResult<{ siteId: SiteId; variantId: OverlayVariantId }>> {
+  const client = await createClient();
+  const orgId = await getOrgId(client);
+  if (!orgId) return { success: false, error: "Kirjaudu sisään." };
+
+  const target = parseTargetUrl(input.targetUrl);
+  if (!target) {
+    return { success: false, error: "Anna kelvollinen sivun osoite, esim. https://asiakas.fi." };
+  }
+
+  // Subdomain on uniikki: kokeillaan perusnimeä ja tarvittaessa satunnaista päätettä.
+  const base = subdomainFromOrigin(target.origin);
+  const suffix = () => nanoid(4).toLowerCase().replace(/[^a-z0-9]/g, "x");
+  const candidates = [base, ...Array.from({ length: 3 }, () => `${base}${suffix()}`)];
+
+  let siteId: SiteId | null = null;
+  for (const subdomain of candidates) {
+    const { data, error } = await client
+      .from("sites")
+      .insert({ user_id: orgId, subdomain, custom_domain: null, settings: {} })
+      .select("id")
+      .single();
+    if (data) {
+      siteId = createSiteId(data.id);
+      break;
+    }
+    if (error?.code !== "23505") {
+      console.error("Create overlay site error:", error);
+      return { success: false, error: "Sivuston luonti epäonnistui." };
+    }
+  }
+  if (!siteId) return { success: false, error: "Sivuston luonti epäonnistui." };
+
+  const variant = await createOverlayVariantCore(client, orgId, siteId, {
+    name: "Variantti 1",
+    targetUrl: input.targetUrl,
+  });
+  if (!variant.success) return variant;
+
+  revalidatePath("/app/dashboard");
+  return { success: true, data: { siteId, variantId: variant.data.id } };
 }
 
 export async function createOverlayVariant(
