@@ -1,6 +1,6 @@
 import { createClient } from "@/src/utils/supabase/server";
 import { redirect } from "next/navigation";
-import Editor from "@/app/components/editor/Editor";
+import Editor from "./EditorClient";
 import { createSiteId } from "@/src/lib/types";
 import { getHomeUrl } from "@/app/lib/navigation";
 

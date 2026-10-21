@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -36,21 +36,20 @@ import {
 } from "./utils/sectionUpdaters";
 import type { SiteId, SectionId } from "@/src/lib/types";
 import { useToast } from "@/app/components/ui/ToastContainer";
-import EditorHeader from "./EditorHeader";
+import EditorTopBar from "./EditorTopBar";
+import SegmentedControl from "@/app/components/ui/segmented-control";
 import StatusMessages from "./StatusMessages";
 import TemplateSelector from "./TemplateSelector";
 import ThemeFields from "./fields/ThemeFields";
 import StyleFields from "./fields/StyleFields";
 import SeoFields from "./fields/SeoFields";
 import { Button } from "@/app/components/ui/button";
-import EditorPreview from "./EditorPreview";
-import PublishedToggle from "./PublishedToggle";
+import EditorPreview, { type PreviewDevice } from "./EditorPreview";
 import SortableSectionItem from "./SortableSectionItem";
-import FloatingSectionEditor from "./FloatingSectionEditor";
+import SectionInspector from "./SectionInspector";
 import AddSectionButton from "./AddSectionButton";
 import SectionPicker from "./SectionPicker";
 import SettingsModal from "./SettingsModal";
-import SaveStatusIndicator from "./SaveStatusIndicator";
 import { EditorSiteProvider } from "./EditorSiteContext";
 import { SitePagesProvider } from "./SitePagesContext";
 import { useHistoryState } from "./hooks/useHistoryState";
@@ -98,14 +97,13 @@ export default function Editor({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [activeSectionId, setActiveSectionId] = useState<SectionId | null>(
-    content.sections[0]?.id || null,
-  );
+  // Aluksi ei valintaa: sivu näkyy kokonaan, tarkastin aukeaa osiota klikkaamalla.
+  const [activeSectionId, setActiveSectionId] = useState<SectionId | null>(null);
   const [isFullPreview, setIsFullPreview] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">(
-    "desktop",
-  );
+  const [previewMode, setPreviewMode] = useState<PreviewDevice>("desktop");
+  const [panelTab, setPanelTab] = useState<"sections" | "style" | "page">("sections");
+  const [isPublishing, setIsPublishing] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [insertAfterId, setInsertAfterId] = useState<SectionId | null>(null);
 
@@ -139,6 +137,7 @@ export default function Editor({
     markSaved,
   } = useAutosave({ data: pageState, onSave: persist });
 
+  const saveRef = useRef<() => void>(() => {});
   const handleSave = async () => {
     setIsSaving(true);
     setError(null);
@@ -164,12 +163,44 @@ export default function Editor({
     }
   };
 
-  // Undo/redo keyboard shortcuts (Cmd/Ctrl+Z, Cmd/Ctrl+Shift+Z, Ctrl+Y)
+  // Julkaisu tallentaa heti, jotta sivu on julkinen eikä odota automaattitallennusta.
+  const handlePublishChange = async (next: boolean) => {
+    setIsPublishing(true);
+    setPublished(next);
+    try {
+      const nextState = { content, published: next };
+      const result = await persist(nextState);
+      if (result?.error) {
+        setPublished(!next);
+        showToast(result.error, "error");
+      } else {
+        markSaved(nextState);
+        showToast(next ? "Sivu julkaistu" : "Sivu piilotettu", "success");
+      }
+    } catch {
+      setPublished(!next);
+      showToast("Julkaisu epäonnistui. Yritä uudelleen.", "error");
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  // Pikanäppäimet: kumoa (⌘Z), tee uudelleen (⇧⌘Z / Ctrl+Y), tallenna (⌘S)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
+      const typing = (e.target as HTMLElement | null)?.closest?.("input, textarea, [contenteditable]");
+      if (e.key === "Escape" && !typing) {
+        setActiveSectionId(null);
+        return;
+      }
       if (!mod) return;
       const key = e.key.toLowerCase();
+      if (key === "s") {
+        e.preventDefault();
+        saveRef.current();
+        return;
+      }
       if (key === "z" && !e.shiftKey) {
         e.preventDefault();
         undo();
@@ -244,339 +275,193 @@ export default function Editor({
     }
   };
 
+  useEffect(() => {
+    saveRef.current = handleSave;
+  });
+
   const activeSection = content.sections.find((s) => s.id === activeSectionId);
+  const siteUrl = siteCustomDomain
+    ? `https://${siteCustomDomain}`
+    : `https://${siteSubdomain}.${rootDomain}`;
 
   return (
     <EditorSiteProvider siteId={siteId}>
       <SitePagesProvider siteId={siteId}>
-      <div className="flex h-screen bg-background">
-        {/* Sidebar */}
-        {!isFullPreview && isSidebarOpen && (
-          <aside className="flex w-[360px] min-w-[320px] max-w-[420px] flex-col border-r border-border bg-card">
-            <div className="border-b border-border p-4">
-              <EditorHeader
-                siteSubdomain={siteSubdomain}
-                pageTitle={pageTitle}
-                pageSlug={pageSlug}
-                siteId={siteId}
-                onSettingsClick={() => setIsSettingsOpen(true)}
-                onHideSidebar={() => setIsSidebarOpen(false)}
-              />
-            </div>
+        <div className="flex h-dvh flex-col bg-background text-foreground">
+          <EditorTopBar
+            siteId={siteId}
+            siteLabel={siteUrl.replace(/^https:\/\//, "")}
+            siteUrl={siteUrl}
+            pageSlug={pageSlug}
+            pageTitle={pageTitle}
+            device={previewMode}
+            onDeviceChange={setPreviewMode}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onUndo={undo}
+            onRedo={redo}
+            saveStatus={saveStatus}
+            lastSavedAt={lastSavedAt}
+            published={published}
+            publishing={isPublishing || isSaving}
+            onPublishChange={handlePublishChange}
+            panelOpen={isSidebarOpen}
+            onTogglePanel={() => setIsSidebarOpen((open) => !open)}
+            fullPreview={isFullPreview}
+            onToggleFullPreview={() => setIsFullPreview((full) => !full)}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+          />
 
-            <div className="flex-1 overflow-y-auto p-4">
-              <StatusMessages error={error} success={success} />
-
-              <div className="space-y-4">
-                <TemplateSelector
-                  currentTemplateId={content.templateId || "saas-modern"}
-                  onTemplateChange={handleTemplateChange}
-                />
-
-                <PublishedToggle
-                  published={published}
-                  onToggle={setPublished}
-                  isSaving={isSaving}
-                />
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-foreground">
-                      Osiot
-                    </h3>
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={undo}
-                        disabled={!canUndo}
-                        title="Kumoa (Ctrl/Cmd+Z)"
-                        aria-label="Kumoa"
-                        className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 14L4 9l5-5M4 9h11a5 5 0 015 5v0a5 5 0 01-5 5h-1"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={redo}
-                        disabled={!canRedo}
-                        title="Tee uudelleen (Ctrl/Cmd+Shift+Z)"
-                        aria-label="Tee uudelleen"
-                        className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 14l5-5-5-5m5 5H9a5 5 0 00-5 5v0a5 5 0 005 5h1"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext
-                      items={content.sections.map((s) => s.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      <div className="space-y-2">
-                        {content.sections.map((section) => (
-                          <SortableSectionItem
-                            key={section.id}
-                            section={section}
-                            isActive={section.id === activeSectionId}
-                            onClick={() => selectSection(section.id)}
-                            onToggleVisibility={() =>
-                              setContent(toggleSectionVisibility(section.id))
-                            }
-                            onRemove={() => handleRemoveSection(section.id)}
-                            onDuplicate={() =>
-                              setContent(duplicateSection(section.id))
-                            }
-                          />
-                        ))}
-                      </div>
-                    </SortableContext>
-                  </DndContext>
-                  <AddSectionButton onAdd={handleAddSection} />
+          <div className="flex min-h-0 flex-1">
+            {/* Paneeli */}
+            {!isFullPreview && isSidebarOpen && (
+              <aside className="flex w-[340px] shrink-0 flex-col border-r border-border bg-card">
+                <div className="border-b border-border p-3">
+                  <SegmentedControl
+                    ariaLabel="Paneelin näkymä"
+                    value={panelTab}
+                    onChange={setPanelTab}
+                    options={[
+                      { value: "sections", label: "Osiot" },
+                      { value: "style", label: "Tyyli" },
+                      { value: "page", label: "Sivu" },
+                    ]}
+                  />
                 </div>
+                <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                  <StatusMessages error={error} success={success} />
+                  {panelTab === "sections" && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-muted-foreground">
+                        Klikkaa osiota esikatselussa muokataksesi sitä. Raahaa järjestääksesi.
+                      </p>
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <SortableContext
+                          items={content.sections.map((s) => s.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className="space-y-1.5">
+                            {content.sections.map((section) => (
+                              <SortableSectionItem
+                                key={section.id}
+                                section={section}
+                                isActive={section.id === activeSectionId}
+                                onClick={() => selectSection(section.id)}
+                                onToggleVisibility={() =>
+                                  setContent(toggleSectionVisibility(section.id))
+                                }
+                                onRemove={() => handleRemoveSection(section.id)}
+                                onDuplicate={() => setContent(duplicateSection(section.id))}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
+                      <AddSectionButton onAdd={handleAddSection} />
+                    </div>
+                  )}
+                  {panelTab === "style" && (
+                    <div className="space-y-6">
+                      <StyleFields
+                        radius={content.theme?.radius}
+                        onPreset={(preset) => setContent(applyThemePreset(preset))}
+                        onRadiusUpdate={(radius) => setContent(updateThemeRadius(radius))}
+                      />
+                      <ThemeFields
+                        primaryColor={content.theme?.primaryColor}
+                        headingFont={content.theme?.headingFont}
+                        bodyFont={content.theme?.bodyFont}
+                        appearance={content.theme?.appearance}
+                        onColorUpdate={(value) => setContent(updateThemeColor(value))}
+                        onFontUpdate={(field, fontName) =>
+                          setContent(updateThemeFont(field, fontName))
+                        }
+                        onAppearanceUpdate={(appearance) =>
+                          setContent(updateThemeAppearance(appearance))
+                        }
+                      />
+                      <TemplateSelector
+                        currentTemplateId={content.templateId || "saas-modern"}
+                        onTemplateChange={handleTemplateChange}
+                      />
+                    </div>
+                  )}
+                  {panelTab === "page" && (
+                    <div className="space-y-6">
+                      <SeoFields
+                        metaTitle={content.seo?.metaTitle}
+                        metaDescription={content.seo?.metaDescription}
+                        ogImage={content.seo?.ogImage}
+                        onUpdate={(field, value) => setContent(updateSeoField(field, value))}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setIsSettingsOpen(true)}
+                      >
+                        Sivuston asetukset (domain, analytiikka)
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </aside>
+            )}
 
-                <StyleFields
-                  radius={content.theme?.radius}
-                  onPreset={(preset) => setContent(applyThemePreset(preset))}
-                  onRadiusUpdate={(radius) =>
-                    setContent(updateThemeRadius(radius))
-                  }
-                />
-
-                <ThemeFields
-                  primaryColor={content.theme?.primaryColor}
-                  headingFont={content.theme?.headingFont}
-                  bodyFont={content.theme?.bodyFont}
-                  appearance={content.theme?.appearance}
-                  onColorUpdate={(value) => setContent(updateThemeColor(value))}
-                  onFontUpdate={(field, fontName) =>
-                    setContent(updateThemeFont(field, fontName))
-                  }
-                  onAppearanceUpdate={(appearance) =>
-                    setContent(updateThemeAppearance(appearance))
-                  }
-                />
-
-                <SeoFields
-                  metaTitle={content.seo?.metaTitle}
-                  metaDescription={content.seo?.metaDescription}
-                  ogImage={content.seo?.ogImage}
-                  onUpdate={(field, value) =>
-                    setContent(updateSeoField(field, value))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-2 border-t border-border p-3">
-              <SaveStatusIndicator
-                status={saveStatus}
-                lastSavedAt={lastSavedAt}
+            {/* Kangas */}
+            <div className="relative min-w-0 flex-1">
+              <EditorPreview
+                content={content}
+                siteId={siteId}
+                previewMode={previewMode}
+                editable={!isFullPreview}
+                activeSectionId={isFullPreview ? null : activeSectionId}
+                onSelectSection={selectSection}
+                onMoveSection={(id, dir) => setContent(moveSection(id, dir))}
+                onDuplicateSection={(id) => setContent(duplicateSection(id))}
+                onRemoveSection={handleRemoveSection}
+                onRequestInsert={(afterId) => setInsertAfterId(afterId)}
+                onReorderSections={(draggedId, targetId) =>
+                  setContent(reorderSections(draggedId, targetId))
+                }
+                onUpdateSectionField={handleInlineFieldUpdate}
               />
-              <Button onClick={handleSave} disabled={isSaving} size="sm">
-                {isSaving ? "Tallennetaan..." : "Tallenna"}
-              </Button>
-            </div>
-          </aside>
-        )}
-
-        {/* Right Side - Preview */}
-        <div className="relative flex-1 overflow-hidden">
-          {/* Preview Controls */}
-          <div
-            className={`absolute top-4 z-10 flex items-center gap-2 ${
-              isFullPreview ? "left-4" : "right-4"
-            }`}
-          >
-            {/* Device Toggle */}
-            <div className="flex rounded-lg border border-border bg-card shadow-sm">
-              <button
-                onClick={() => setPreviewMode("desktop")}
-                className={`flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors ${
-                  previewMode === "desktop"
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                } rounded-l-lg`}
-                title="Desktop"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={() => setPreviewMode("mobile")}
-                className={`flex items-center gap-1 px-3 py-2 text-sm font-medium transition-colors ${
-                  previewMode === "mobile"
-                    ? "bg-accent text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                } rounded-r-lg border-l border-border`}
-                title="Mobile"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
-                  />
-                </svg>
-              </button>
             </div>
 
-            {/* Full Preview Toggle */}
-            <button
-              onClick={() => setIsFullPreview(!isFullPreview)}
-              className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent"
-              title={isFullPreview ? "Näytä editori" : "Koko näytön esikatselu"}
-            >
-              {isFullPreview ? (
-                <>
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-                    />
-                  </svg>
-                  Editori
-                </>
-              ) : (
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-                  />
-                </svg>
-              )}
-            </button>
+            {/* Valitun osion tarkastin */}
+            {!isFullPreview && activeSection && (
+              <SectionInspector
+                key={activeSection.id}
+                section={activeSection}
+                onUpdateContent={handleSectionUpdate}
+                onUpdateStyle={(patch) =>
+                  setContent(updateSectionStyle(activeSection.id, patch))
+                }
+                onClose={() => setActiveSectionId(null)}
+                crmEnabled={crmEnabled}
+              />
+            )}
           </div>
 
-          {/* Reveal sidebar — tab on the left edge it slides out from */}
-          {!isFullPreview && !isSidebarOpen && (
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              title="Näytä sivupalkki"
-              aria-label="Näytä sivupalkki"
-              className="absolute left-0 top-1/2 z-20 flex h-14 w-7 -translate-y-1/2 items-center justify-center rounded-r-xl border border-l-0 border-border bg-card text-muted-foreground shadow-md transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          )}
-
-          <div className="h-full w-full overflow-y-auto">
-            <EditorPreview
-              content={content}
-              siteId={siteId}
-              previewMode={previewMode}
-              activeSectionId={activeSectionId}
-              onSelectSection={selectSection}
-              onMoveSection={(id, dir) => setContent(moveSection(id, dir))}
-              onDuplicateSection={(id) => setContent(duplicateSection(id))}
-              onRemoveSection={handleRemoveSection}
-              onRequestInsert={(afterId) => setInsertAfterId(afterId)}
-              onReorderSections={(draggedId, targetId) =>
-                setContent(reorderSections(draggedId, targetId))
-              }
-              onUpdateSectionField={handleInlineFieldUpdate}
-            />
-          </div>
-
-          {!isFullPreview && activeSection && (
-            <FloatingSectionEditor
-              section={activeSection}
-              onUpdateContent={handleSectionUpdate}
-              onUpdateStyle={(patch) =>
-                setContent(updateSectionStyle(activeSection.id, patch))
-              }
-              onClose={() => setActiveSectionId(null)}
-              crmEnabled={crmEnabled}
-            />
-          )}
+          <SettingsModal
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            siteId={siteId}
+            subdomain={siteSubdomain}
+            rootDomain={rootDomain}
+            customDomain={siteCustomDomain}
+            initialSettings={initialSettings}
+          />
+          <SectionPicker
+            open={insertAfterId !== null}
+            onClose={() => setInsertAfterId(null)}
+            onPick={handleInsertSection}
+          />
         </div>
-
-        <SettingsModal
-          isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
-          siteId={siteId}
-          subdomain={siteSubdomain}
-          rootDomain={rootDomain}
-          customDomain={siteCustomDomain}
-          initialSettings={initialSettings}
-        />
-
-        <SectionPicker
-          open={insertAfterId !== null}
-          onClose={() => setInsertAfterId(null)}
-          onPick={handleInsertSection}
-        />
-      </div>
       </SitePagesProvider>
     </EditorSiteProvider>
   );
