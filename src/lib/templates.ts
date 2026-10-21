@@ -1012,6 +1012,17 @@ export function getDefaultTemplate(): Template {
 }
 
 /**
+ * Tyhjä sivu "Blankko"-vaihtoehdolle: oletuspohjan teema, ei osioita.
+ */
+export function createBlankContent(): TemplateConfig {
+  return {
+    templateId: "blank",
+    theme: { ...getDefaultTemplate().defaultContent.theme },
+    sections: [],
+  };
+}
+
+/**
  * Section type display names for UI
  */
 export const SECTION_TYPE_LABELS: Record<SectionType, string> = {

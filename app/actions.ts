@@ -2,6 +2,7 @@
 
 import { createClient } from '@/src/utils/supabase/server';
 import { redirect } from 'next/navigation';
+import { createBlankContent } from '@/src/lib/templates';
 
 // Poista sivusto
 interface DeleteSiteResult {
@@ -196,20 +197,38 @@ export async function createSite(formData: FormData) {
   }
 
   // Luo uusi sivusto Supabase REST API:n kautta
-  const { error: insertError } = await supabase
+  const { data: newSite, error: insertError } = await supabase
     .from('sites')
     .insert({
       user_id: userId,
       subdomain: subdomain,
       custom_domain: null,
       settings: {},
-    });
+    })
+    .select('id')
+    .single();
 
-  if (insertError) {
+  if (insertError || !newSite) {
     console.error('Virhe sivuston luonnissa:', insertError);
     return {
       error: 'Sivuston luominen epäonnistui. Yritä uudelleen.',
     };
+  }
+
+  // Blankko: tyhjä etusivu ilman osioita (muuten editori käyttää oletuspohjaa)
+  if (formData.get('mode') === 'blank') {
+    const { error: pageError } = await supabase.from('pages').insert({
+      site_id: newSite.id,
+      slug: 'home',
+      title: 'Etusivu',
+      content: createBlankContent(),
+      published: false,
+    });
+
+    if (pageError) {
+      console.error('Virhe tyhjän sivun luonnissa:', pageError);
+    }
+    redirect(`/app/dashboard/${newSite.id}`);
   }
 
   // Redirect dashboardiin onnistuessa

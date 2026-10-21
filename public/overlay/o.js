@@ -73,28 +73,33 @@
   var script = document.currentScript;
   if (!script || script.hasAttribute("data-rp-preview")) return;
 
+  // Jakolinkin esikatselu (proxy, ei snippetiä asiakkaan sivulla): variantti
+  // haetaan allekirjoitetulla tunnisteella kohdennuksesta riippumatta.
+  var token = script.getAttribute("data-rp-token");
   var siteId = script.getAttribute("data-site");
-  if (!siteId) return;
+  if (!token && !siteId) return;
 
   // Kohdennusparametrit: URL:sta, tai session aikana aiemmin tallennetut,
   // jotta variantti säilyy sivulta toiselle siirryttäessä.
-  var query = new URLSearchParams(window.location.search);
   var params = {};
-  var fromUrl = false;
-  MATCH_KEYS.forEach(function (key) {
-    var value = query.get(key);
-    if (value) {
-      params[key] = value;
-      fromUrl = true;
+  if (!token) {
+    var query = new URLSearchParams(window.location.search);
+    var fromUrl = false;
+    MATCH_KEYS.forEach(function (key) {
+      var value = query.get(key);
+      if (value) {
+        params[key] = value;
+        fromUrl = true;
+      }
+    });
+    try {
+      if (fromUrl) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(params));
+      else params = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || "{}") || {};
+    } catch {
+      // sessionStorage ei käytettävissä — jatketaan URL:n parametreilla.
     }
-  });
-  try {
-    if (fromUrl) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(params));
-    else params = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || "{}") || {};
-  } catch {
-    // sessionStorage ei käytettävissä — jatketaan URL:n parametreilla.
   }
-  var targeted = Object.keys(params).length > 0;
+  var targeted = Boolean(token) || Object.keys(params).length > 0;
 
   // Anti-flicker vain kohdennetuille kävijöille, ja aina aikakatkaisulla.
   var root = document.documentElement;
@@ -110,11 +115,15 @@
   }
 
   var url = new URL("/api/overlay/config", script.src);
-  url.searchParams.set("s", siteId);
-  url.searchParams.set("u", window.location.origin + window.location.pathname);
-  Object.keys(params).forEach(function (key) {
-    url.searchParams.set(key, params[key]);
-  });
+  if (token) {
+    url.searchParams.set("t", token);
+  } else {
+    url.searchParams.set("s", siteId);
+    url.searchParams.set("u", window.location.origin + window.location.pathname);
+    Object.keys(params).forEach(function (key) {
+      url.searchParams.set(key, params[key]);
+    });
+  }
 
   function whenReady(fn) {
     if (document.readyState === "loading") {

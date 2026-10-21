@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/src/utils/supabase/client";
 import LoginModal from "./LoginModal";
 import CreateAiSiteModal from "./CreateAiSiteModal";
+import NewSiteMenu from "./NewSiteMenu";
 import SitePreview from "./SitePreview";
 import { useRouter } from "next/navigation";
 import { togglePagePublish } from "@/app/actions/toggle-publish";
@@ -183,18 +184,7 @@ export default function DashboardClient({
             </div>
             <div className="flex items-center gap-3">
               <ThemeToggle />
-              <button
-                onClick={() => setIsAiModalOpen(true)}
-                className="rounded-lg border border-primary bg-card px-6 py-3 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
-              >
-                ✨ Luo AI:n avulla
-              </button>
-              <Link
-                href="/app/dashboard/new"
-                className="rounded-lg bg-primary px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
-              >
-                + Uusi sivusto
-              </Link>
+              <NewSiteMenu onAiClick={() => setIsAiModalOpen(true)} />
               <AccountMenu />
             </div>
           </div>
@@ -224,12 +214,10 @@ export default function DashboardClient({
                   Aloita luomalla ensimmäinen sivustosi
                 </p>
                 <div className="mt-6">
-                  <Link
-                    href="/app/dashboard/new"
-                    className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-hover"
-                  >
-                    + Uusi sivusto
-                  </Link>
+                  <NewSiteMenu
+                    onAiClick={() => setIsAiModalOpen(true)}
+                    className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-hover"
+                  />
                 </div>
               </div>
             </div>

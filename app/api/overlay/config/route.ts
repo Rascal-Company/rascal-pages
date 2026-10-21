@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/src/utils/supabase/admin";
 import { isValidUuid } from "@/src/lib/types";
+import { previewSecret, verifyPreviewToken } from "@/src/lib/overlay-token";
 import {
   OVERLAY_MATCH_KEYS,
   pickVariant,
@@ -27,8 +28,25 @@ export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
+/** Jakolinkin esikatselu: variantin tallennetut muutokset tunnisteella, myös luonnoksena. */
+async function previewChanges(token: string) {
+  const variantId = verifyPreviewToken(token, previewSecret());
+  if (!variantId) return json({ changes: [] }, "no-store");
+
+  const { data } = await createAdminClient()
+    .from("overlay_variants")
+    .select("id, changes")
+    .eq("id", variantId)
+    .maybeSingle();
+
+  return json({ variant: data?.id ?? null, changes: data?.changes ?? [] }, "no-store");
+}
+
 export async function GET(req: NextRequest) {
   const search = req.nextUrl.searchParams;
+  const token = search.get("t");
+  if (token) return previewChanges(token);
+
   const siteId = search.get("s") ?? "";
   const rawUrl = search.get("u") ?? "";
 
