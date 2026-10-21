@@ -42,6 +42,7 @@ import {
   type OverlayProfile,
   type OverlayVariation,
 } from "@/app/actions/overlay";
+import { uploadSiteAsset } from "@/app/actions/upload-site-asset";
 import { cn } from "@/src/lib/utils";
 import type { SiteId } from "@/src/lib/types";
 import {
@@ -67,6 +68,7 @@ import {
 } from "@/src/lib/overlay-selector";
 import SegmentedControl from "../../components/SegmentedControl";
 import StatusPill from "../../components/StatusPill";
+import ImageSlotField from "../../components/ImageSlotField";
 import { createFrameHighlighter, type FrameHighlighter } from "../../components/frame-highlight";
 
 type LandingPageState = {
@@ -231,6 +233,7 @@ export default function LandingPageEditor({
   const [selectionType, setSelectionType] = useState<OverlayChangeType>("text");
   const [selectionLabel, setSelectionLabel] = useState("");
   const [activeSlotId, setActiveSlotId] = useState<OverlaySlotId | null>(null);
+  const [activeSlotTypes, setActiveSlotTypes] = useState<OverlayChangeType[]>([]);
 
   const [busy, setBusy] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -261,14 +264,29 @@ export default function LandingPageEditor({
   useEffect(() => {
     slotsRef.current = page.slots;
   }, [page.slots]);
+  const variantsRef = useRef(variants);
+  const selectedVariantIdRef = useRef(selectedVariantId);
+  useEffect(() => {
+    variantsRef.current = variants;
+    selectedVariantIdRef.current = selectedVariantId;
+  }, [variants, selectedVariantId]);
+  // Klikkaamalla luodut elementit, jotka poistetaan, jos niihin ei kirjoiteta mitään.
+  const draftSlotIdsRef = useRef<Set<string>>(new Set());
+  // Sivulla suoraan muokattava elementti (contenteditable iframessa).
+  const editingRef = useRef<{ slotId: string; stop: (restore?: boolean) => void; el: Element } | null>(
+    null,
+  );
 
   const frameSrc = `/api/overlay/proxy?c=${campaignId}&path=${encodeURIComponent(previewPath)}`;
 
   const applyPreview = useCallback((changes: OverlayChange[]) => {
     const win = iframeRef.current?.contentWindow as (Window & { __rpOverlay?: OverlayApi }) | null;
     const doc = iframeRef.current?.contentDocument;
-    if (win?.__rpOverlay && doc) win.__rpOverlay.apply(changes, doc);
-    appliedIdsRef.current = new Set(changes.map((c) => c.id as string));
+    // Sivulla kirjoitettavaa elementtiä ei kosketa, ettei kursori hyppää.
+    const editingId = editingRef.current?.slotId;
+    const visible = editingId ? changes.filter((c) => c.id !== editingId) : changes;
+    if (win?.__rpOverlay && doc) win.__rpOverlay.apply(visible, doc);
+    appliedIdsRef.current = new Set(visible.map((c) => c.id as string));
     highlighterRef.current?.refresh();
   }, []);
 
@@ -276,8 +294,9 @@ export default function LandingPageEditor({
   // sivun uudelleenlatauksen, jotta alkuperäinen sisältö palaa.
   useEffect(() => {
     previewChangesRef.current = previewChanges;
+    const editingId = editingRef.current?.slotId;
     const ids = new Set(previewChanges.map((c) => c.id as string));
-    const removed = [...appliedIdsRef.current].some((id) => !ids.has(id));
+    const removed = [...appliedIdsRef.current].some((id) => id !== editingId && !ids.has(id));
     if (removed) {
       iframeRef.current?.contentWindow?.location.reload();
     } else {
@@ -292,48 +311,206 @@ export default function LandingPageEditor({
     );
   }, []);
 
+  const setValueForSelected = useCallback((slotId: string, value: string) => {
+    const variantId = selectedVariantIdRef.current;
+    if (!variantId) return;
+    setVariants((list) =>
+      list.map((v) => (v.id === variantId ? { ...v, values: { ...v.values, [slotId]: value } } : v)),
+    );
+  }, []);
+
+  /** Poistaa klikkauksella luodut elementit, joihin ei kirjoitettu mitään. */
+  const discardEmptyDrafts = useCallback((keep?: string) => {
+    const drafts = draftSlotIdsRef.current;
+    const empty = [...drafts].filter(
+      (id) => id !== keep && variantsRef.current.every((v) => !(v.values[id] ?? "").trim()),
+    );
+    if (empty.length === 0) return;
+    empty.forEach((id) => drafts.delete(id));
+    slotsRef.current = slotsRef.current.filter((s) => !empty.includes(s.id));
+    setPage((p) => ({ ...p, slots: p.slots.filter((s) => !empty.includes(s.id)) }));
+  }, []);
+
+  const stopInlineEdit = useCallback(() => {
+    editingRef.current?.stop();
+  }, []);
+
+  /** Tekstin muokkaus suoraan sivulla: elementti muuttuu muokattavaksi iframessa. */
+  const startInlineEdit = useCallback(
+    (el: Element, slot: OverlaySlot, point?: { x: number; y: number }) => {
+      stopInlineEdit();
+      const target = el as HTMLElement;
+      const doc = target.ownerDocument;
+
+      const onInput = () => {
+        setValueForSelected(slot.id, target.textContent ?? "");
+        highlighterRef.current?.refresh();
+      };
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === "Escape") {
+          e.preventDefault();
+          e.stopPropagation();
+          target.blur();
+        }
+      };
+      const stop = () => {
+        target.removeEventListener("input", onInput);
+        target.removeEventListener("keydown", onKey);
+        target.removeEventListener("blur", stop);
+        target.removeAttribute("contenteditable");
+        editingRef.current = null;
+        // Tyhjäksi jätetty teksti = alkuperäinen sisältö.
+        if (!normalizeText(target.textContent)) target.textContent = slot.original;
+        applyPreview(previewChangesRef.current);
+      };
+
+      target.setAttribute("contenteditable", "plaintext-only");
+      target.addEventListener("input", onInput);
+      target.addEventListener("keydown", onKey);
+      target.addEventListener("blur", stop);
+      editingRef.current = { slotId: slot.id, stop, el };
+      target.focus({ preventScroll: true });
+
+      // Kursori klikattuun kohtaan, muuten tekstin loppuun.
+      const selection = doc.getSelection();
+      if (selection) {
+        const docWithCaret = doc as Document & {
+          caretRangeFromPoint?: (x: number, y: number) => Range | null;
+        };
+        const range =
+          (point && docWithCaret.caretRangeFromPoint?.(point.x, point.y)) || doc.createRange();
+        if (!point || !range.startContainer || !target.contains(range.startContainer)) {
+          range.selectNodeContents(target);
+          range.collapse(false);
+        }
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    },
+    [applyPreview, setValueForSelected, stopInlineEdit],
+  );
+
+  const revealRow = useCallback((slotId: string, focusField: boolean) => {
+    requestAnimationFrame(() => {
+      const row = document.getElementById(`slot-${slotId}`);
+      row?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      if (focusField) row?.querySelector<HTMLElement>("textarea, input:not([aria-label='Elementin nimi'])")?.focus();
+    });
+  }, []);
+
+  /**
+   * Klikkaus sivulla: teksti muuttuu heti muokattavaksi ja lisätään
+   * personoitaviin automaattisesti. Pelkät säiliöt (vain piilotus) avaavat
+   * valintakortin.
+   */
   const selectElement = useCallback(
-    (el: Element) => {
+    (el: Element, point?: { x: number; y: number }) => {
       const selector = buildSelector(el);
       const existing = slotsRef.current.find((s) => s.selector === selector);
-      highlighterRef.current?.select(el, existing?.label ?? el.tagName.toLowerCase());
+      discardEmptyDrafts(existing?.id);
       setTab("content");
 
-      // Jo personoitu elementti: hyppää sen riville.
       if (existing) {
+        stopInlineEdit();
         setSelection(null);
         setActiveSlotId(existing.id);
-        requestAnimationFrame(() => {
-          document
-            .getElementById(`slot-${existing.id}`)
-            ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        });
+        setActiveSlotTypes(availableTypes(el));
+        highlighterRef.current?.select(el, existing.label);
+        if (existing.type === "text" && selectedVariantIdRef.current) {
+          startInlineEdit(el, existing, point);
+          revealRow(existing.id, false);
+        } else {
+          revealRow(existing.id, true);
+        }
         return;
       }
 
       const types = availableTypes(el);
-      const originals = {} as Record<OverlayChangeType, string>;
-      for (const type of types) originals[type] = fingerprintOf(el, type);
       const tag = el.tagName.toLowerCase();
-      setActiveSlotId(null);
-      setSelection({
+      stopInlineEdit();
+
+      if (types[0] === "hide" || !selectedVariantIdRef.current) {
+        highlighterRef.current?.select(el, tag);
+        setActiveSlotId(null);
+        setSelection({
+          selector,
+          tag,
+          types,
+          originals: { hide: fingerprintOf(el, "hide") } as Record<OverlayChangeType, string>,
+          preview: normalizeText(el.textContent).slice(0, 140),
+        });
+        setSelectionType("hide");
+        setSelectionLabel(suggestLabel(tag, "hide", slotsRef.current));
+        return;
+      }
+
+      const type = types[0];
+      const slot: OverlaySlot = {
+        id: nanoid(10) as OverlaySlotId,
+        label: suggestLabel(tag, type, slotsRef.current),
         selector,
-        tag,
-        types,
-        originals,
-        preview: types[0] === "text" ? originals.text : normalizeText(el.textContent).slice(0, 140),
-      });
-      setSelectionType(types[0]);
-      setSelectionLabel(suggestLabel(tag, types[0], slotsRef.current));
+        type,
+        original: fingerprintOf(el, type),
+      };
+      draftSlotIdsRef.current.add(slot.id);
+      slotsRef.current = [...slotsRef.current, slot];
+      setPage((p) => ({ ...p, slots: [...p.slots, slot] }));
+      setSelection(null);
+      setActiveSlotId(slot.id);
+      setActiveSlotTypes(types);
+      highlighterRef.current?.select(el, slot.label);
+
+      if (type === "text") {
+        startInlineEdit(el, slot, point);
+        revealRow(slot.id, false);
+      } else {
+        revealRow(slot.id, true);
+      }
     },
-    [],
+    [discardEmptyDrafts, revealRow, startInlineEdit, stopInlineEdit],
   );
 
   const clearSelection = useCallback(() => {
+    stopInlineEdit();
+    discardEmptyDrafts();
     setSelection(null);
     setActiveSlotId(null);
     highlighterRef.current?.select(null);
-  }, []);
+  }, [discardEmptyDrafts, stopInlineEdit]);
+
+  const uploadImage = useCallback(
+    async (file: File): Promise<string | null> => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const result = await uploadSiteAsset(siteId, formData);
+      if ("error" in result) {
+        showToast(result.error, "error");
+        return null;
+      }
+      return result.url;
+    },
+    [siteId, showToast],
+  );
+
+  /** Kuvatiedosto raahattu suoraan esikatselun kuvan päälle. */
+  const dropImage = useCallback(
+    async (el: Element, file: File) => {
+      selectElement(el);
+      const selector = buildSelector(el);
+      const slot = slotsRef.current.find((s) => s.selector === selector && s.type === "image");
+      if (!slot) return;
+      const url = await uploadImage(file);
+      if (url) {
+        setValueForSelected(slot.id, url);
+        showToast("Kuva vaihdettu", "success");
+      }
+    },
+    [selectElement, uploadImage, setValueForSelected, showToast],
+  );
+  const dropImageRef = useRef(dropImage);
+  useEffect(() => {
+    dropImageRef.current = dropImage;
+  }, [dropImage]);
 
   const handleFrameLoad = useCallback(() => {
     setFrameLoading(false);
@@ -345,6 +522,7 @@ export default function LandingPageEditor({
     setFrameError(false);
     setSelection(null);
     setActiveSlotId(null);
+    editingRef.current = null;
 
     const highlighter = createFrameHighlighter(doc);
     highlighterRef.current = highlighter;
@@ -364,13 +542,28 @@ export default function LandingPageEditor({
         e.preventDefault();
         e.stopPropagation();
         const target = e.target as Element | null;
+        // Kursorin siirto muokattavan tekstin sisällä ei ole uusi valinta.
+        if (target && editingRef.current?.el.contains(target)) return;
         if (target && target !== doc.body && target !== doc.documentElement) {
-          selectElement(target);
+          selectElement(target, { x: e.clientX, y: e.clientY });
         }
       },
       true,
     );
     doc.addEventListener("submit", (e) => e.preventDefault(), true);
+    doc.addEventListener("dragover", (e) => {
+      const target = e.target as Element | null;
+      if (target?.tagName === "IMG" && e.dataTransfer?.types.includes("Files")) {
+        e.preventDefault();
+        highlighter.hover(target, "Pudota kuva tähän");
+      }
+    });
+    doc.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const target = e.target as Element | null;
+      const file = e.dataTransfer?.files[0];
+      if (target?.tagName === "IMG" && file) dropImageRef.current(target, file);
+    });
     doc.addEventListener("keydown", (e) => {
       if (e.key === "Escape") clearSelection();
     });
@@ -416,19 +609,15 @@ export default function LandingPageEditor({
       showToast(`"${slot.label}" ei löydy tältä sivulta.`, "warning");
       return;
     }
+    stopInlineEdit();
     setActiveSlotId(slot.id);
+    setActiveSlotTypes(availableTypes(el));
     setSelection(null);
     highlighterRef.current?.select(el, slot.label);
     el.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   // ---- Elementit ---------------------------------------------------------------
-
-  function chooseSelectionType(type: OverlayChangeType) {
-    if (!selection) return;
-    setSelectionType(type);
-    setSelectionLabel(suggestLabel(selection.tag, type, page.slots));
-  }
 
   function addSelectionAsSlot() {
     if (!selection || !selectionLabel.trim()) return;
@@ -439,7 +628,9 @@ export default function LandingPageEditor({
       type: selectionType,
       original: selection.originals[selectionType],
     };
+    slotsRef.current = [...slotsRef.current, slot];
     setPage((p) => ({ ...p, slots: [...p.slots, slot] }));
+    if (slot.type === "hide") setValueForSelected(slot.id, "1");
     setSelection(null);
     setActiveSlotId(slot.id);
     const el = elementForSlot(slot);
@@ -453,9 +644,31 @@ export default function LandingPageEditor({
   }
 
   function removeSlot(slot: OverlaySlot) {
+    if (editingRef.current?.slotId === slot.id) stopInlineEdit();
+    draftSlotIdsRef.current.delete(slot.id);
     setPage((p) => ({ ...p, slots: p.slots.filter((s) => s.id !== slot.id) }));
     if (activeSlotId === slot.id) clearSelection();
     showToast(`"${slot.label}" poistettu personoinnista.`, "info");
+  }
+
+  /** Tyypin vaihto (esim. teksti → linkki) nollaa elementin arvot, koska ne eivät ole yhteensopivia. */
+  function changeSlotType(slot: OverlaySlot, type: OverlayChangeType) {
+    const el = elementForSlot(slot);
+    if (!el || type === slot.type) return;
+    stopInlineEdit();
+    setPage((p) => ({
+      ...p,
+      slots: p.slots.map((s) =>
+        s.id === slot.id ? { ...s, type, original: fingerprintOf(el, type) } : s,
+      ),
+    }));
+    setVariants((list) =>
+      list.map((v) => {
+        const values = { ...v.values };
+        delete values[slot.id];
+        return { ...v, values };
+      }),
+    );
   }
 
   function renameSlot(id: OverlaySlotId, label: string) {
@@ -852,33 +1065,13 @@ export default function LandingPageEditor({
                         <span aria-hidden className="text-lg leading-none">×</span>
                       </IconButton>
                     </div>
-                    <SegmentedControl
-                      size="sm"
-                      ariaLabel="Muutoksen tyyppi"
-                      value={selectionType}
-                      onChange={chooseSelectionType}
-                      options={selection.types.map((t) => {
-                        const Icon = TYPE_META[t].icon;
-                        return {
-                          value: t,
-                          label: (
-                            <>
-                              <Icon className="size-3.5" aria-hidden />
-                              {TYPE_META[t].label}
-                            </>
-                          ),
-                        };
-                      })}
-                    />
-                    {!selection.types.includes("text") && (
-                      <p className="text-xs text-muted-foreground">
-                        Tekstiä voi vaihtaa vain elementistä, jonka sisällä ei ole muita
-                        elementtejä — klikkaa tarkemmin itse tekstiä.
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Tässä osiossa ei ole suoraan muokattavaa tekstiä. Voit piilottaa sen tältä
+                      variaatiolta — tai klikata tarkemmin itse tekstiä tai kuvaa.
+                    </p>
                     <div className="space-y-1">
                       <Label htmlFor="selection-label" className="text-xs text-muted-foreground">
-                        Nimi (näkyy listassa ja AI:lle)
+                        Nimi
                       </Label>
                       <Input
                         id="selection-label"
@@ -892,10 +1085,10 @@ export default function LandingPageEditor({
                       size="sm"
                       className="w-full"
                       onClick={addSelectionAsSlot}
-                      disabled={!selectionLabel.trim()}
+                      disabled={!selectionLabel.trim() || !variant}
                     >
-                      <Plus aria-hidden />
-                      Personoi tämä elementti
+                      <EyeOff aria-hidden />
+                      Piilota tässä variaatiossa
                     </Button>
                   </section>
                 )}
@@ -906,10 +1099,10 @@ export default function LandingPageEditor({
                     <span className="flex size-12 items-center justify-center rounded-full bg-accent text-primary">
                       <MousePointerClick className="size-6" aria-hidden />
                     </span>
-                    <p className="mt-4 text-sm font-semibold">Klikkaa sivulta elementtiä</p>
+                    <p className="mt-4 text-sm font-semibold">Klikkaa sivulta ja kirjoita</p>
                     <p className="mt-1 max-w-64 text-sm text-muted-foreground">
-                      Valitse otsikot, tekstit, kuvat ja painikkeet, joita haluat vaihtaa tälle
-                      kohderyhmälle.
+                      Klikkaa mitä tahansa tekstiä ja kirjoita suoraan sen päälle. Kuvan voit
+                      vaihtaa raahaamalla tiedoston sen päälle.
                     </p>
                   </div>
                 ) : (
@@ -961,6 +1154,27 @@ export default function LandingPageEditor({
                                   </IconButton>
                                 </div>
                               </div>
+                              {active && activeSlotTypes.length > 1 && (
+                                <SegmentedControl
+                                  size="sm"
+                                  className="mt-2"
+                                  ariaLabel="Muutoksen tyyppi"
+                                  value={slot.type}
+                                  onChange={(type) => changeSlotType(slot, type)}
+                                  options={activeSlotTypes.map((t) => {
+                                    const TypeIcon = TYPE_META[t].icon;
+                                    return {
+                                      value: t,
+                                      label: (
+                                        <>
+                                          <TypeIcon className="size-3.5" aria-hidden />
+                                          {TYPE_META[t].label}
+                                        </>
+                                      ),
+                                    };
+                                  })}
+                                />
+                              )}
                               {variant && (
                                 <div className="mt-2">
                                   {slot.type === "hide" ? (
@@ -986,6 +1200,15 @@ export default function LandingPageEditor({
                                         generating && "animate-pulse motion-reduce:animate-none",
                                       )}
                                     />
+                                  ) : slot.type === "image" ? (
+                                    <ImageSlotField
+                                      value={value}
+                                      original={slot.original}
+                                      baseUrl={new URL(previewPath, targetOrigin).toString()}
+                                      onChange={(url) => setSlotValue(slot.id, url)}
+                                      upload={uploadImage}
+                                      disabled={generating}
+                                    />
                                   ) : (
                                     <Input
                                       value={value}
@@ -995,7 +1218,7 @@ export default function LandingPageEditor({
                                       className="h-8 text-sm"
                                     />
                                   )}
-                                  {changed && slot.type !== "hide" && (
+                                  {changed && (slot.type === "text" || slot.type === "link") && (
                                     <p className="mt-1.5 line-clamp-1 text-xs text-muted-foreground" title={slot.original}>
                                       Alkuperäinen: {slot.original}
                                     </p>

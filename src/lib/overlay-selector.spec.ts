@@ -110,4 +110,17 @@ describe("o.js apply (sama logiikka snippetissä ja esikatselussa)", () => {
       );
     }
   });
+
+  it("vaihtaa kuvan myös <picture>-elementissä ja lazy load -attribuuteissa", () => {
+    document.body.innerHTML = `<picture><source srcset="/a.webp" type="image/webp"><img src="/a.jpg" data-src="/a-big.jpg" sizes="100vw"></picture>`;
+    const img = document.querySelector("img")!;
+    const changes: Change[] = [
+      { id: "i", selector: "picture > img", type: "image", value: "https://cdn.fi/b.jpg", original: "/a.jpg" },
+    ];
+    expect(api.apply(changes)).toBe(1);
+    expect(img.getAttribute("src")).toBe("https://cdn.fi/b.jpg");
+    expect(img.getAttribute("data-src")).toBe("https://cdn.fi/b.jpg");
+    expect(img.hasAttribute("sizes")).toBe(false);
+    expect(document.querySelectorAll("source")).toHaveLength(0);
+  });
 });

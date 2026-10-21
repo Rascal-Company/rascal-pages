@@ -42,7 +42,16 @@ export default async function Dashboard() {
     return <div>Virhe ladatessa sivustoja: {error.message}</div>;
   }
 
-  // 5. Hae jokaisen sivuston 'home' sivun julkaisutila
+  // 5. Overlay-kampanjat: sivusto ilman omaa etusivua on overlay-sivusto
+  const siteIds = (sites || []).map((site) => site.id);
+  const { data: campaigns } = siteIds.length
+    ? await supabase
+        .from("overlay_campaigns")
+        .select("site_id, target_origin")
+        .in("site_id", siteIds)
+    : { data: [] };
+
+  // 6. Hae jokaisen sivuston 'home' sivun julkaisutila
   const sitesWithPublishedStatus = await Promise.all(
     (sites || []).map(async (site) => {
       const { data: page } = await supabase
@@ -52,7 +61,12 @@ export default async function Dashboard() {
         .eq("slug", "home")
         .maybeSingle();
 
+      const siteCampaigns = (campaigns ?? []).filter((c) => c.site_id === site.id);
+
       return {
+        kind: !page && siteCampaigns.length > 0 ? ("overlay" as const) : ("lander" as const),
+        campaignCount: siteCampaigns.length,
+        overlayOrigin: siteCampaigns[0]?.target_origin ?? null,
         id: site.id,
         user_id: site.user_id,
         subdomain: site.subdomain,
