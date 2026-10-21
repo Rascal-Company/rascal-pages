@@ -81,7 +81,7 @@ export default function SegmentedControl<T extends string>({
             title={option.title}
             onClick={() => onChange(option.value)}
             className={cn(
-              "relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "relative z-10 flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               size === "sm" ? "h-7 px-2.5" : "h-8 px-3",
               selected ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}

@@ -5,7 +5,7 @@ import type {
   TemplateConfig,
   HeroContent,
 } from "@/src/lib/templates";
-import { SECTION_TYPE_LABELS } from "@/src/lib/templates";
+import { sectionDisplayName } from "@/src/lib/section-name";
 import { SectionEditProvider } from "@/app/components/blocks/SectionEditContext";
 import { PageViewTracker } from "@/app/components/PageViewTracker";
 import type { SiteId, SectionId } from "@/src/lib/types";
@@ -22,7 +22,7 @@ import {
   FluidRenderProvider,
   type ComponentBlock,
 } from "@/app/components/blocks/fluid/FluidRenderContext";
-import type { FluidContent } from "@/src/lib/fluid";
+import { findComponentData, type FluidContent } from "@/src/lib/fluid";
 import SiteHeader from "@/app/components/site/SiteHeader";
 import type { SiteNavLink } from "@/src/lib/site-nav";
 import type { CasesContent, TechStackContent } from "@/src/lib/templates";
@@ -78,8 +78,14 @@ export default function SiteRenderer({
   const normalizedContent = migrateToSections(content);
   const { sections, theme } = normalizedContent;
 
+  // Pääosio voi olla myös valmiina osiona vapaan osion sisällä.
   const heroSection = sections.find((s) => s.type === "hero");
-  const heroContent = heroSection?.content as HeroContent | undefined;
+  const heroContent =
+    (heroSection?.content as HeroContent | undefined) ??
+    sections
+      .filter((s) => s.type === "fluid")
+      .map((s) => findComponentData((s.content as FluidContent).blocks ?? [], "hero"))
+      .find(Boolean);
 
   const fontsUrl = buildGoogleFontsUrl(theme.headingFont, theme.bodyFont);
   const isDark = isDarkAppearance(theme);
@@ -96,7 +102,9 @@ export default function SiteRenderer({
       if (section.type === "fluid") {
         const fluid = section.content as FluidContent;
         if (fluid.navLabel?.trim() && fluid.anchor) {
-          navItems.push({ label: fluid.navLabel.trim(), href: `#${fluid.anchor}` });
+          const item = { label: fluid.navLabel.trim(), href: `#${fluid.anchor}` };
+          if (fluid.navStyle === "cta") navCta = item;
+          else navItems.push(item);
         }
       } else if (section.type === "about") {
         navItems.push({ label: "Tarina", href: "#tarina" });
@@ -270,7 +278,7 @@ export default function SiteRenderer({
                       ⠿
                     </span>
                     <span className="pointer-events-none rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground shadow">
-                      {SECTION_TYPE_LABELS[section.type]}
+                      {sectionDisplayName(section)}
                     </span>
                   </div>
                   {section.id === activeSectionId && (

@@ -54,6 +54,8 @@ export type FluidContent = {
   anchor?: string;
   /** Nimi sivun navigaatiossa; tyhjä = ei näy navigaatiossa. */
   navLabel?: string;
+  /** "cta" = näytetään navigaation korostettuna painikkeena. */
+  navStyle?: "link" | "cta";
 };
 
 export function columnsFor(layout: FluidLayout): number {
@@ -263,4 +265,24 @@ export function defaultFluidContent(makeId: () => string): FluidContent {
       },
     ],
   };
+}
+
+/**
+ * Osio, jossa on pelkkiä täysleveitä valmiita osioita, renderöidään "paljaana":
+ * valmis osio näyttää täsmälleen omalta itseltään ilman ruudukon reunuksia.
+ */
+export function isBareComponentSection(blocks: FluidBlock[]): boolean {
+  return (
+    blocks.length > 0 &&
+    blocks.every((b) => b.type === "component" && b.desktop.x === 0 && b.desktop.w === DESKTOP_COLUMNS)
+  );
+}
+
+/** Ensimmäisen valmiin pääosion sisältö (portfolion navigaatio ja lomakkeet tarvitsevat sitä). */
+export function findComponentData<T extends ComponentSectionType>(
+  blocks: FluidBlock[],
+  sectionType: T,
+): SectionContentMap[T] | undefined {
+  const block = blocks.find((b) => b.type === "component" && b.content.sectionType === sectionType);
+  return block?.type === "component" ? (block.content.data as SectionContentMap[T]) : undefined;
 }

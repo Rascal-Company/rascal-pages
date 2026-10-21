@@ -22,6 +22,8 @@ import {
   moveRect,
   newBlock,
   newComponentBlock,
+  isBareComponentSection,
+  readingOrder,
   rectFor,
   resizeRect,
   rowCount,
@@ -87,6 +89,30 @@ export default function FluidSection({
   const editor = useFluidEditor();
   const blocks = useMemo(() => content?.blocks ?? [], [content]);
   const autoMobile = useMemo(() => autoMobileLayout(blocks), [blocks]);
+
+  const bare = isBareComponentSection(blocks);
+
+  if (editable && editor && bare) {
+    return (
+      <EditableBareSection
+        sectionId={sectionId}
+        content={content}
+        blocks={blocks}
+        editor={editor}
+        active={active}
+      />
+    );
+  }
+
+  if (bare) {
+    return (
+      <div id={content?.anchor || undefined} className="scroll-mt-24">
+        {readingOrder(blocks).map((block) => (
+          <FluidBlockView key={block.id} block={block} bare />
+        ))}
+      </div>
+    );
+  }
 
   if (editable && editor) {
     return (
@@ -642,5 +668,112 @@ function InlineText({
     >
       {block.content.text}
     </Tag>
+  );
+}
+
+/**
+ * Paljas komponenttiosio editorissa: valmis osio näkyy omana itsenään, sen
+ * tekstejä voi muokata suoraan ja sen voi valita. Tekstin, kuvan tai painikkeen
+ * lisääminen siirtää osion ruudukkotilaan.
+ */
+function EditableBareSection({
+  sectionId,
+  content,
+  blocks,
+  editor,
+  active,
+}: {
+  sectionId: SectionId;
+  content: FluidContent;
+  blocks: FluidBlock[];
+  editor: FluidEditorApi;
+  active: boolean;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const selectedId = editor.selection?.sectionId === sectionId ? editor.selection.blockId : null;
+
+  function commitBlocks(next: FluidBlock[]) {
+    editor.commit(sectionId, { ...content, blocks: next });
+  }
+
+  function addBlock(option: (typeof ADD_OPTIONS)[number]) {
+    const block = newBlock(option.type, nanoid(10), blocks, {
+      ...(option.variant && { variant: option.variant }),
+      ...(option.text && { text: option.text }),
+    });
+    commitBlocks([...blocks, block]);
+    editor.select(sectionId, block.id);
+    setMenuOpen(false);
+  }
+
+  return (
+    <div id={content?.anchor || undefined} className="scroll-mt-24">
+      {readingOrder(blocks).map((block) => (
+        <div
+          key={block.id}
+          className="relative"
+          style={selectedId === block.id ? { outline: `2px solid ${EDITOR_ACCENT}`, outlineOffset: -2 } : undefined}
+          onClick={(e) => {
+            e.stopPropagation();
+            editor.select(sectionId, block.id);
+          }}
+        >
+          <SectionEditProvider
+            editable
+            updateField={(field, value) =>
+              commitBlocks(
+                blocks.map((b) =>
+                  b.id === block.id && b.type === "component"
+                    ? {
+                        ...b,
+                        content: {
+                          ...b.content,
+                          data: { ...(b.content.data as object), [field]: value } as typeof b.content.data,
+                        },
+                      }
+                    : b,
+                ),
+              )
+            }
+          >
+            <FluidBlockView block={block} editing bare />
+          </SectionEditProvider>
+        </div>
+      ))}
+      {active && (
+        <div className="relative flex justify-center pb-6">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen((open) => !open);
+            }}
+            className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-white shadow-lg transition-transform active:scale-95"
+            style={{ background: EDITOR_ACCENT }}
+          >
+            <Plus className="size-4" aria-hidden />
+            Lisää lohko
+          </button>
+          {menuOpen && (
+            <div
+              className="absolute bottom-full z-50 mb-2 grid w-72 grid-cols-4 gap-1 rounded-xl bg-neutral-900 p-1.5 text-white shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {ADD_OPTIONS.map((option) => (
+                <button
+                  key={option.label}
+                  type="button"
+                  onClick={() => addBlock(option)}
+                  className="flex flex-col items-center gap-1.5 rounded-lg px-2 py-3 text-xs font-medium hover:bg-white/10"
+                >
+                  <option.icon className="size-5" aria-hidden />
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

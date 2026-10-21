@@ -11,6 +11,7 @@ import type {
 import { SECTION_TYPE_LABELS } from "@/src/lib/templates";
 import SegmentedControl from "@/app/components/ui/segmented-control";
 import BlockEditor from "./BlockEditor";
+import { sectionDisplayName } from "@/src/lib/section-name";
 import SectionStyleInspector from "./SectionStyleInspector";
 import FluidBlockInspector from "./FluidBlockInspector";
 import { useFluidEditor } from "@/app/components/blocks/fluid/FluidEditorContext";
@@ -62,7 +63,7 @@ export default function SectionInspector({
           </button>
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              {SECTION_TYPE_LABELS[section.type]} · lohko
+              {sectionDisplayName(section)} · lohko
             </p>
             <h2 className="truncate text-sm font-semibold">
               {selectedBlock.type === "component"
@@ -100,14 +101,14 @@ export default function SectionInspector({
   return (
     <aside
       className="overlay-pop flex w-[340px] shrink-0 flex-col border-l border-border bg-card"
-      aria-label={`Osio: ${SECTION_TYPE_LABELS[section.type]}`}
+      aria-label={`Osio: ${sectionDisplayName(section)}`}
     >
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             Osio
           </p>
-          <h2 className="truncate text-sm font-semibold">{SECTION_TYPE_LABELS[section.type]}</h2>
+          <h2 className="truncate text-sm font-semibold">{sectionDisplayName(section)}</h2>
         </div>
         <button
           type="button"

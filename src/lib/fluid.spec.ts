@@ -9,6 +9,8 @@ import {
   moveRect,
   newBlock,
   newComponentBlock,
+  isBareComponentSection,
+  findComponentData,
   slugifyAnchor,
   readingOrder,
   rectFor,
@@ -116,5 +118,20 @@ describe("komponenttilohko ja ankkurit", () => {
   it("ankkuri nimestä ilman ääkkösiä ja erikoismerkkejä", () => {
     expect(slugifyAnchor("Meistä & tiimi")).toBe("meista-tiimi");
     expect(slugifyAnchor("  Ota yhteyttä! ")).toBe("ota-yhteytta");
+  });
+});
+
+describe("paljas komponenttiosio", () => {
+  const faq = newComponentBlock("faq", [{ question: "K", answer: "V" }], "c", []);
+  it("pelkät täysleveät komponentit = paljas", () => {
+    expect(isBareComponentSection([faq])).toBe(true);
+    expect(isBareComponentSection([])).toBe(false);
+    expect(isBareComponentSection([faq, text("t", 0, 20)])).toBe(false);
+    expect(isBareComponentSection([{ ...faq, desktop: { ...faq.desktop, w: 12 } }])).toBe(false);
+  });
+
+  it("löytää komponentin datan", () => {
+    expect(findComponentData([text("t", 0, 0), faq], "faq")).toEqual([{ question: "K", answer: "V" }]);
+    expect(findComponentData([faq], "hero")).toBeUndefined();
   });
 });

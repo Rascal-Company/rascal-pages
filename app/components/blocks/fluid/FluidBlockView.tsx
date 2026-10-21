@@ -50,10 +50,13 @@ export function textElementProps(content: FluidTextContent) {
 export default function FluidBlockView({
   block,
   editing = false,
+  bare = false,
 }: {
   block: FluidBlock;
   /** Editorissa tyhjät kuvat näytetään paikkamerkkinä. */
   editing?: boolean;
+  /** Paljas komponenttiosio: valmis osio omine reunuksineen. */
+  bare?: boolean;
 }) {
   if (block.type === "text") {
     const { Tag, className, style } = textElementProps(block.content);
@@ -91,7 +94,7 @@ export default function FluidBlockView({
   }
 
   if (block.type === "component") {
-    return <ComponentView block={block} />;
+    return <ComponentView block={block} bare={bare} />;
   }
 
   const { label, href, variant, align } = block.content;
@@ -114,8 +117,15 @@ export default function FluidBlockView({
   );
 }
 
-function ComponentView({ block }: { block: Extract<FluidBlock, { type: "component" }> }) {
+function ComponentView({
+  block,
+  bare,
+}: {
+  block: Extract<FluidBlock, { type: "component" }>;
+  bare: boolean;
+}) {
   const render = useComponentRenderer();
-  // Valmiilla osioilla on omat sisäreunuksensa; ruudukko vain sijoittaa ne.
+  if (bare) return <>{render?.(block) ?? null}</>;
+  // Ruudukon sisällä valmiin osion pystyreunukset tulevat ruudukosta.
   return <div className="h-full [&>section]:py-0">{render?.(block) ?? null}</div>;
 }

@@ -3,7 +3,7 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import type { Section } from "@/src/lib/templates";
-import { SECTION_TYPE_LABELS } from "@/src/lib/templates";
+import { sectionDisplayName } from "@/src/lib/section-name";
 import { Button } from "@/app/components/ui/button";
 
 type SortableSectionItemProps = {
@@ -73,7 +73,7 @@ export default function SortableSectionItem({
         onClick={onClick}
         className="flex-1 text-left text-sm font-medium text-foreground"
       >
-        {SECTION_TYPE_LABELS[section.type]}
+        {sectionDisplayName(section)}
       </button>
 
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

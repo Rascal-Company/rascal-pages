@@ -8,6 +8,8 @@ import type {
 import type { ThemePreset } from "@/src/lib/site-theme";
 import type { SectionId } from "@/src/lib/types";
 import { createSection, getDefaultSectionContent } from "./contentUtils";
+import { convertSection } from "@/src/lib/fluid-convert";
+import { nanoid } from "nanoid";
 
 type ContentUpdater = (prev: TemplateConfig) => TemplateConfig;
 
@@ -102,7 +104,8 @@ export function addSection(
 ): ContentUpdater {
   return (prev) => {
     const defaultContent = getDefaultSectionContent(type);
-    const newSection = createSection(type, defaultContent);
+    // Uudet osiot ovat aina vapaita osioita (valmis osio komponenttilohkona).
+    const newSection = convertSection(createSection(type, defaultContent), () => nanoid(10));
     const sections = [...prev.sections];
 
     if (afterId) {

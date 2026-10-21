@@ -18,6 +18,8 @@ import {
 import { updatePageContent } from "@/app/actions/save-page";
 import type { TemplateConfig, SectionType, Section } from "@/src/lib/templates";
 import { normalizeContent, mergeTemplateContent } from "./utils/contentUtils";
+import { convertPageToFluid } from "@/src/lib/fluid-convert";
+import { nanoid } from "nanoid";
 import {
   reorderSections,
   updateSectionContent,
@@ -90,6 +92,10 @@ export default function Editor({
   crmEnabled,
 }: EditorProps) {
   const { showToast, showConfirm } = useToast();
+  // Vanhat osiot muunnetaan vapaiksi osioiksi kerran, editorin avautuessa.
+  const [initialPage] = useState(() =>
+    convertPageToFluid(normalizeContent(initialContent), () => nanoid(10)),
+  );
   const {
     state: content,
     set: setContent,
@@ -97,7 +103,7 @@ export default function Editor({
     redo,
     canUndo,
     canRedo,
-  } = useHistoryState<TemplateConfig>(normalizeContent(initialContent));
+  } = useHistoryState<TemplateConfig>(initialPage);
   const [published, setPublished] = useState<boolean>(initialPublished);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -231,7 +237,8 @@ export default function Editor({
     );
 
     if (confirmed) {
-      const mergedContent = mergeTemplateContent(content, newTemplateId);
+      const merged = mergeTemplateContent(content, newTemplateId);
+      const mergedContent = merged && convertPageToFluid(merged, () => nanoid(10));
       if (mergedContent) {
         setContent(mergedContent);
         setActiveSectionId(mergedContent.sections[0]?.id || null);
