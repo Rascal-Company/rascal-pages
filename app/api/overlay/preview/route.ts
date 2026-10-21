@@ -24,17 +24,21 @@ export async function GET(req: NextRequest) {
 
   const { data: variant } = await createAdminClient()
     .from("overlay_variants")
-    .select("target_origin, path_pattern")
+    .select("overlay_landing_pages!inner(path_pattern, overlay_campaigns!inner(target_origin))")
     .eq("id", variantId)
     .maybeSingle();
-  if (!variant) return proxyErrorPage("Esikatselulinkki ei ole voimassa.", 404);
+  const landingPage = variant?.overlay_landing_pages as unknown as
+    | { path_pattern: string; overlay_campaigns: { target_origin: string } }
+    | undefined;
+  if (!landingPage) return proxyErrorPage("Esikatselulinkki ei ole voimassa.", 404);
 
-  const defaultPath = variant.path_pattern.includes("*") ? "/" : variant.path_pattern;
+  const origin = landingPage.overlay_campaigns.target_origin;
+  const defaultPath = landingPage.path_pattern.includes("*") ? "/" : landingPage.path_pattern;
   const path = req.nextUrl.searchParams.get("path") || defaultPath;
   if (!path.startsWith("/")) return proxyErrorPage("Virheellinen polku.", 400);
 
-  const target = new URL(path, variant.target_origin);
-  if (target.origin !== variant.target_origin) {
+  const target = new URL(path, origin);
+  if (target.origin !== origin) {
     return proxyErrorPage("Virheellinen polku.", 400);
   }
 

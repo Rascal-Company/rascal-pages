@@ -6,9 +6,10 @@ import {
   parseChanges,
   parseMatch,
   parseTargetUrl,
-  pickVariant,
+  assignVariant,
+  pickTarget,
   subdomainFromOrigin,
-  type OverlayVariantRow,
+  type OverlayTargetRow,
 } from "./overlay";
 
 describe("parseTargetUrl", () => {
@@ -58,13 +59,13 @@ describe("matchesQuery", () => {
   });
 });
 
-describe("pickVariant", () => {
+describe("pickTarget", () => {
   const base = {
     target_origin: "https://asiakas.fi",
     path_pattern: "*",
     changes: [],
   };
-  const variants: OverlayVariantRow[] = [
+  const variants: (OverlayTargetRow & { id: string })[] = [
     { ...base, id: createOverlayVariantId("all"), match: {}, updated_at: "2026-10-01" },
     {
       ...base,
@@ -83,22 +84,22 @@ describe("pickVariant", () => {
   it("valitsee tarkimmin kohdennetun", () => {
     const url = new URL("https://asiakas.fi/");
     expect(
-      pickVariant(variants, url, { utm_campaign: "syksy", utm_content: "video1" })?.id,
+      pickTarget(variants, url, { utm_campaign: "syksy", utm_content: "video1" })?.id,
     ).toBe("creative");
-    expect(pickVariant(variants, url, { utm_campaign: "syksy" })?.id).toBe("campaign");
-    expect(pickVariant(variants, url, {})?.id).toBe("all");
+    expect(pickTarget(variants, url, { utm_campaign: "syksy" })?.id).toBe("campaign");
+    expect(pickTarget(variants, url, {})?.id).toBe("all");
   });
 
   it("ei palauta toisen originin variantteja", () => {
-    expect(pickVariant(variants, new URL("https://muu.fi/"), {})).toBeNull();
+    expect(pickTarget(variants, new URL("https://muu.fi/"), {})).toBeNull();
   });
 
   it("tasatilanteessa uusin voittaa", () => {
-    const tie: OverlayVariantRow[] = [
+    const tie: (OverlayTargetRow & { id: string })[] = [
       { ...base, id: createOverlayVariantId("old"), match: {}, updated_at: "2026-01-01" },
       { ...base, id: createOverlayVariantId("new"), match: {}, updated_at: "2026-02-01" },
     ];
-    expect(pickVariant(tie, new URL("https://asiakas.fi/"), {})?.id).toBe("new");
+    expect(pickTarget(tie, new URL("https://asiakas.fi/"), {})?.id).toBe("new");
   });
 });
 
@@ -157,5 +158,29 @@ describe("subdomainFromOrigin", () => {
   it("ei palauta varattua nimeä", () => {
     expect(subdomainFromOrigin("https://app.fi")).toBe("appsite");
     expect(subdomainFromOrigin("https://www.app.fi")).toBe("appsite");
+  });
+});
+
+describe("assignVariant", () => {
+  const variants = [{ id: "b" }, { id: "a" }, { id: "c" }];
+
+  it("antaa samalle kävijälle aina saman variaation järjestyksestä riippumatta", () => {
+    const first = assignVariant(variants, "kävijä-1", "lp");
+    expect(assignVariant([...variants].reverse(), "kävijä-1", "lp")).toEqual(first);
+  });
+
+  it("jakaa kävijät kaikille variaatioille", () => {
+    const counts = new Map<string, number>();
+    for (let i = 0; i < 3000; i++) {
+      const v = assignVariant(variants, `v${i}`, "lp")!;
+      counts.set(v.id, (counts.get(v.id) ?? 0) + 1);
+    }
+    for (const id of ["a", "b", "c"]) {
+      expect(counts.get(id)).toBeGreaterThan(800);
+    }
+  });
+
+  it("palauttaa nullin ilman variaatioita", () => {
+    expect(assignVariant([], "x", "lp")).toBeNull();
   });
 });

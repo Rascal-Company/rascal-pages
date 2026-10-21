@@ -20,8 +20,8 @@ export default function NewOverlaySiteForm() {
     setIsSubmitting(true);
     const result = await createOverlaySite({ targetUrl });
     if (result.success) {
-      const { siteId, variantId } = result.data;
-      router.push(`/app/dashboard/${siteId}/overlay/${variantId}`);
+      const { siteId, campaignId, landingPageId } = result.data;
+      router.push(`/app/dashboard/${siteId}/overlay/${campaignId}/${landingPageId}`);
     } else {
       setError(result.error);
       setIsSubmitting(false);

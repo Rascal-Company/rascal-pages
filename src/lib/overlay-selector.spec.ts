@@ -3,9 +3,13 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { buildSelector, canEditText, normalizeText } from "./overlay-selector";
+import { assignVariant } from "./overlay";
 
 type Change = { id: string; selector: string; type: string; value: string; original: string };
-type OverlayApi = { apply: (changes: Change[], doc?: Document) => number };
+type OverlayApi = {
+  apply: (changes: Change[], doc?: Document) => number;
+  pick: (variants: { id: string }[], visitorId: string, landingPageId: string) => { id: string } | null;
+};
 
 beforeEach(() => {
   document.body.innerHTML = `
@@ -96,5 +100,14 @@ describe("o.js apply (sama logiikka snippetissä ja esikatselussa)", () => {
     api.apply([change]);
     expect(api.apply([{ ...change, value: "toka" }])).toBe(1);
     expect(document.querySelector("span")!.textContent).toBe("toka");
+  });
+
+  it("valitsee A/B-variaation samoin kuin palvelin (assignVariant)", () => {
+    const variants = [{ id: "c3" }, { id: "a1" }, { id: "b2" }];
+    for (let i = 0; i < 200; i++) {
+      expect(api.pick(variants, `kävijä-${i}`, "lp-1")?.id).toBe(
+        assignVariant(variants, `kävijä-${i}`, "lp-1")?.id,
+      );
+    }
   });
 });

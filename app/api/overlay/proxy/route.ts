@@ -4,14 +4,14 @@ import { isValidUuid } from "@/src/lib/types";
 import { proxiedPageResponse, proxyErrorPage } from "@/src/lib/overlay-proxy";
 
 /**
- * Overlay-editorin proxy: /api/overlay/proxy?v=VARIANT_ID&path=/polku
- * Hakee variantin kohdesivun (vain variantin omasta originista) ja palauttaa
+ * Overlay-editorin proxy: /api/overlay/proxy?c=CAMPAIGN_ID&path=/polku
+ * Hakee kampanjan kohdesivun (vain kampanjan omasta originista) ja palauttaa
  * sen editorin iframeen ilman asiakkaan skriptejä.
  */
 export async function GET(req: NextRequest) {
-  const variantId = req.nextUrl.searchParams.get("v") ?? "";
+  const campaignId = req.nextUrl.searchParams.get("c") ?? "";
   const path = req.nextUrl.searchParams.get("path") || "/";
-  if (!isValidUuid(variantId) || !path.startsWith("/")) {
+  if (!isValidUuid(campaignId) || !path.startsWith("/")) {
     return proxyErrorPage("Virheellinen pyyntö.", 400);
   }
 
@@ -27,21 +27,21 @@ export async function GET(req: NextRequest) {
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
-  const { data: variant } = await supabase
-    .from("overlay_variants")
+  const { data: campaign } = await supabase
+    .from("overlay_campaigns")
     .select("target_origin, sites!inner(user_id)")
-    .eq("id", variantId)
+    .eq("id", campaignId)
     .maybeSingle();
 
-  const site = variant?.sites as unknown as { user_id: string } | undefined;
-  if (!variant || !orgMember || site?.user_id !== orgMember.org_id) {
-    return proxyErrorPage("Varianttia ei löydy.", 404);
+  const site = campaign?.sites as unknown as { user_id: string } | undefined;
+  if (!campaign || !orgMember || site?.user_id !== orgMember.org_id) {
+    return proxyErrorPage("Kampanjaa ei löydy.", 404);
   }
 
-  // Polku liitetään aina variantin originiin, joten proxyllä ei voi hakea
+  // Polku liitetään aina kampanjan originiin, joten proxyllä ei voi hakea
   // mielivaltaisia osoitteita.
-  const target = new URL(path, variant.target_origin);
-  if (target.origin !== variant.target_origin) {
+  const target = new URL(path, campaign.target_origin);
+  if (target.origin !== campaign.target_origin) {
     return proxyErrorPage("Virheellinen polku.", 400);
   }
 

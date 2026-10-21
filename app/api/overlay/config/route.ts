@@ -4,19 +4,25 @@ import { isValidUuid } from "@/src/lib/types";
 import { previewSecret, verifyPreviewToken } from "@/src/lib/overlay-token";
 import {
   OVERLAY_MATCH_KEYS,
-  pickVariant,
+  pickTarget,
+  type OverlayChange,
   type OverlayMatch,
-  type OverlayVariantRow,
 } from "@/src/lib/overlay";
 
 /**
- * Julkinen endpoint o.js-snippetille: palauttaa kävijälle valitun variantin
- * muutokset. Kutsutaan asiakkaan sivulta, joten CORS on auki kaikille.
+ * Julkinen endpoint o.js-snippetille: palauttaa kävijälle valitun
+ * laskeutumissivun julkaistut variaatiot. Snippet arpoo kävijän variaation
+ * (A/B), joten vastaus on sama kaikille ja välimuistiin sopiva.
+ * Kutsutaan asiakkaan sivulta, joten CORS on auki kaikille.
  */
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
 };
+
+type ConfigVariant = { id: string; changes: OverlayChange[] };
+
+const EMPTY = { landingPage: null, variants: [] as ConfigVariant[] };
 
 function json(body: unknown, cache: string) {
   return NextResponse.json(body, {
@@ -28,35 +34,50 @@ export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-/** Jakolinkin esikatselu: variantin tallennetut muutokset tunnisteella, myös luonnoksena. */
-async function previewChanges(token: string) {
+/** Jakolinkin esikatselu: yksi variaatio tunnisteella, myös luonnoksena. */
+async function previewConfig(token: string) {
   const variantId = verifyPreviewToken(token, previewSecret());
-  if (!variantId) return json({ changes: [] }, "no-store");
+  if (!variantId) return json(EMPTY, "no-store");
 
   const { data } = await createAdminClient()
     .from("overlay_variants")
-    .select("id, changes")
+    .select("id, landing_page_id, changes")
     .eq("id", variantId)
     .maybeSingle();
+  if (!data) return json(EMPTY, "no-store");
 
-  return json({ variant: data?.id ?? null, changes: data?.changes ?? [] }, "no-store");
+  return json(
+    {
+      landingPage: data.landing_page_id,
+      variants: [{ id: data.id, changes: data.changes ?? [] }],
+      preview: true,
+    },
+    "no-store",
+  );
 }
+
+type LandingPageRow = {
+  id: string;
+  path_pattern: string;
+  match: OverlayMatch;
+  updated_at: string;
+  overlay_campaigns: { target_origin: string };
+  overlay_variants: { id: string; changes: OverlayChange[]; active: boolean }[];
+};
 
 export async function GET(req: NextRequest) {
   const search = req.nextUrl.searchParams;
   const token = search.get("t");
-  if (token) return previewChanges(token);
+  if (token) return previewConfig(token);
 
   const siteId = search.get("s") ?? "";
-  const rawUrl = search.get("u") ?? "";
-
   let pageUrl: URL;
   try {
-    pageUrl = new URL(rawUrl);
+    pageUrl = new URL(search.get("u") ?? "");
   } catch {
-    return json({ changes: [] }, "no-store");
+    return json(EMPTY, "no-store");
   }
-  if (!isValidUuid(siteId)) return json({ changes: [] }, "no-store");
+  if (!isValidUuid(siteId)) return json(EMPTY, "no-store");
 
   const params: OverlayMatch = {};
   for (const key of OVERLAY_MATCH_KEYS) {
@@ -65,23 +86,39 @@ export async function GET(req: NextRequest) {
   }
 
   const { data, error } = await createAdminClient()
-    .from("overlay_variants")
-    .select("id, target_origin, path_pattern, match, changes, updated_at")
-    .eq("site_id", siteId)
-    .eq("target_origin", pageUrl.origin)
-    .eq("active", true);
+    .from("overlay_landing_pages")
+    .select(
+      "id, path_pattern, match, updated_at, overlay_campaigns!inner(site_id, target_origin, active), overlay_variants(id, changes, active)",
+    )
+    .eq("overlay_campaigns.site_id", siteId)
+    .eq("overlay_campaigns.target_origin", pageUrl.origin)
+    .eq("overlay_campaigns.active", true);
 
   if (error) {
     console.error("Overlay config error:", error);
-    return json({ changes: [] }, "no-store");
+    return json(EMPTY, "no-store");
   }
 
-  const variant = pickVariant((data ?? []) as OverlayVariantRow[], pageUrl, params);
+  // Vain laskeutumissivut, joilla on vähintään yksi julkaistu variaatio.
+  const candidates = ((data ?? []) as unknown as LandingPageRow[])
+    .map((lp) => ({
+      ...lp,
+      target_origin: lp.overlay_campaigns.target_origin,
+      variants: lp.overlay_variants.filter((v) => v.active),
+    }))
+    .filter((lp) => lp.variants.length > 0);
+
+  const landingPage = pickTarget(candidates, pageUrl, params);
 
   // Lyhyt CDN-cache: muutokset näkyvät minuutissa, mutta liikennepiikit
   // eivät kuormita kantaa.
   return json(
-    { variant: variant?.id ?? null, changes: variant?.changes ?? [] },
+    landingPage
+      ? {
+          landingPage: landingPage.id,
+          variants: landingPage.variants.map((v) => ({ id: v.id, changes: v.changes })),
+        }
+      : EMPTY,
     "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
   );
 }

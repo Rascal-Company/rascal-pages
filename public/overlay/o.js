@@ -11,8 +11,9 @@
 (function () {
   "use strict";
 
-  var MATCH_KEYS = ["utm_campaign", "utm_content", "rp"];
+  var MATCH_KEYS = ["utm_term", "utm_campaign", "utm_content", "rp"];
   var STORAGE_KEY = "rp_overlay_params";
+  var VISITOR_KEY = "rp_overlay_vid";
   var HIDE_TIMEOUT_MS = 800;
   var OBSERVE_MS = 15000;
 
@@ -68,7 +69,26 @@
     return count;
   }
 
-  window.__rpOverlay = { apply: apply, normalize: normalize };
+  // FNV-1a — pidettävä samana kuin src/lib/overlay.ts:n hashString().
+  function hash(value) {
+    var h = 0x811c9dc5;
+    for (var i = 0; i < value.length; i++) {
+      h ^= value.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return h;
+  }
+
+  // Sama kävijä saa aina saman variaation (A/B) — vrt. assignVariant().
+  function pick(variants, visitorId, landingPageId) {
+    if (!variants.length) return null;
+    var sorted = variants.slice().sort(function (a, b) {
+      return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    });
+    return sorted[hash(visitorId + ":" + landingPageId) % sorted.length];
+  }
+
+  window.__rpOverlay = { apply: apply, normalize: normalize, pick: pick };
 
   var script = document.currentScript;
   if (!script || script.hasAttribute("data-rp-preview")) return;
@@ -125,6 +145,34 @@
     });
   }
 
+  function visitorId() {
+    var id;
+    try {
+      id = localStorage.getItem(VISITOR_KEY);
+      if (!id) {
+        id = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12);
+        localStorage.setItem(VISITOR_KEY, id);
+      }
+    } catch {
+      id = "anon-" + Math.random().toString(36).slice(2, 12);
+    }
+    return id;
+  }
+
+  function track(variantId, type, vid) {
+    var body = JSON.stringify({ s: siteId, v: variantId, vid: vid, t: type });
+    var endpoint = new URL("/api/overlay/event", script.src).toString();
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(endpoint, new Blob([body], { type: "text/plain" }));
+      } else {
+        fetch(endpoint, { method: "POST", body: body, keepalive: true, credentials: "omit" });
+      }
+    } catch {
+      // Tilastointi ei saa rikkoa sivua.
+    }
+  }
+
   function whenReady(fn) {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", fn);
@@ -135,13 +183,26 @@
 
   fetch(url.toString(), { credentials: "omit" })
     .then(function (res) {
-      return res.ok ? res.json() : { changes: [] };
+      return res.ok ? res.json() : {};
     })
     .then(function (data) {
-      var changes = (data && data.changes) || [];
+      var vid = visitorId();
+      var variant = pick((data && data.variants) || [], vid, (data && data.landingPage) || "");
+      var changes = (variant && variant.changes) || [];
       whenReady(function () {
         apply(changes);
         reveal();
+        // Tilastot vain oikealta sivulta, ei jakolinkin esikatselusta.
+        if (variant && !token) {
+          track(variant.id, "view", vid);
+          document.addEventListener(
+            "submit",
+            function () {
+              track(variant.id, "conversion", vid);
+            },
+            true,
+          );
+        }
         if (!changes.length || !window.MutationObserver) return;
 
         // SPA-kehykset voivat hydraation yhteydessä palauttaa alkuperäisen
