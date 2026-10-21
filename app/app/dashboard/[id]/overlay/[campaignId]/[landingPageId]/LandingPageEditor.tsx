@@ -66,7 +66,7 @@ import {
   fingerprintOf,
   normalizeText,
 } from "@/src/lib/overlay-selector";
-import SegmentedControl from "../../components/SegmentedControl";
+import SegmentedControl from "@/app/components/ui/segmented-control";
 import StatusPill from "../../components/StatusPill";
 import ImageSlotField from "../../components/ImageSlotField";
 import { createFrameHighlighter, type FrameHighlighter } from "../../components/frame-highlight";
