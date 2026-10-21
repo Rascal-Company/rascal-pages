@@ -383,7 +383,8 @@ function EditableFluidSection({
   }, [selectedId]);
 
   const showGuides = draft !== null && !draft.settling;
-  const fillerRow = rows + 6;
+  // Tyhjää tilaa raahaamista varten vain valitussa osiossa; muuten osio näyttää julkaistun korkeuden.
+  const fillerRow = rows + (active || draft ? 6 : 1);
 
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-16 lg:px-8">

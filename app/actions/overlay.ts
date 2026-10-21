@@ -1,5 +1,6 @@
 "use server";
 
+import { loadBrandContext } from "@/src/lib/brand-context";
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/src/utils/supabase/server";
@@ -22,7 +23,6 @@ import {
   createOverlayProfileId,
   parseSlots,
   parseSlotValues,
-  type BrandContext,
   type OverlayCampaignId,
   type OverlayLandingPageId,
   type OverlayProfileId,
@@ -741,29 +741,6 @@ export async function importCrmSegmentProfile(
 
 /** AI-generointien rajoitus organisaatiota kohden. */
 const copyLimiter = new RateLimiter({ maxRequests: 30, windowMs: 15 * 60 * 1000 });
-
-/** Rascal AI -profiili organisaation riviltä (public.users). */
-async function loadBrandContext(orgId: string): Promise<BrandContext> {
-  const { data } = await createAdminClient()
-    .from("users")
-    .select(
-      "company_name, company_website_url, industry, content_language, company_summary, icp_summary, buyer_persona, tov, voice_anchor",
-    )
-    .eq("id", orgId)
-    .maybeSingle();
-
-  return {
-    companyName: data?.company_name ?? null,
-    website: data?.company_website_url ?? null,
-    industry: data?.industry ?? null,
-    language: data?.content_language ?? null,
-    companySummary: data?.company_summary ?? null,
-    icpSummary: data?.icp_summary ?? null,
-    buyerPersona: data?.buyer_persona ?? null,
-    tov: data?.tov ?? null,
-    voiceAnchor: data?.voice_anchor ?? null,
-  };
-}
 
 /**
  * Personoi variaation tekstit laskeutumissivun tallennettuihin
