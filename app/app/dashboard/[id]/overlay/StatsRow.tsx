@@ -1,4 +1,5 @@
 import { Eye, Target, UsersRound } from "lucide-react";
+import { cn } from "@/src/lib/utils";
 import type { VariantStats } from "./overlay-data";
 
 export function conversionRate(stats: VariantStats): string {
@@ -6,44 +7,51 @@ export function conversionRate(stats: VariantStats): string {
   return `${((stats.convertedVisitors / stats.visitors) * 100).toFixed(1).replace(".", ",")} %`;
 }
 
+const NUMBER = new Intl.NumberFormat("fi-FI");
+
 /** Kävijät, näytöt ja konversio. `compact` = yhdelle riville variaatiolistaan. */
 export default function StatsRow({
   stats,
   compact = false,
+  className,
 }: {
   stats: VariantStats;
   compact?: boolean;
+  className?: string;
 }) {
   const items = [
-    { icon: UsersRound, value: stats.visitors.toString(), label: "Kävijät" },
-    { icon: Eye, value: stats.views.toString(), label: "Näytöt" },
+    { icon: UsersRound, value: NUMBER.format(stats.visitors), label: "Kävijät" },
+    { icon: Eye, value: NUMBER.format(stats.views), label: "Näytöt" },
     { icon: Target, value: conversionRate(stats), label: "Konversio" },
   ];
 
   if (compact) {
     return (
-      <div className="flex items-center gap-4 text-sm text-brand-dark/80">
+      <dl className={cn("flex items-center gap-4 text-sm tabular-nums", className)}>
         {items.map(({ icon: Icon, value, label }) => (
-          <span key={label} className="inline-flex items-center gap-1" title={label}>
-            <Icon className="size-4 text-brand-dark/50" aria-hidden />
-            {value}
-          </span>
+          <div key={label} className="inline-flex items-center gap-1.5" title={label}>
+            <dt>
+              <Icon className="size-3.5 text-muted-foreground" aria-hidden />
+              <span className="sr-only">{label}</span>
+            </dt>
+            <dd className="font-medium">{value}</dd>
+          </div>
         ))}
-      </div>
+      </dl>
     );
   }
 
   return (
-    <div className="grid grid-cols-3 gap-4 rounded-md bg-brand-light p-4">
+    <dl className={cn("grid grid-cols-3 divide-x divide-border rounded-xl bg-muted/60", className)}>
       {items.map(({ icon: Icon, value, label }) => (
-        <div key={label}>
-          <div className="flex items-center gap-2">
-            <Icon className="size-4 text-primary" aria-hidden />
-            <span className="text-xl font-semibold text-brand-dark">{value}</span>
-          </div>
-          <p className="mt-1 text-xs text-brand-dark/60">{label}</p>
+        <div key={label} className="px-4 py-3">
+          <dt className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Icon className="size-3.5" aria-hidden />
+            {label}
+          </dt>
+          <dd className="mt-1 text-xl font-semibold tabular-nums tracking-tight">{value}</dd>
         </div>
       ))}
-    </div>
+    </dl>
   );
 }

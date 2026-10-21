@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
 import { createOverlayCampaign } from "@/app/actions/overlay";
 import type { SiteId } from "@/src/lib/types";
 
@@ -29,22 +31,35 @@ export default function NewCampaignForm({ siteId }: { siteId: SiteId }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row">
-      <Input
-        placeholder="Kampanjan nimi, esim. Syksy 2026"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="sm:max-w-xs"
-      />
-      <Input
-        placeholder="https://asiakas.fi/hinnasto"
-        value={targetUrl}
-        onChange={(e) => setTargetUrl(e.target.value)}
-      />
-      <Button type="submit" disabled={busy || !name || !targetUrl} className="shrink-0">
-        {busy ? "Luodaan…" : "Luo ja avaa editori"}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-1.5">
+        <Label htmlFor="campaign-name">Nimi</Label>
+        <Input
+          id="campaign-name"
+          placeholder="Esim. Syksy 2026"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          autoFocus
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="campaign-url">Asiakkaan sivu</Label>
+        <Input
+          id="campaign-url"
+          inputMode="url"
+          placeholder="https://asiakas.fi/hinnasto"
+          value={targetUrl}
+          onChange={(e) => setTargetUrl(e.target.value)}
+        />
+        <p className="text-xs text-muted-foreground">
+          Sivu avautuu editoriin heti — asennusta tarvitaan vasta tuotantoon.
+        </p>
+      </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      <Button type="submit" disabled={busy || !name.trim() || !targetUrl.trim()} className="w-full">
+        {busy && <Loader2 className="animate-spin" aria-hidden />}
+        {busy ? "Avataan editoria…" : "Luo ja avaa editori"}
       </Button>
-      {error && <p className="text-sm text-red-600 sm:basis-full">{error}</p>}
     </form>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { createAdminClient } from "@/src/utils/supabase/admin";
 import { loadOverlayContext, loadProfiles } from "../overlay-data";
 import ProfilesClient from "./ProfilesClient";
@@ -22,18 +23,19 @@ export default async function OverlayProfilesPage({ params }: PageProps) {
     .order("name");
 
   return (
-    <div className="min-h-screen bg-brand-light">
+    <div className="min-h-dvh bg-background text-foreground">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         <Link
           href={`/app/dashboard/${id}/overlay`}
-          className="mb-4 inline-flex items-center text-sm text-brand-dark/70 hover:text-brand-dark"
+          className="-ml-1 mb-6 inline-flex items-center gap-0.5 text-sm text-muted-foreground hover:text-foreground"
         >
-          ← Kampanjat
+          <ChevronLeft className="size-4" aria-hidden />
+          Kampanjat
         </Link>
-        <h1 className="text-3xl font-bold text-brand-dark">Kohderyhmäprofiilit</h1>
-        <p className="mt-2 text-sm text-brand-dark/70">
+        <h1 className="text-3xl font-bold leading-tight tracking-tight">Kohderyhmät</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
           Profiilit ovat yhteisiä kaikille kampanjoille. AI kirjoittaa laskeutumissivun
-          variaatiot sille valitun profiilin pohjalta.
+          variaatiot sille valitun kohderyhmän pohjalta.
         </p>
         <div className="mt-8">
           <ProfilesClient

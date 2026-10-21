@@ -1,37 +1,52 @@
 "use client";
 
 import { useState } from "react";
+import { Check, ChevronRight, Code2, Copy } from "lucide-react";
 
+/** Tuotantoasennus: kokoontaitettu, koska editori ja esikatselu toimivat ilman sitä. */
 export default function SnippetBox({ snippet }: { snippet: string }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
     await navigator.clipboard.writeText(snippet);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 1600);
   }
 
   return (
-    <section className="rounded-lg border border-brand-dark/10 bg-card p-6 shadow-sm">
-      <h2 className="text-xl font-semibold text-brand-dark">Tuotantokäyttö: asennus</h2>
-      <p className="mt-1 text-sm text-brand-dark/60">
-        Editori ja esikatselulinkit toimivat ilman asennusta. Kun asiakas on
-        hyväksynyt variantin, lisää tämä rivi asiakkaan sivuston
-        &lt;head&gt;-osioon mahdollisimman ylös. Sama snippet toimii kaikille
-        tämän sivuston varianteille.
-      </p>
-      <div className="mt-4 flex items-start gap-2 rounded-md border border-brand-dark/10 bg-brand-light p-3">
-        <code className="min-w-0 flex-1 break-all font-mono text-xs text-brand-dark/80">
-          {snippet}
-        </code>
-        <button
-          type="button"
-          onClick={copy}
-          className="shrink-0 text-sm font-medium text-primary hover:text-primary-hover"
-        >
-          {copied ? "Kopioitu" : "Kopioi"}
-        </button>
+    <details className="group rounded-xl border border-border bg-card">
+      <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+          <Code2 className="size-4" aria-hidden />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold">Asenna tuotantoon</span>
+          <span className="block text-xs text-muted-foreground">
+            Yksi rivi asiakkaan sivulle, kun variaatiot on hyväksytty.
+          </span>
+        </span>
+        <ChevronRight
+          className="size-4 text-muted-foreground transition-transform group-open:rotate-90 motion-reduce:transition-none"
+          aria-hidden
+        />
+      </summary>
+      <div className="space-y-2 border-t border-border p-4">
+        <p className="text-sm text-muted-foreground">
+          Lisää rivi asiakkaan sivuston &lt;head&gt;-osioon mahdollisimman ylös. Sama rivi
+          toimii kaikille tämän sivuston kampanjoille.
+        </p>
+        <div className="flex items-start gap-2 rounded-lg bg-muted p-3">
+          <code className="min-w-0 flex-1 break-all font-mono text-xs">{snippet}</code>
+          <button
+            type="button"
+            onClick={copy}
+            aria-label={copied ? "Kopioitu" : "Kopioi"}
+            className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-card hover:text-foreground"
+          >
+            {copied ? <Check className="size-4 text-success" /> : <Copy className="size-4" />}
+          </button>
+        </div>
       </div>
-    </section>
+    </details>
   );
 }

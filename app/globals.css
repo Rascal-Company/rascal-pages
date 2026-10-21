@@ -227,3 +227,25 @@ html {
 .text-sidebar {
   color: var(--color-text-sidebar);
 }
+
+/* Overlay-editori: paneeliin ilmestyvä kortti kasvaa paikalleen. */
+@keyframes overlayPop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.overlay-pop {
+  animation: overlayPop 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay-pop {
+    animation: none;
+  }
+}
