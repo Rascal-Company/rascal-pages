@@ -22,16 +22,15 @@ export type OverlayChange = {
 };
 
 /** Kohdennusavaimet, joiden perusteella variantti valitaan. */
-export const OVERLAY_MATCH_KEYS = ["utm_campaign", "utm_content", "rp"] as const;
+export const OVERLAY_MATCH_KEYS = ["utm_term", "utm_campaign", "utm_content", "rp"] as const;
 export type OverlayMatchKey = (typeof OVERLAY_MATCH_KEYS)[number];
 export type OverlayMatch = Partial<Record<OverlayMatchKey, string>>;
 
-export type OverlayVariantRow = {
-  id: OverlayVariantId;
+/** Kohdennettava rivi (laskeutumissivu kampanjan originilla). */
+export type OverlayTargetRow = {
   target_origin: string;
   path_pattern: string;
   match: OverlayMatch;
-  changes: OverlayChange[];
   updated_at: string;
 };
 
@@ -105,15 +104,15 @@ function specificity(match: OverlayMatch): number {
 }
 
 /**
- * Valitsee kävijälle näytettävän variantin: täsmäävistä tarkimmin kohdennettu,
- * tasatilanteessa viimeksi päivitetty.
+ * Valitsee kävijälle näytettävän laskeutumissivun: täsmäävistä tarkimmin
+ * kohdennettu, tasatilanteessa viimeksi päivitetty.
  */
-export function pickVariant(
-  variants: OverlayVariantRow[],
+export function pickTarget<T extends OverlayTargetRow>(
+  rows: T[],
   pageUrl: URL,
   params: OverlayMatch,
-): OverlayVariantRow | null {
-  const candidates = variants.filter(
+): T | null {
+  const candidates = rows.filter(
     (v) =>
       v.target_origin === pageUrl.origin &&
       matchesPath(v.path_pattern, pageUrl.pathname) &&
@@ -230,3 +229,26 @@ export function subdomainFromOrigin(origin: string): string {
 }
 
 const RESERVED_SUBDOMAINS = ["app", "www", "api", "admin", "mail", "home"];
+
+/**
+ * Kävijän A/B-variaatio: sama kävijä saa aina saman variaation (FNV-1a-tiiviste
+ * kävijätunnisteesta ja laskeutumissivusta). Pidettävä samana kuin o.js:ssä.
+ */
+export function assignVariant<T extends { id: string }>(
+  variants: T[],
+  visitorId: string,
+  landingPageId: string,
+): T | null {
+  if (variants.length === 0) return null;
+  const sorted = [...variants].sort((a, b) => a.id.localeCompare(b.id));
+  return sorted[hashString(`${visitorId}:${landingPageId}`) % sorted.length];
+}
+
+export function hashString(value: string): number {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return hash;
+}

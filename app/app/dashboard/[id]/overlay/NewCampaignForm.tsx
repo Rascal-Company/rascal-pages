@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
-import { createOverlayVariant } from "@/app/actions/overlay";
+import { createOverlayCampaign } from "@/app/actions/overlay";
 import type { SiteId } from "@/src/lib/types";
 
-export default function NewVariantForm({ siteId }: { siteId: SiteId }) {
+export default function NewCampaignForm({ siteId }: { siteId: SiteId }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [targetUrl, setTargetUrl] = useState("");
@@ -18,9 +18,10 @@ export default function NewVariantForm({ siteId }: { siteId: SiteId }) {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const result = await createOverlayVariant(siteId, { name, targetUrl });
+    const result = await createOverlayCampaign(siteId, { name, targetUrl });
     if (result.success) {
-      router.push(`/app/dashboard/${siteId}/overlay/${result.data.id}`);
+      const { campaignId, landingPageId } = result.data;
+      router.push(`/app/dashboard/${siteId}/overlay/${campaignId}/${landingPageId}`);
     } else {
       setError(result.error);
       setBusy(false);
@@ -30,7 +31,7 @@ export default function NewVariantForm({ siteId }: { siteId: SiteId }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row">
       <Input
-        placeholder="Nimi, esim. Syyskampanja – video 1"
+        placeholder="Kampanjan nimi, esim. Syksy 2026"
         value={name}
         onChange={(e) => setName(e.target.value)}
         className="sm:max-w-xs"
