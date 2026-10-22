@@ -33,6 +33,7 @@ import {
 import { generateVariantCopy } from "@/src/lib/overlay-ai";
 import { createPreviewToken, previewSecret } from "@/src/lib/overlay-token";
 import { pagesSiteOrigins } from "@/src/lib/overlay-pages";
+import { describeProfileData } from "@/src/lib/overlay-profile";
 
 type ActionResult<T = undefined> =
   | ({ success: true } & (T extends undefined ? object : { data: T }))
@@ -711,12 +712,6 @@ export async function deleteOverlayProfile(profileId: OverlayProfileId): Promise
   return { success: true };
 }
 
-function describeJson(value: unknown): string {
-  if (!value) return "";
-  if (typeof value === "string") return value;
-  return JSON.stringify(value, null, 2);
-}
-
 /** Profiili Rascal AI:n ihanneasiakkaasta (icp_summary + ostajapersoona). */
 export async function importRascalProfile(): Promise<ActionResult<OverlayProfile>> {
   const s = await session();
@@ -728,8 +723,11 @@ export async function importRascalProfile(): Promise<ActionResult<OverlayProfile
     .eq("id", s.orgId)
     .maybeSingle();
 
-  const description = [describeJson(data?.icp_summary), data?.buyer_persona ?? ""]
-    .filter((part) => part && part !== "{}")
+  const description = [
+    describeProfileData(data?.icp_summary),
+    describeProfileData(data?.buyer_persona),
+  ]
+    .filter(Boolean)
     .join("\n\n");
   if (!description) {
     return {
