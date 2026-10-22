@@ -1,5 +1,6 @@
 "use server";
 
+import { loadBrandContext } from "@/src/lib/brand-context";
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/src/utils/supabase/server";
@@ -9,6 +10,7 @@ import { createSiteId, isValidUuid, type SiteId } from "@/src/lib/types";
 import { RateLimiter } from "@/src/lib/rate-limit";
 import {
   createOverlayVariantId,
+  createRpCode,
   parseMatch,
   parseTargetUrl,
   subdomainFromOrigin,
@@ -22,7 +24,6 @@ import {
   createOverlayProfileId,
   parseSlots,
   parseSlotValues,
-  type BrandContext,
   type OverlayCampaignId,
   type OverlayLandingPageId,
   type OverlayProfileId,
@@ -31,6 +32,7 @@ import {
 } from "@/src/lib/overlay-campaign";
 import { generateVariantCopy } from "@/src/lib/overlay-ai";
 import { createPreviewToken, previewSecret } from "@/src/lib/overlay-token";
+import { pagesSiteOrigins } from "@/src/lib/overlay-pages";
 
 type ActionResult<T = undefined> =
   | ({ success: true } & (T extends undefined ? object : { data: T }))
@@ -291,6 +293,10 @@ export async function deleteOverlayVariant(variantId: OverlayVariantId): Promise
 
 // ---- Laskeutumissivut ------------------------------------------------------
 
+function withRpCode(match: OverlayMatch): OverlayMatch {
+  return Object.keys(match).length > 0 ? match : { rp: createRpCode() };
+}
+
 async function insertLandingPage(
   client: SupabaseClient,
   campaign: CampaignRow,
@@ -308,7 +314,8 @@ async function insertLandingPage(
       name,
       path_pattern: path,
       profile_id: input.profileId && isValidUuid(input.profileId) ? input.profileId : null,
-      match: parseMatch(input.match),
+      // Ilman omaa UTM-kohdennusta sivu saa valmiin linkkitunnisteen (?rp=).
+      match: withRpCode(parseMatch(input.match)),
     })
     .select("id, path_pattern")
     .single();
@@ -439,16 +446,41 @@ export async function deleteOverlayLandingPage(
 
 // ---- Kampanjat ---------------------------------------------------------------
 
+/** Kampanjan kohde: ulkoinen sivu (URL) tai organisaation oma Pages-sivusto. */
+export type CampaignTargetInput = { name: string; targetUrl: string; pagesSiteId?: string };
+
+/** Oman Pages-sivuston ensisijainen origin, jos sivusto kuuluu organisaatiolle. */
+async function ownPagesOrigin(
+  client: SupabaseClient,
+  orgId: string,
+  pagesSiteId: string,
+): Promise<string | null> {
+  if (!isValidUuid(pagesSiteId)) return null;
+  const { data } = await client
+    .from("sites")
+    .select("subdomain, custom_domain")
+    .eq("id", pagesSiteId)
+    .eq("user_id", orgId)
+    .maybeSingle();
+  return data ? (pagesSiteOrigins(data)[0] ?? null) : null;
+}
+
 async function createCampaignCore(
   client: SupabaseClient,
   orgId: string,
   siteId: SiteId,
-  input: { name: string; targetUrl: string },
+  input: CampaignTargetInput,
 ): Promise<ActionResult<{ campaignId: OverlayCampaignId; landingPageId: OverlayLandingPageId }>> {
   const name = input.name.trim();
   if (!name) return { success: false, error: "Anna kampanjalle nimi." };
 
-  const target = parseTargetUrl(input.targetUrl);
+  let targetUrl = input.targetUrl;
+  if (input.pagesSiteId) {
+    const origin = await ownPagesOrigin(client, orgId, input.pagesSiteId);
+    if (!origin) return { success: false, error: "Pages-sivustoa ei löydy." };
+    targetUrl = `${origin}/`;
+  }
+  const target = parseTargetUrl(targetUrl);
   if (!target) {
     return { success: false, error: "Anna kelvollinen sivun osoite, esim. https://asiakas.fi/hinnasto." };
   }
@@ -488,7 +520,7 @@ async function createCampaignCore(
 
 export async function createOverlayCampaign(
   siteId: SiteId,
-  input: { name: string; targetUrl: string },
+  input: CampaignTargetInput,
 ): Promise<ActionResult<{ campaignId: OverlayCampaignId; landingPageId: OverlayLandingPageId }>> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
@@ -741,29 +773,6 @@ export async function importCrmSegmentProfile(
 
 /** AI-generointien rajoitus organisaatiota kohden. */
 const copyLimiter = new RateLimiter({ maxRequests: 30, windowMs: 15 * 60 * 1000 });
-
-/** Rascal AI -profiili organisaation riviltä (public.users). */
-async function loadBrandContext(orgId: string): Promise<BrandContext> {
-  const { data } = await createAdminClient()
-    .from("users")
-    .select(
-      "company_name, company_website_url, industry, content_language, company_summary, icp_summary, buyer_persona, tov, voice_anchor",
-    )
-    .eq("id", orgId)
-    .maybeSingle();
-
-  return {
-    companyName: data?.company_name ?? null,
-    website: data?.company_website_url ?? null,
-    industry: data?.industry ?? null,
-    language: data?.content_language ?? null,
-    companySummary: data?.company_summary ?? null,
-    icpSummary: data?.icp_summary ?? null,
-    buyerPersona: data?.buyer_persona ?? null,
-    tov: data?.tov ?? null,
-    voiceAnchor: data?.voice_anchor ?? null,
-  };
-}
 
 /**
  * Personoi variaation tekstit laskeutumissivun tallennettuihin

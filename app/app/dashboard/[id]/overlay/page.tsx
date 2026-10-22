@@ -7,7 +7,7 @@ import StatsRow from "./StatsRow";
 import CreateDialog from "./components/CreateDialog";
 import StatusPill from "./components/StatusPill";
 import { getAppOrigin } from "./app-origin";
-import { loadOverlayContext, loadVariantStats, sumStats } from "./overlay-data";
+import { loadOverlayContext, loadPagesTargets, loadVariantStats, sumStats } from "./overlay-data";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +25,7 @@ type CampaignRow = {
 
 export default async function OverlayPage({ params }: PageProps) {
   const { id } = await params;
-  const { supabase, site } = await loadOverlayContext(id);
+  const { supabase, orgId, site } = await loadOverlayContext(id);
 
   const { data } = await supabase
     .from("overlay_campaigns")
@@ -36,16 +36,22 @@ export default async function OverlayPage({ params }: PageProps) {
     .order("created_at", { ascending: false });
   const campaigns = (data ?? []) as unknown as CampaignRow[];
 
-  const stats = await Promise.all(campaigns.map((c) => loadVariantStats(c.id)));
+  const [stats, pagesTargets] = await Promise.all([
+    Promise.all(campaigns.map((c) => loadVariantStats(c.id))),
+    loadPagesTargets(supabase, orgId),
+  ]);
+  const pagesOrigins = new Set(pagesTargets.map((t) => t.origin));
+  // Snippetti tarvitaan vain ulkoisille sivustoille.
+  const needsSnippet = campaigns.length === 0 || campaigns.some((c) => !pagesOrigins.has(c.target_origin));
   const snippet = `<script src="${await getAppOrigin()}/overlay/o.js" data-site="${id}"></script>`;
 
   const newCampaign = (
     <CreateDialog
       trigger="Uusi kampanja"
       title="Uusi kampanja"
-      description="Kampanja on asiakkaan sivusto. Ensimmäinen laskeutumissivu ja variaatio luodaan valmiiksi."
+      description="Kampanja on oma Pages-sivu tai asiakkaan sivusto. Ensimmäinen laskeutumissivu ja variaatio luodaan valmiiksi."
     >
-      <NewCampaignForm siteId={createSiteId(site.id)} />
+      <NewCampaignForm siteId={createSiteId(site.id)} pagesTargets={pagesTargets} />
     </CreateDialog>
   );
 
@@ -69,7 +75,7 @@ export default async function OverlayPage({ params }: PageProps) {
           </div>
           <div className="flex gap-2">
             <Link
-              href={`/app/dashboard/${id}/overlay/profiles`}
+              href="/app/dashboard/audiences"
               className="inline-flex h-8 items-center gap-2 rounded-md border border-input bg-card px-3 text-xs font-medium hover:bg-muted"
             >
               <UsersRound className="size-4" aria-hidden />
@@ -106,6 +112,7 @@ export default async function OverlayPage({ params }: PageProps) {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-base font-semibold tracking-tight">{c.name}</p>
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {pagesOrigins.has(c.target_origin) && "Pages · "}
                         {c.target_origin.replace(/^https?:\/\//, "")}
                       </p>
                     </div>
@@ -133,9 +140,11 @@ export default async function OverlayPage({ params }: PageProps) {
           </div>
         )}
 
-        <div className="mt-8">
-          <SnippetBox snippet={snippet} />
-        </div>
+        {needsSnippet && (
+          <div className="mt-8">
+            <SnippetBox snippet={snippet} />
+          </div>
+        )}
       </div>
     </div>
   );

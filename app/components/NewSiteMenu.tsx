@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import {
   ChevronDown,
+  Copy,
   FilePlus2,
   LayoutTemplate,
   MousePointerClick,
@@ -25,7 +26,7 @@ type Option = {
   onSelect: () => void;
 };
 
-/** "Uusi sivusto" -valikko: AI, pohjasta, overlay asiakkaan sivulle tai blankko. */
+/** "Uusi sivusto" -valikko: AI, referensseistä, pohjasta, overlay asiakkaan sivulle tai blankko. */
 export default function NewSiteMenu({
   onAiClick,
   className,
@@ -41,6 +42,12 @@ export default function NewSiteMenu({
       label: "Luo AI:n avulla",
       description: "Kerro yrityksestä, AI tekee sivun valmiiksi",
       onSelect: onAiClick,
+    },
+    {
+      icon: Copy,
+      label: "Referensseistä",
+      description: "Anna sivuja, joiden ilmeestä pidät, AI tekee samantyylisen",
+      onSelect: () => router.push("/app/dashboard/new?mode=reference"),
     },
     {
       icon: LayoutTemplate,
@@ -77,7 +84,7 @@ export default function NewSiteMenu({
       <DropdownMenuContent align="end" className="w-72 max-w-[calc(100vw-2rem)]">
         {options.map((option, i) => (
           <div key={option.label}>
-            {i === 1 && <DropdownMenuSeparator />}
+            {i === 2 && <DropdownMenuSeparator />}
             <DropdownMenuItem onSelect={option.onSelect} className="items-start py-2">
               <option.icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
               <span className="flex flex-col">

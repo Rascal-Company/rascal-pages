@@ -12,6 +12,7 @@ import type { OverlayVariation } from "@/app/actions/overlay";
 import { getAppOrigin } from "../../app-origin";
 import { loadOverlayContext, loadProfiles } from "../../overlay-data";
 import LandingPageEditor from "./LandingPageEditor";
+import { findPagesSite, pagesFetchUrl } from "@/src/lib/overlay-pages-server";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,10 @@ export default async function OverlayLandingPagePage({ params }: PageProps) {
     .eq("landing_page_id", landingPageId)
     .order("created_at", { ascending: true });
 
+  // Oma Pages-sivu: ei snippettiä, ja kehityksessä linkki osoittaa paikalliseen sivuun.
+  const pagesSite = await findPagesSite(orgId, campaign.target_origin);
+  const linkOrigin = pagesSite ? pagesFetchUrl(pagesSite, "/").url.origin : campaign.target_origin;
+
   const secret = previewSecret();
   const variants: OverlayVariation[] = (rows ?? []).map((row) => {
     const variantId = createOverlayVariantId(row.id);
@@ -65,6 +70,8 @@ export default async function OverlayLandingPagePage({ params }: PageProps) {
       campaignName={campaign.name}
       landingPageId={createOverlayLandingPageId(landingPage.id)}
       targetOrigin={campaign.target_origin}
+      linkOrigin={linkOrigin}
+      isPagesTarget={pagesSite !== null}
       appOrigin={await getAppOrigin()}
       initialLandingPage={{
         name: landingPage.name,

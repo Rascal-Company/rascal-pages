@@ -108,7 +108,9 @@ export default function FluidSection({
     return (
       <div id={content?.anchor || undefined} className="scroll-mt-24">
         {readingOrder(blocks).map((block) => (
-          <FluidBlockView key={block.id} block={block} bare />
+          <div key={block.id} data-rp-block={block.id}>
+            <FluidBlockView block={block} bare />
+          </div>
         ))}
       </div>
     );
@@ -134,7 +136,13 @@ export default function FluidSection({
     >
       <div className="fluid-grid">
         {blocks.map((block, index) => (
-          <div key={block.id} className="fluid-block" style={blockStyle(block, index, autoMobile)}>
+          // data-rp-block: pysyvä ankkuri overlayn elementeille (ks. overlay-pages.ts).
+          <div
+            key={block.id}
+            data-rp-block={block.id}
+            className="fluid-block"
+            style={blockStyle(block, index, autoMobile)}
+          >
             <FluidBlockView block={block} />
           </div>
         ))}
@@ -383,7 +391,8 @@ function EditableFluidSection({
   }, [selectedId]);
 
   const showGuides = draft !== null && !draft.settling;
-  const fillerRow = rows + 6;
+  // Tyhjää tilaa raahaamista varten vain valitussa osiossa; muuten osio näyttää julkaistun korkeuden.
+  const fillerRow = rows + (active || draft ? 6 : 1);
 
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-16 lg:px-8">

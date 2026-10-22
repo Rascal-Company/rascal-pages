@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CircleCheck, Eye, Globe, Inbox, Search, Target } from "lucide-react";
+import Link from "next/link";
+import { CircleCheck, Eye, Globe, Inbox, Search, Target, UsersRound } from "lucide-react";
 import { createClient } from "@/src/utils/supabase/client";
 import LoginModal from "./LoginModal";
 import CreateAiSiteModal from "./CreateAiSiteModal";
@@ -206,6 +207,13 @@ export default function DashboardClient({
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
+              <Link
+                href="/app/dashboard/audiences"
+                className="inline-flex h-9 items-center gap-2 rounded-md border border-input bg-card px-3 text-sm font-medium transition-colors hover:bg-muted active:scale-[0.98] motion-reduce:active:scale-100"
+              >
+                <UsersRound className="size-4" aria-hidden />
+                Kohderyhmät
+              </Link>
               <NewSiteMenu
                 onAiClick={() => setIsAiModalOpen(true)}
                 className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover active:scale-[0.98] motion-reduce:active:scale-100"

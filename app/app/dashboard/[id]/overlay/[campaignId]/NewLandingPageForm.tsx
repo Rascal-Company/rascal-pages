@@ -73,21 +73,29 @@ export default function NewLandingPageForm({
           ))}
         </select>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="lp-path">Polku</Label>
-          <Input id="lp-path" value={path} onChange={(e) => setPath(e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="lp-term">utm_term</Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="lp-path">Polku</Label>
+        <Input id="lp-path" value={path} onChange={(e) => setPath(e.target.value)} />
+        <p className="text-xs text-muted-foreground">
+          Sivulle syntyy valmis mainoslinkki, jonka voit kopioida editorista.
+        </p>
+      </div>
+      <details className="group rounded-md border border-border px-3 py-2 text-sm">
+        <summary className="cursor-pointer select-none text-muted-foreground">Lisäasetukset</summary>
+        <div className="mt-3 space-y-1.5">
+          <Label htmlFor="lp-term">Kohdenna utm_term-arvolla</Label>
           <Input
             id="lp-term"
             placeholder="esim. rakennus"
             value={utmTerm}
             onChange={(e) => setUtmTerm(e.target.value)}
           />
+          <p className="text-xs text-muted-foreground">
+            Käynnissä oleville mainoksille, joiden linkkiä ei haluta vaihtaa, tai Google Adsin
+            hakusanalle ({"{keyword}"}). Korvaa valmiin linkin.
+          </p>
         </div>
-      </div>
+      </details>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button type="submit" disabled={busy || !name.trim()} className="w-full">
         {busy && <Loader2 className="animate-spin" aria-hidden />}

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/src/utils/supabase/admin";
 import { RateLimiter } from "@/src/lib/rate-limit";
 import { previewSecret, verifyPreviewToken } from "@/src/lib/overlay-token";
 import { proxiedPageResponse, proxyErrorPage } from "@/src/lib/overlay-proxy";
+import { findPagesSite, pagesFetchUrl } from "@/src/lib/overlay-pages-server";
 
 /**
  * Julkinen esikatselulinkki: /api/overlay/preview?t=TOKEN&path=/polku
@@ -24,11 +25,16 @@ export async function GET(req: NextRequest) {
 
   const { data: variant } = await createAdminClient()
     .from("overlay_variants")
-    .select("overlay_landing_pages!inner(path_pattern, overlay_campaigns!inner(target_origin))")
+    .select(
+      "overlay_landing_pages!inner(path_pattern, overlay_campaigns!inner(target_origin, sites!inner(user_id)))",
+    )
     .eq("id", variantId)
     .maybeSingle();
   const landingPage = variant?.overlay_landing_pages as unknown as
-    | { path_pattern: string; overlay_campaigns: { target_origin: string } }
+    | {
+        path_pattern: string;
+        overlay_campaigns: { target_origin: string; sites: { user_id: string } };
+      }
     | undefined;
   if (!landingPage) return proxyErrorPage("Esikatselulinkki ei ole voimassa.", 404);
 
@@ -40,6 +46,14 @@ export async function GET(req: NextRequest) {
   const target = new URL(path, origin);
   if (target.origin !== origin) {
     return proxyErrorPage("Virheellinen polku.", 400);
+  }
+
+  // Oma Pages-sivu renderöi esikatselun itse palvelimella (?t=).
+  const pagesSite = await findPagesSite(landingPage.overlay_campaigns.sites.user_id, origin);
+  if (pagesSite) {
+    const { url } = pagesFetchUrl(pagesSite, target.pathname);
+    url.searchParams.set("t", token);
+    return Response.redirect(url, 302);
   }
 
   try {
