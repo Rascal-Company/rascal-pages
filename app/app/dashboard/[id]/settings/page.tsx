@@ -1,11 +1,7 @@
-import { createClient } from "@/src/utils/supabase/server";
 import { redirect } from "next/navigation";
-import SettingsClient from "./SettingsClient";
 import SiteAdminNav from "@/app/components/dashboard/SiteAdminNav";
-import { loadSiteAdminNav } from "../site-admin-nav-data";
-
-import { createSiteId } from "@/src/lib/types";
-import { getHomeUrl } from "@/app/lib/navigation";
+import { loadSiteAdminNavForUser } from "../site-admin-nav-data";
+import SettingsView from "./view";
 
 export const dynamic = "force-dynamic";
 
@@ -13,80 +9,19 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function SettingsPage({ params }: PageProps) {
+/**
+ * Suora osoite (päivitys, kirjanmerkki, dashboardin linkki). Pages-sivustolla
+ * näkymä avautuu editorin päälle (ks. @modal); overlay-sivustolla omana sivunaan.
+ */
+export default async function Page({ params }: PageProps) {
   const { id } = await params;
-  const supabase = await createClient();
-
-  // 1. Tarkista käyttäjä
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    redirect(getHomeUrl());
-  }
-
-  // 2. Hae käyttäjän organisaatio
-  const { data: orgMember, error: orgMemberError } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-
-  if (!orgMember || orgMemberError) {
-    return <div>Virhe: Organisaatiota ei löydy.</div>;
-  }
-
-  // 3. Hae sivuston tiedot
-  const { data: site, error: siteError } = await supabase
-    .from("sites")
-    .select("*")
-    .eq("id", id)
-    .eq("user_id", orgMember.org_id)
-    .single();
-
-  if (siteError || !site) {
-    redirect("/app/dashboard");
-  }
-
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "rascalpages.fi";
-
-  // Hae analytiikka-asetukset settings-kentästä
-  const siteSettings = (site.settings as Record<string, unknown>) || {};
-  const initialSettings = {
-    googleTagManagerId: (siteSettings.googleTagManagerId as string) || "",
-    googleAnalyticsId: (siteSettings.googleAnalyticsId as string) || "",
-    metaPixelId: (siteSettings.metaPixelId as string) || "",
-  };
-
-  // Hae organisaation API-avaimet (ei key_hash:ia clientille)
-  const { data: keyRows } = await supabase
-    .from("api_keys")
-    .select("id, name, key_prefix, created_at, last_used_at, revoked_at")
-    .eq("org_id", orgMember.org_id)
-    .order("created_at", { ascending: false });
-
-  const apiKeys = (keyRows ?? []).map((row) => ({
-    id: row.id as string,
-    name: row.name as string,
-    keyPrefix: row.key_prefix as string,
-    createdAt: row.created_at as string,
-    lastUsedAt: (row.last_used_at as string | null) ?? null,
-    revokedAt: (row.revoked_at as string | null) ?? null,
-  }));
-
-  const nav = await loadSiteAdminNav(supabase, site);
+  const nav = await loadSiteAdminNavForUser(id);
+  if (nav.kind === "pages") redirect(`/app/dashboard/${id}?open=settings`);
 
   return (
     <div className="min-h-dvh bg-brand-light">
       <SiteAdminNav {...nav} />
-      <SettingsClient
-      siteId={createSiteId(id)}
-      subdomain={site.subdomain}
-      rootDomain={rootDomain}
-      customDomain={site.custom_domain ?? null}
-      initialSettings={initialSettings}
-      initialApiKeys={apiKeys}
-      />
+      <SettingsView siteId={id} />
     </div>
   );
 }
