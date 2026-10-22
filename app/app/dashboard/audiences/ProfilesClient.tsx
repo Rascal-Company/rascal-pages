@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Building2, Plus, Sparkles, Trash2, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Textarea } from "@/app/components/ui/textarea";
@@ -15,6 +16,9 @@ import {
 } from "@/app/actions/overlay";
 
 type CrmSegment = { id: string; name: string; totalContacts: number };
+
+/** Laskeutumissivu, jolle kohderyhmä on valittu. */
+export type ProfileUsage = { id: string; label: string; href: string };
 type ActionResult = { success: true; data: OverlayProfile } | { success: false; error: string };
 
 const SOURCES: Record<OverlayProfile["source"], { label: string; icon: LucideIcon }> = {
@@ -25,10 +29,12 @@ const SOURCES: Record<OverlayProfile["source"], { label: string; icon: LucideIco
 
 function ProfileCard({
   profile,
+  usage,
   onChange,
   onDelete,
 }: {
   profile: OverlayProfile;
+  usage: ProfileUsage[];
   onChange: (p: OverlayProfile) => void;
   onDelete: () => void;
 }) {
@@ -94,6 +100,24 @@ function ProfileCard({
         className="mt-2 text-sm"
         placeholder="Keitä he ovat, mikä heitä vaivaa, mitä he arvostavat ja millä sanoilla he puhuvat."
       />
+      <div className="mt-3 text-xs text-muted-foreground">
+        {usage.length === 0 ? (
+          "Ei vielä käytössä laskeutumissivuilla."
+        ) : (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span>Käytössä:</span>
+            {usage.map((u) => (
+              <Link
+                key={u.id}
+                href={u.href}
+                className="rounded-full bg-muted px-2 py-0.5 font-medium text-foreground hover:bg-accent"
+              >
+                {u.label}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
       {dirty && (
         <div className="mt-3 flex justify-end gap-2 overlay-pop">
           <Button
@@ -118,9 +142,11 @@ function ProfileCard({
 export default function ProfilesClient({
   initialProfiles,
   crmSegments,
+  usage,
 }: {
   initialProfiles: OverlayProfile[];
   crmSegments: CrmSegment[];
+  usage: Record<string, ProfileUsage[]>;
 }) {
   const { showToast } = useToast();
   const [profiles, setProfiles] = useState(initialProfiles);
@@ -197,6 +223,7 @@ export default function ProfilesClient({
             <ProfileCard
               key={p.id}
               profile={p}
+              usage={usage[p.id] ?? []}
               onChange={(next) =>
                 setProfiles((list) => list.map((x) => (x.id === next.id ? next : x)))
               }

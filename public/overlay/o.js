@@ -7,6 +7,10 @@
  * Hakee kävijälle kohdennetun variantin (utm_campaign / utm_content / rp) ja
  * korvaa sisällön. Editorin esikatselussa (data-rp-preview) vain paljastaa
  * apply-funktion eikä hae mitään.
+ *
+ * Pages-sivuilla palvelin on jo valinnut ja soveltanut variantin
+ * (data-rp-applied): snippet vain tallentaa evästeet, kirjaa tilastot ja
+ * soveltaa muutokset, joita palvelin ei osannut kohdistaa (data-rp-changes).
  */
 (function () {
   "use strict";
@@ -111,6 +115,12 @@
   // haetaan allekirjoitetulla tunnisteella kohdennuksesta riippumatta.
   var token = script.getAttribute("data-rp-token");
   var siteId = script.getAttribute("data-site");
+
+  var appliedVariant = script.getAttribute("data-rp-applied");
+  if (appliedVariant) {
+    runApplied(appliedVariant);
+    return;
+  }
   if (!token && !siteId) return;
 
   // Kohdennusparametrit: URL:sta, tai session aikana aiemmin tallennetut,
@@ -195,6 +205,75 @@
     }
   }
 
+  function parseJson(value, fallback) {
+    try {
+      return JSON.parse(value || "") || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  // Palvelin lukee nämä evästeet seuraavilla sivulatauksilla (sama variantti).
+  function setCookie(name, value, maxAge) {
+    document.cookie =
+      name + "=" + encodeURIComponent(value) + "; path=/; SameSite=Lax" +
+      (maxAge ? "; max-age=" + maxAge : "");
+  }
+
+  function runApplied(variantId) {
+    var changes = parseJson(script.getAttribute("data-rp-changes"), []);
+    var shouldTrack = !script.hasAttribute("data-rp-notrack");
+    var vid = script.getAttribute("data-rp-vid") || "";
+    if (shouldTrack && vid) {
+      setCookie(VISITOR_KEY, vid, 60 * 60 * 24 * 365);
+      try {
+        localStorage.setItem(VISITOR_KEY, vid);
+      } catch {
+        // localStorage ei käytettävissä — eväste riittää.
+      }
+      var params = script.getAttribute("data-rp-params");
+      if (params && params !== "{}") setCookie(STORAGE_KEY, params);
+    }
+    whenReady(function () {
+      if (changes.length) {
+        apply(changes);
+        keepApplied(changes);
+      }
+      if (!shouldTrack || !vid) return;
+      track(variantId, "view", vid);
+      document.addEventListener(
+        "submit",
+        function () {
+          track(variantId, "conversion", vid);
+        },
+        true,
+      );
+    });
+  }
+
+  // SPA-kehykset voivat hydraation yhteydessä palauttaa alkuperäisen
+  // sisällön — ajetaan korvaukset uudelleen hetken ajan.
+  function keepApplied(changes) {
+    if (!window.MutationObserver) return;
+    var scheduled = false;
+    var observer = new MutationObserver(function () {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(function () {
+        scheduled = false;
+        apply(changes);
+      });
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    setTimeout(function () {
+      observer.disconnect();
+    }, OBSERVE_MS);
+  }
+
   fetch(url.toString(), { credentials: "omit" })
     .then(function (res) {
       return res.ok ? res.json() : {};
@@ -217,27 +296,7 @@
             true,
           );
         }
-        if (!changes.length || !window.MutationObserver) return;
-
-        // SPA-kehykset voivat hydraation yhteydessä palauttaa alkuperäisen
-        // sisällön — ajetaan korvaukset uudelleen hetken ajan.
-        var scheduled = false;
-        var observer = new MutationObserver(function () {
-          if (scheduled) return;
-          scheduled = true;
-          requestAnimationFrame(function () {
-            scheduled = false;
-            apply(changes);
-          });
-        });
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true,
-          characterData: true,
-        });
-        setTimeout(function () {
-          observer.disconnect();
-        }, OBSERVE_MS);
+        if (changes.length) keepApplied(changes);
       });
     })
     .catch(reveal);

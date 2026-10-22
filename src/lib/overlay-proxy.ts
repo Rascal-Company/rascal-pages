@@ -88,6 +88,11 @@ type FetchOptions = {
   /** Hyväksytyt content-typet (osamerkkijonona). */
   contentTypes: string[];
   maxBytes?: number;
+  /**
+   * Oma palvelin (Pages-sivu kehitysympäristössä): osoite muodostetaan
+   * omasta sivustorivistä, joten julkisen osoitteen tarkistus ohitetaan.
+   */
+  trusted?: boolean;
 };
 
 /**
@@ -100,7 +105,7 @@ export async function fetchPublicText(
 ): Promise<{ text: string; finalUrl: URL }> {
   let url = start;
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-    await assertPublicUrl(url);
+    if (!options.trusted) await assertPublicUrl(url);
     const res = await fetch(url, {
       redirect: "manual",
       signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -131,10 +136,12 @@ export async function fetchPublicText(
 /** Hakee sivun HTML:n (ks. fetchPublicText). */
 export async function fetchPublicHtml(
   start: URL,
+  trusted = false,
 ): Promise<{ html: string; finalUrl: URL }> {
   const { text, finalUrl } = await fetchPublicText(start, {
     accept: "text/html,application/xhtml+xml",
     contentTypes: ["text/html"],
+    trusted,
   });
   return { html: text, finalUrl };
 }
@@ -197,8 +204,9 @@ export async function proxiedPageResponse(
   target: URL,
   appOrigin: string,
   mode: ProxyMode,
+  trusted = false,
 ): Promise<Response> {
-  const { html, finalUrl } = await fetchPublicHtml(target);
+  const { html, finalUrl } = await fetchPublicHtml(target, trusted);
   const body = rewriteProxiedHtml(
     html,
     finalUrl.toString(),

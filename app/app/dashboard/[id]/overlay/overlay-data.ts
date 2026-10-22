@@ -5,12 +5,10 @@ import { createAdminClient } from "@/src/utils/supabase/admin";
 import { getHomeUrl } from "@/app/lib/navigation";
 import { createOverlayProfileId } from "@/src/lib/overlay-campaign";
 import type { OverlayProfile } from "@/app/actions/overlay";
+import { pagesSiteOrigins } from "@/src/lib/overlay-pages";
 
-/**
- * Overlay-sivujen yhteinen alku: kirjautunut käyttäjä, organisaatio ja
- * sivuston omistajuus (CLAUDE.md:n auktorisointikaava).
- */
-export async function loadOverlayContext(siteId: string) {
+/** Kirjautunut käyttäjä ja organisaatio (CLAUDE.md:n auktorisointikaava). */
+export async function loadOrgContext() {
   const supabase = await createClient();
 
   const {
@@ -25,15 +23,22 @@ export async function loadOverlayContext(siteId: string) {
     .maybeSingle();
   if (!orgMember) redirect("/app/dashboard");
 
+  return { supabase, orgId: orgMember.org_id as string };
+}
+
+/** Overlay-sivujen yhteinen alku: organisaatio ja sivuston omistajuus. */
+export async function loadOverlayContext(siteId: string) {
+  const { supabase, orgId } = await loadOrgContext();
+
   const { data: site } = await supabase
     .from("sites")
     .select("id, subdomain")
     .eq("id", siteId)
-    .eq("user_id", orgMember.org_id)
+    .eq("user_id", orgId)
     .maybeSingle();
   if (!site) notFound();
 
-  return { supabase, orgId: orgMember.org_id as string, site };
+  return { supabase, orgId, site };
 }
 
 export async function loadProfiles(
@@ -92,4 +97,24 @@ export function sumStats(list: (VariantStats | undefined)[]): VariantStats {
     }),
     { visitors: 0, views: 0, convertedVisitors: 0 },
   );
+}
+
+export type PagesTarget = { id: string; label: string; origin: string };
+
+/** Organisaation Pages-sivustot (joilla on etusivu), overlay-kampanjan kohteiksi. */
+export async function loadPagesTargets(
+  supabase: SupabaseClient,
+  orgId: string,
+): Promise<PagesTarget[]> {
+  const { data } = await supabase
+    .from("sites")
+    .select("id, subdomain, custom_domain, pages!inner(slug)")
+    .eq("user_id", orgId)
+    .eq("pages.slug", "home")
+    .order("subdomain");
+
+  return (data ?? []).flatMap((site) => {
+    const origin = pagesSiteOrigins(site)[0];
+    return origin ? [{ id: site.id, label: origin.replace(/^https:\/\//, ""), origin }] : [];
+  });
 }

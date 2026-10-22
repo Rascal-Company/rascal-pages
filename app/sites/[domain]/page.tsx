@@ -17,6 +17,7 @@ import {
   resolvePageSeo,
 } from "@/src/lib/seo";
 import JsonLd from "@/app/components/JsonLd";
+import { withPagesOverlay } from "@/app/components/overlay/pages-overlay";
 import type {
   AboutContent,
   HeroContent,
@@ -28,6 +29,7 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ domain: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 /**
@@ -91,7 +93,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function PublicSitePage({ params }: PageProps) {
+export default async function PublicSitePage({ params, searchParams }: PageProps) {
   const { domain } = await params;
   const supabase = await createClient();
 
@@ -148,7 +150,14 @@ export default async function PublicSitePage({ params }: PageProps) {
   const defaultTemplate = getDefaultTemplate();
   const defaultContent = defaultTemplate.defaultContent;
 
-  const content = page?.content || defaultContent;
+  // Overlay-variantti (mainoksen rp-linkki / UTM) sovelletaan palvelimella.
+  const overlay = await withPagesOverlay(
+    site,
+    (page?.content || defaultContent) as TemplateConfig,
+    "/",
+    (await searchParams) ?? {},
+  );
+  const content = overlay.content;
 
   // Hae julkaistut blogikirjoitukset (henkilöbrändi-templaatin blogiosiolle)
   const posts = await getPublishedPosts(site.id);
@@ -183,6 +192,7 @@ export default async function PublicSitePage({ params }: PageProps) {
         metaPixelId={metaPixelId}
       />
       {personJsonLd && <JsonLd data={personJsonLd} />}
+      {overlay.script}
       <SiteRenderer
         content={content}
         siteId={createSiteId(site.id)}

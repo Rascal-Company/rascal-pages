@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { createClient } from "@/src/utils/supabase/server";
 import { isValidUuid } from "@/src/lib/types";
 import { proxiedPageResponse, proxyErrorPage } from "@/src/lib/overlay-proxy";
+import { findPagesSite, pagesFetchUrl } from "@/src/lib/overlay-pages-server";
 
 /**
  * Overlay-editorin proxy: /api/overlay/proxy?c=CAMPAIGN_ID&path=/polku
@@ -46,6 +47,13 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Oma Pages-sivu haetaan ilman kohdennusparametreja, jotta editori saa
+    // aina alkuperäisen sivun (ei palvelimella sovellettua varianttia).
+    const pagesSite = await findPagesSite(orgMember.org_id, campaign.target_origin);
+    if (pagesSite) {
+      const { url, trusted } = pagesFetchUrl(pagesSite, target.pathname);
+      return await proxiedPageResponse(url, req.nextUrl.origin, { kind: "editor" }, trusted);
+    }
     return await proxiedPageResponse(target, req.nextUrl.origin, { kind: "editor" });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Tuntematon virhe.";

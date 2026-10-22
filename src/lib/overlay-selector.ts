@@ -33,6 +33,14 @@ function step(el: Element): string {
   return `${tag}:nth-of-type(${index})`;
 }
 
+/** Pages-sivun lohkon pysyvä tunniste (julkinen renderöinti, ks. FluidSection). */
+export const BLOCK_ATTR = "data-rp-block";
+
+function blockAnchor(el: Element): string | null {
+  const id = el.getAttribute(BLOCK_ATTR);
+  return id && /^[\w-]{1,64}$/.test(id) ? `[${BLOCK_ATTR}="${id}"]` : null;
+}
+
 export function buildSelector(el: Element): string {
   const doc = el.ownerDocument;
 
@@ -44,6 +52,12 @@ export function buildSelector(el: Element): string {
   const parts: string[] = [];
   let current: Element | null = el;
   while (current && current !== doc.documentElement) {
+    // Pages-lohko on pysyvä ankkuri: valinta säilyy, vaikka lohkoa siirretään.
+    const block = blockAnchor(current);
+    if (block && isUnique(doc, block, current)) {
+      parts.unshift(block);
+      break;
+    }
     if (current !== el && current.id && isStableId(current.id)) {
       const anchor = `#${escapeIdent(current.id)}`;
       if (isUnique(doc, anchor, current)) {

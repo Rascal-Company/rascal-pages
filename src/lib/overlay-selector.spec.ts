@@ -124,3 +124,19 @@ describe("o.js apply (sama logiikka snippetissä ja esikatselussa)", () => {
     expect(document.querySelectorAll("source")).toHaveLength(0);
   });
 });
+
+describe("buildSelector Pages-lohkoissa", () => {
+  it("ankkuroituu lohkon pysyvään tunnisteeseen", () => {
+    document.body.innerHTML = `
+      <main><div class="fluid-grid">
+        <div data-rp-block="abc123"><h2>Otsikko</h2></div>
+        <div data-rp-block="cta-9"><div><a href="#x">Varaa</a></div></div>
+      </div></main>`;
+    const a = document.querySelector("a")!;
+    const sel = buildSelector(a);
+    expect(sel).toBe('[data-rp-block="cta-9"] > div:nth-of-type(1) > a:nth-of-type(1)');
+    expect(document.querySelector(sel)).toBe(a);
+    const wrapper = document.querySelector('[data-rp-block="abc123"]')!;
+    expect(buildSelector(wrapper)).toBe('[data-rp-block="abc123"]');
+  });
+});

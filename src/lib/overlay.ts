@@ -128,6 +128,30 @@ export function pickTarget<T extends OverlayTargetRow>(
   return candidates[0] ?? null;
 }
 
+const RP_ALPHABET = "abcdefghijkmnpqrstuvwxyz23456789";
+
+/** Laskeutumissivun lyhyt linkkitunniste (?rp=…); ei sekoittuvia merkkejä (l/1, o/0). */
+export function createRpCode(random: () => number = Math.random): string {
+  return Array.from({ length: 6 }, () => RP_ALPHABET[Math.floor(random() * RP_ALPHABET.length)]).join("");
+}
+
+/**
+ * Valmis mainoslinkki laskeutumissivulle, kun kohdennus on pelkkä rp-tunniste.
+ * Jokerimerkkipolku ("/blogi/*", "*") ohjaa sivuston etusivulle.
+ */
+export function landingPageLink(
+  origin: string,
+  pathPattern: string,
+  match: OverlayMatch,
+): string | null {
+  const rp = match.rp?.trim();
+  if (!rp || OVERLAY_MATCH_KEYS.some((key) => key !== "rp" && match[key]?.trim())) return null;
+  const path = pathPattern.includes("*") ? "/" : pathPattern || "/";
+  const url = new URL(path, origin);
+  url.searchParams.set("rp", rp);
+  return url.toString();
+}
+
 /** Validoi ja siistii kohdennuksen (tyhjät avaimet pois). */
 export function parseMatch(input: unknown): OverlayMatch {
   const result: OverlayMatch = {};

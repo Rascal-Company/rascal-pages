@@ -17,6 +17,7 @@ import type { SiteNavLink } from "./site-nav";
 
 export type SiteRecord = {
   id: string;
+  user_id: string;
   subdomain: string | null;
   custom_domain: string | null;
   settings: Record<string, unknown> | null;

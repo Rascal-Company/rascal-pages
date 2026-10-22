@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   createOverlayVariantId,
+  createRpCode,
+  landingPageLink,
   matchesPath,
   matchesQuery,
   parseChanges,
@@ -182,5 +184,33 @@ describe("assignVariant", () => {
 
   it("palauttaa nullin ilman variaatioita", () => {
     expect(assignVariant([], "x", "lp")).toBeNull();
+  });
+});
+
+describe("createRpCode", () => {
+  it("tekee 6 merkin koodin ilman sekoittuvia merkkejä", () => {
+    const code = createRpCode();
+    expect(code).toMatch(/^[a-km-np-z2-9]{6}$/);
+    expect(createRpCode(() => 0)).toBe("aaaaaa");
+  });
+});
+
+describe("landingPageLink", () => {
+  it("tekee valmiin linkin rp-tunnisteesta", () => {
+    expect(landingPageLink("https://acme.fi", "/hinnasto", { rp: "k7f2a9" })).toBe(
+      "https://acme.fi/hinnasto?rp=k7f2a9",
+    );
+  });
+
+  it("ohjaa jokerimerkkipolun etusivulle", () => {
+    expect(landingPageLink("https://acme.fi", "/blogi/*", { rp: "abc234" })).toBe(
+      "https://acme.fi/?rp=abc234",
+    );
+  });
+
+  it("ei tee linkkiä UTM-kohdennukselle", () => {
+    expect(landingPageLink("https://acme.fi", "/", { utm_term: "kirjanpito" })).toBeNull();
+    expect(landingPageLink("https://acme.fi", "/", { rp: "x", utm_term: "y" })).toBeNull();
+    expect(landingPageLink("https://acme.fi", "/", {})).toBeNull();
   });
 });

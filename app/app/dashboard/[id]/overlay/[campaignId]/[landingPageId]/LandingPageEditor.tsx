@@ -47,6 +47,8 @@ import { cn } from "@/src/lib/utils";
 import type { SiteId } from "@/src/lib/types";
 import {
   OVERLAY_MATCH_KEYS,
+  createRpCode,
+  landingPageLink,
   type OverlayChange,
   type OverlayChangeType,
   type OverlayMatch,
@@ -189,6 +191,8 @@ export default function LandingPageEditor({
   campaignName,
   landingPageId,
   targetOrigin,
+  linkOrigin,
+  isPagesTarget,
   appOrigin,
   initialLandingPage,
   initialVariants,
@@ -199,6 +203,10 @@ export default function LandingPageEditor({
   campaignName: string;
   landingPageId: OverlayLandingPageId;
   targetOrigin: string;
+  /** Mainoslinkin origin (kehityksessä oma Pages-sivu paikallisesti). */
+  linkOrigin: string;
+  /** Kohde on oma Pages-sivu: variantti renderöidään palvelimella, ei snippettiä. */
+  isPagesTarget: boolean;
   appOrigin: string;
   initialLandingPage: LandingPageState;
   initialVariants: OverlayVariation[];
@@ -817,14 +825,20 @@ export default function LandingPageEditor({
     return url.toString();
   }, [appOrigin, variant, previewPath]);
 
+  // Valmis linkki (rp), muuten kohdennusparametreista koottu osoite.
   const productionUrl = useMemo(() => {
-    const url = new URL(previewPath, targetOrigin);
+    const ready = landingPageLink(linkOrigin, page.pathPattern, page.match);
+    if (ready) return ready;
+    const url = new URL(previewPath, linkOrigin);
     for (const key of OVERLAY_MATCH_KEYS) {
       const value = page.match[key];
       if (value) url.searchParams.set(key, value);
     }
     return url.toString();
-  }, [previewPath, targetOrigin, page.match]);
+  }, [previewPath, linkOrigin, page.pathPattern, page.match]);
+  const utmKeys = OVERLAY_MATCH_KEYS.filter((key) => key !== "rp");
+  const hasUtm = utmKeys.some((key) => page.match[key]?.trim());
+  const hasTargeting = hasUtm || Boolean(page.match.rp?.trim());
 
   async function copy(kind: "share" | "production") {
     await navigator.clipboard.writeText(kind === "share" ? shareUrl : productionUrl);
@@ -1258,7 +1272,7 @@ export default function LandingPageEditor({
                     </p>
                   )}
                   <Link
-                    href={`/app/dashboard/${siteId}/overlay/profiles`}
+                    href="/app/dashboard/audiences"
                     className="inline-block text-xs font-medium text-primary hover:underline"
                   >
                     Hallitse profiileja
@@ -1285,37 +1299,63 @@ export default function LandingPageEditor({
                       className="h-8"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {OVERLAY_MATCH_KEYS.map((key) => (
-                      <div key={key} className="space-y-1">
-                        <Label htmlFor={`match-${key}`} className="text-xs">
-                          {MATCH_LABELS[key]}
-                        </Label>
-                        <Input
-                          id={`match-${key}`}
-                          value={page.match[key] ?? ""}
-                          onChange={(e) =>
-                            setPage((p) => ({ ...p, match: { ...p.match, [key]: e.target.value } }))
-                          }
-                          className="h-8"
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  <details open={hasUtm} className="rounded-lg border border-border px-3 py-2">
+                    <summary className="cursor-pointer select-none text-xs text-muted-foreground">
+                      Lisäasetukset: kohdenna UTM-arvoilla
+                    </summary>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Käynnissä oleville mainoksille tai Google Adsin hakusanalle ({"{keyword}"} →
+                      utm_term). Korvaa valmiin linkin.
+                    </p>
+                    <div className="mt-2 grid grid-cols-2 gap-2 pb-1">
+                      {utmKeys.map((key) => (
+                        <div key={key} className="space-y-1">
+                          <Label htmlFor={`match-${key}`} className="text-xs">
+                            {MATCH_LABELS[key]}
+                          </Label>
+                          <Input
+                            id={`match-${key}`}
+                            value={page.match[key] ?? ""}
+                            onChange={(e) =>
+                              setPage((p) => {
+                                // Kaikkien ehtojen pitää täsmätä, joten UTM-kohdennus korvaa rp-linkin.
+                                const match: OverlayMatch = { ...p.match, [key]: e.target.value };
+                                if (e.target.value.trim()) delete match.rp;
+                                return { ...p, match };
+                              })
+                            }
+                            className="h-8"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </details>
                 </section>
 
                 <section className="space-y-2">
                   <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Mainoslinkki
                   </h2>
-                  <div className="flex items-start gap-2 rounded-lg bg-muted p-3">
-                    <code className="min-w-0 flex-1 break-all text-xs">{productionUrl}</code>
-                    <IconButton label="Kopioi mainoslinkki" onClick={() => copy("production")} className="size-7">
-                      {copied === "production" ? <Check className="text-success" /> : <Copy />}
-                    </IconButton>
-                  </div>
+                  {hasTargeting ? (
+                    <div className="flex items-start gap-2 rounded-lg bg-muted p-3">
+                      <code className="min-w-0 flex-1 break-all text-xs">{productionUrl}</code>
+                      <IconButton label="Kopioi mainoslinkki" onClick={() => copy("production")} className="size-7">
+                        {copied === "production" ? <Check className="text-success" /> : <Copy />}
+                      </IconButton>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => ({ ...p, match: { rp: createRpCode() } }))}
+                    >
+                      Luo linkki
+                    </Button>
+                  )}
                   <p className="text-xs text-muted-foreground">
-                    Toimii, kun snippet on asennettu asiakkaan sivulle ja variaatio on julkaistu.
+                    {isPagesTarget
+                      ? "Laita linkki mainokseen. Toimii heti, kun variaatio on julkaistu ja muutokset tallennettu."
+                      : "Toimii, kun snippet on asennettu asiakkaan sivulle ja variaatio on julkaistu."}
                   </p>
                 </section>
 

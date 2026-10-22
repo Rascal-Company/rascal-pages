@@ -1,3 +1,4 @@
+import { withPagesOverlay } from "@/app/components/overlay/pages-overlay";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import SiteRenderer from "@/app/components/renderer/SiteRenderer";
@@ -18,6 +19,7 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ domain: string; slug: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export async function generateMetadata({
@@ -52,7 +54,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function SubPage({ params }: PageProps) {
+export default async function SubPage({ params, searchParams }: PageProps) {
   const { domain, slug } = await params;
   const site = await getSiteByDomain(domain);
   if (!site) notFound();
@@ -65,6 +67,13 @@ export default async function SubPage({ params }: PageProps) {
     getSiteChrome(site.id),
   ]);
 
+  const overlay = await withPagesOverlay(
+    site,
+    page.content,
+    `/${slug}`,
+    (await searchParams) ?? {},
+  );
+
   const settings = (site.settings as Record<string, unknown>) || {};
   const gtmId = settings.googleTagManagerId as string | undefined;
   const ga4Id = settings.googleAnalyticsId as string | undefined;
@@ -73,8 +82,9 @@ export default async function SubPage({ params }: PageProps) {
   return (
     <>
       <ThirdPartyScripts gtmId={gtmId} ga4Id={ga4Id} metaPixelId={metaPixelId} />
+      {overlay.script}
       <SiteRenderer
-        content={page.content}
+        content={overlay.content}
         siteId={createSiteId(site.id)}
         posts={posts}
         siteNav={chrome.navLinks}
