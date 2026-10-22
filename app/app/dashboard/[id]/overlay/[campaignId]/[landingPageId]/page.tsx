@@ -25,7 +25,7 @@ export default async function OverlayLandingPagePage({ params }: PageProps) {
 
   const { data: campaign } = await supabase
     .from("overlay_campaigns")
-    .select("id, target_origin")
+    .select("id, name, target_origin")
     .eq("id", campaignId)
     .eq("site_id", id)
     .maybeSingle();
@@ -62,6 +62,7 @@ export default async function OverlayLandingPagePage({ params }: PageProps) {
     <LandingPageEditor
       siteId={createSiteId(id)}
       campaignId={createOverlayCampaignId(campaign.id)}
+      campaignName={campaign.name}
       landingPageId={createOverlayLandingPageId(landingPage.id)}
       targetOrigin={campaign.target_origin}
       appOrigin={await getAppOrigin()}

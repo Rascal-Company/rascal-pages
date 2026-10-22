@@ -3,9 +3,11 @@
  * Defines available landing page templates and their fields
  */
 
+import type { FluidContent } from "./fluid";
 import type { SectionId } from "./types";
 
 export type SectionType =
+  | "fluid"
   | "hero"
   | "features"
   | "faq"
@@ -312,6 +314,7 @@ export type CtaContent = {
 };
 
 export type SectionContentMap = {
+  fluid: FluidContent;
   hero: HeroContent;
   features: FeatureItem[];
   faq: FaqItem[];
@@ -1026,6 +1029,7 @@ export function createBlankContent(): TemplateConfig {
  * Section type display names for UI
  */
 export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
+  fluid: "Vapaa osio",
   hero: "Pääosio",
   features: "Ominaisuudet",
   faq: "UKK",
@@ -1048,6 +1052,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
  * Section types that can be added by users
  */
 export const ADDABLE_SECTION_TYPES: SectionType[] = [
+  "fluid",
   "hero",
   "features",
   "faq",

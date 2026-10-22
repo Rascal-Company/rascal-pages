@@ -4,9 +4,8 @@ import { Fragment, useState } from "react";
 import type {
   TemplateConfig,
   HeroContent,
-  SectionContentMap,
 } from "@/src/lib/templates";
-import { SECTION_TYPE_LABELS } from "@/src/lib/templates";
+import { sectionDisplayName } from "@/src/lib/section-name";
 import { SectionEditProvider } from "@/app/components/blocks/SectionEditContext";
 import { PageViewTracker } from "@/app/components/PageViewTracker";
 import type { SiteId, SectionId } from "@/src/lib/types";
@@ -16,26 +15,14 @@ import { buildGoogleFontsUrl } from "@/src/lib/fonts";
 import { buildSiteThemeVars } from "@/src/lib/site-theme";
 import { buildSectionContainer } from "@/src/lib/section-style";
 import { isDarkAppearance } from "@/app/components/blocks/appearance";
-import {
-  HeroBlock,
-  FeaturesBlock,
-  FaqBlock,
-  TestimonialsBlock,
-  AboutBlock,
-  VideoBlock,
-  FormBlock,
-  LogosBlock,
-  BlogListBlock,
-  CasesBlock,
-  TechStackBlock,
-  BentoBlock,
-  PricingBlock,
-  GalleryBlock,
-  CtaBlock,
-  PortfolioNav,
-  FooterBlock,
-} from "@/app/components/blocks";
+import { PortfolioNav } from "@/app/components/blocks";
 import type { PortfolioNavItem } from "@/app/components/blocks/PortfolioNav";
+import { renderSectionBlock } from "./renderSectionBlock";
+import {
+  FluidRenderProvider,
+  type ComponentBlock,
+} from "@/app/components/blocks/fluid/FluidRenderContext";
+import { findComponentData, type FluidContent } from "@/src/lib/fluid";
 import SiteHeader from "@/app/components/site/SiteHeader";
 import type { SiteNavLink } from "@/src/lib/site-nav";
 import type { CasesContent, TechStackContent } from "@/src/lib/templates";
@@ -91,8 +78,14 @@ export default function SiteRenderer({
   const normalizedContent = migrateToSections(content);
   const { sections, theme } = normalizedContent;
 
+  // Pääosio voi olla myös valmiina osiona vapaan osion sisällä.
   const heroSection = sections.find((s) => s.type === "hero");
-  const heroContent = heroSection?.content as HeroContent | undefined;
+  const heroContent =
+    (heroSection?.content as HeroContent | undefined) ??
+    sections
+      .filter((s) => s.type === "fluid")
+      .map((s) => findComponentData((s.content as FluidContent).blocks ?? [], "hero"))
+      .find(Boolean);
 
   const fontsUrl = buildGoogleFontsUrl(theme.headingFont, theme.bodyFont);
   const isDark = isDarkAppearance(theme);
@@ -106,7 +99,14 @@ export default function SiteRenderer({
   let navCta: PortfolioNavItem | undefined;
   if (isPortfolio) {
     for (const section of visibleSections) {
-      if (section.type === "about") {
+      if (section.type === "fluid") {
+        const fluid = section.content as FluidContent;
+        if (fluid.navLabel?.trim() && fluid.anchor) {
+          const item = { label: fluid.navLabel.trim(), href: `#${fluid.anchor}` };
+          if (fluid.navStyle === "cta") navCta = item;
+          else navItems.push(item);
+        }
+      } else if (section.type === "about") {
         navItems.push({ label: "Tarina", href: "#tarina" });
       } else if (section.type === "techStack") {
         const heading = (section.content as TechStackContent)?.heading;
@@ -135,6 +135,24 @@ export default function SiteRenderer({
 
   const isLightPortfolio = isPortfolio && !isDark;
 
+  // Vapaan osion komponenttilohkot (valmiit osiot ruudukossa) piirretään
+  // samalla renderöijällä kuin sivun osiot.
+  const sharedBaseProps = {
+    theme,
+    siteId,
+    isPreview,
+    templateId: normalizedContent.templateId,
+  };
+  const renderComponent = (block: ComponentBlock) =>
+    renderSectionBlock(
+      {
+        id: block.id as unknown as SectionId,
+        type: block.content.sectionType,
+        content: block.content.data,
+      },
+      { baseProps: sharedBaseProps, heroContent, posts },
+    );
+
   return (
     <div
       className="relative min-h-screen bg-background text-foreground"
@@ -153,6 +171,7 @@ export default function SiteRenderer({
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.025)_1px,transparent_1px)] bg-[size:64px_64px]"
         />
       )}
+      <FluidRenderProvider value={renderComponent}>
       <div className="relative">
         {!isPreview && <PageViewTracker siteId={siteId} />}
         {showSiteHeader && (
@@ -172,151 +191,14 @@ export default function SiteRenderer({
           />
         )}
         {visibleSections.map((section, index) => {
-          const baseProps = {
-            theme,
-            siteId,
-            isPreview,
-            templateId: normalizedContent.templateId,
-          };
+          const baseProps = sharedBaseProps;
 
-          const block = (() => {
-            switch (section.type) {
-              case "hero":
-                return (
-                  <HeroBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["hero"]}
-                  />
-                );
-              case "features":
-                return (
-                  <FeaturesBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["features"]}
-                  />
-                );
-              case "faq":
-                return (
-                  <FaqBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["faq"]}
-                  />
-                );
-              case "testimonials":
-                return (
-                  <TestimonialsBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={
-                      section.content as SectionContentMap["testimonials"]
-                    }
-                  />
-                );
-              case "about":
-                return (
-                  <AboutBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["about"]}
-                  />
-                );
-              case "video":
-                return (
-                  <VideoBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["video"]}
-                  />
-                );
-              case "form":
-                return (
-                  <FormBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["form"]}
-                    hero={heroContent}
-                  />
-                );
-              case "logos":
-                return (
-                  <LogosBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["logos"]}
-                  />
-                );
-              case "blog":
-                return (
-                  <BlogListBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["blog"]}
-                    posts={posts}
-                  />
-                );
-              case "cases":
-                return (
-                  <CasesBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["cases"]}
-                  />
-                );
-              case "techStack":
-                return (
-                  <TechStackBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["techStack"]}
-                  />
-                );
-              case "bento":
-                return (
-                  <BentoBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["bento"]}
-                  />
-                );
-              case "pricing":
-                return (
-                  <PricingBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["pricing"]}
-                  />
-                );
-              case "gallery":
-                return (
-                  <GalleryBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["gallery"]}
-                  />
-                );
-              case "cta":
-                return (
-                  <CtaBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["cta"]}
-                  />
-                );
-              case "footer":
-                return (
-                  <FooterBlock
-                    key={section.id}
-                    {...baseProps}
-                    content={section.content as SectionContentMap["footer"]}
-                  />
-                );
-              default:
-                return null;
-            }
-          })();
+          const block = renderSectionBlock(section, {
+            baseProps,
+            heroContent,
+            posts,
+            activeSectionId,
+          });
 
           if (!block) return null;
 
@@ -396,7 +278,7 @@ export default function SiteRenderer({
                       ⠿
                     </span>
                     <span className="pointer-events-none rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground shadow">
-                      {SECTION_TYPE_LABELS[section.type]}
+                      {sectionDisplayName(section)}
                     </span>
                   </div>
                   {section.id === activeSectionId && (
@@ -479,6 +361,7 @@ export default function SiteRenderer({
           );
         })}
       </div>
+      </FluidRenderProvider>
     </div>
   );
 }

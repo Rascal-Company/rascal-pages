@@ -2,6 +2,8 @@ import { createClient } from "@/src/utils/supabase/server";
 import { redirect } from "next/navigation";
 import DashboardClient from "@/app/components/DashboardClient";
 import { getHomeUrl } from "@/app/lib/navigation";
+import { loadSiteKpis } from "./site-kpis";
+import { siteKind } from "@/src/lib/site-kind";
 
 // Estetään pre-rendering build-aikana, koska sivu vaatii käyttäjäsession
 export const dynamic = "force-dynamic";
@@ -42,17 +44,41 @@ export default async function Dashboard() {
     return <div>Virhe ladatessa sivustoja: {error.message}</div>;
   }
 
-  // 5. Hae jokaisen sivuston 'home' sivun julkaisutila
+  // 5. Overlay-kampanjat ryhmittelyä varten (lander / portfolio / overlay)
+  const siteIds = (sites || []).map((site) => site.id);
+  const { data: campaigns } = siteIds.length
+    ? await supabase
+        .from("overlay_campaigns")
+        .select("site_id, target_origin")
+        .in("site_id", siteIds)
+    : { data: [] };
+
+  // Blogi tekee sivustosta kokonaisen sivuston (portfolio-ryhmä).
+  const { data: posts } = siteIds.length
+    ? await supabase.from("posts").select("site_id").in("site_id", siteIds)
+    : { data: [] };
+
+  // 6. Hae jokaisen sivuston 'home' sivun julkaisutila
   const sitesWithPublishedStatus = await Promise.all(
     (sites || []).map(async (site) => {
       const { data: page } = await supabase
         .from("pages")
-        .select("published")
+        .select("published, templateId:content->>templateId")
         .eq("site_id", site.id)
         .eq("slug", "home")
         .maybeSingle();
 
+      const siteCampaigns = (campaigns ?? []).filter((c) => c.site_id === site.id);
+
       return {
+        kind: siteKind({
+          hasHomePage: Boolean(page),
+          templateId: (page?.templateId as string | null) ?? null,
+          campaignCount: siteCampaigns.length,
+          postCount: (posts ?? []).filter((post) => post.site_id === site.id).length,
+        }),
+        campaignCount: siteCampaigns.length,
+        overlayOrigin: siteCampaigns[0]?.target_origin ?? null,
         id: site.id,
         user_id: site.user_id,
         subdomain: site.subdomain,
@@ -71,7 +97,16 @@ export default async function Dashboard() {
     }),
   );
 
-  return (
-    <DashboardClient initialSites={sitesWithPublishedStatus} userId={user.id} />
+  // 7. Tunnusluvut (30 pv + vertailujakso) rinnakkain
+  const sitesWithKpis = await Promise.all(
+    sitesWithPublishedStatus.map(async (site) => ({
+      ...site,
+      kpis: await loadSiteKpis(supabase, {
+        id: site.id,
+        kind: site.kind === "overlay" ? "overlay" : "lander",
+      }),
+    })),
   );
+
+  return <DashboardClient initialSites={sitesWithKpis} userId={user.id} />;
 }

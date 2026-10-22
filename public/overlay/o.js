@@ -16,6 +16,7 @@
   var VISITOR_KEY = "rp_overlay_vid";
   var HIDE_TIMEOUT_MS = 800;
   var OBSERVE_MS = 15000;
+  var LAZY_ATTRS = ["data-src", "data-srcset", "data-lazy-src", "data-original"];
 
   function normalize(value) {
     return (value || "").replace(/\s+/g, " ").trim();
@@ -50,6 +51,19 @@
       if (el.getAttribute("src") !== change.value) {
         el.setAttribute("src", change.value);
         el.removeAttribute("srcset");
+        el.removeAttribute("sizes");
+      }
+      // Lazy load -kirjastot kirjoittaisivat src:n uudelleen data-attribuuteista.
+      LAZY_ATTRS.forEach(function (attr) {
+        if (el.hasAttribute(attr) && el.getAttribute(attr) !== change.value) {
+          el.setAttribute(attr, change.value);
+        }
+      });
+      // <picture>-elementissä selain valitsee <source>-kuvan img-src:n ohi.
+      var parent = el.parentElement;
+      if (parent && parent.tagName === "PICTURE") {
+        var sources = parent.querySelectorAll("source");
+        for (var s = 0; s < sources.length; s++) sources[s].remove();
       }
     } else if (change.type === "link") {
       if (el.getAttribute("href") !== change.value) el.setAttribute("href", change.value);

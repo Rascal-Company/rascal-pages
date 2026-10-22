@@ -23,6 +23,7 @@ import {
   CtaBlockEditor,
   FooterBlockEditor,
 } from "./blocks";
+import FluidSectionEditor from "./blocks/FluidSectionEditor";
 
 type BlockEditorProps = {
   section: Section;
@@ -39,6 +40,14 @@ export default function BlockEditor({
     <div className="space-y-4">
       {(() => {
         switch (section.type) {
+          case "fluid":
+            return (
+              <FluidSectionEditor
+                sectionId={section.id}
+                content={section.content as SectionContentMap["fluid"]}
+                onUpdate={onUpdate}
+              />
+            );
           case "hero":
             return (
               <HeroBlockEditor

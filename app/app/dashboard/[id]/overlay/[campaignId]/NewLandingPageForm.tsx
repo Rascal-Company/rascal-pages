@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
 import { createOverlayLandingPage, type OverlayProfile } from "@/app/actions/overlay";
 import type { SiteId } from "@/src/lib/types";
 import type { OverlayCampaignId } from "@/src/lib/overlay-campaign";
@@ -44,39 +46,53 @@ export default function NewLandingPageForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-2 sm:grid-cols-2">
-      <Input
-        placeholder="Nimi, esim. Rakennusliikkeet – syyskampanja"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <Input
-        placeholder="Polku, esim. / tai /hinnasto"
-        value={path}
-        onChange={(e) => setPath(e.target.value)}
-      />
-      <Input
-        placeholder="utm_term, esim. rakennus"
-        value={utmTerm}
-        onChange={(e) => setUtmTerm(e.target.value)}
-      />
-      <select
-        value={profileId}
-        onChange={(e) => setProfileId(e.target.value)}
-        className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-        aria-label="Kohderyhmäprofiili"
-      >
-        <option value="">Ei profiilia</option>
-        {profiles.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.name}
-          </option>
-        ))}
-      </select>
-      <Button type="submit" disabled={busy || !name.trim()} className="sm:col-span-2">
-        {busy ? "Luodaan…" : "Luo ja avaa editori"}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-1.5">
+        <Label htmlFor="lp-name">Nimi</Label>
+        <Input
+          id="lp-name"
+          placeholder="Esim. Rakennusliikkeet"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          autoFocus
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="lp-profile">Kohderyhmä</Label>
+        <select
+          id="lp-profile"
+          value={profileId}
+          onChange={(e) => setProfileId(e.target.value)}
+          className="h-9 w-full rounded-md border border-input bg-card px-3 text-sm"
+        >
+          <option value="">Ei profiilia (yrityksen ihanneasiakas)</option>
+          {profiles.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="lp-path">Polku</Label>
+          <Input id="lp-path" value={path} onChange={(e) => setPath(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="lp-term">utm_term</Label>
+          <Input
+            id="lp-term"
+            placeholder="esim. rakennus"
+            value={utmTerm}
+            onChange={(e) => setUtmTerm(e.target.value)}
+          />
+        </div>
+      </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      <Button type="submit" disabled={busy || !name.trim()} className="w-full">
+        {busy && <Loader2 className="animate-spin" aria-hidden />}
+        {busy ? "Avataan editoria…" : "Luo ja avaa editori"}
       </Button>
-      {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
     </form>
   );
 }

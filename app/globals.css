@@ -227,3 +227,60 @@ html {
 .text-sidebar {
   color: var(--color-text-sidebar);
 }
+
+/* Overlay-editori: paneeliin ilmestyvä kortti kasvaa paikalleen. */
+@keyframes overlayPop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.overlay-pop {
+  animation: overlayPop 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay-pop {
+    animation: none;
+  }
+}
+
+/* Vapaa osio (Fluid): 8 saraketta mobiilissa, 24 työpöydällä. Rivit kasvavat,
+   jos sisältö ei mahdu. Mitat pidettävä samoina kuin FluidSection.tsx:n METRICS. */
+.fluid-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-auto-rows: minmax(20px, auto);
+  column-gap: 12px;
+  --row: 20px;
+}
+
+.fluid-block {
+  position: relative;
+  min-width: 0;
+  grid-column: var(--m-c);
+  grid-row: var(--m-r);
+  z-index: var(--z, 1);
+  --h: var(--m-h);
+  min-height: calc(var(--h) * var(--row));
+}
+
+@media (min-width: 768px) {
+  .fluid-grid {
+    grid-template-columns: repeat(24, minmax(0, 1fr));
+    grid-auto-rows: minmax(24px, auto);
+    column-gap: 16px;
+    --row: 24px;
+  }
+
+  .fluid-block {
+    grid-column: var(--d-c);
+    grid-row: var(--d-r);
+    --h: var(--d-h);
+  }
+}

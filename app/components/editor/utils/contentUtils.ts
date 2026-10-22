@@ -1,4 +1,5 @@
 import { nanoid } from "nanoid";
+import { defaultFluidContent } from "@/src/lib/fluid";
 import type {
   TemplateConfig,
   Section,
@@ -212,6 +213,7 @@ export function getDefaultSectionContent<T extends SectionType>(
   type: T,
 ): SectionContentMap[T] {
   const defaults: Record<SectionType, SectionContentMap[SectionType]> = {
+    fluid: defaultFluidContent(() => nanoid(10)),
     hero: {
       title: "Otsikko",
       subtitle: "Alaotsikko",

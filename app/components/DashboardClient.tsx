@@ -1,12 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { CircleCheck, Eye, Globe, Inbox, Search, Target } from "lucide-react";
 import { createClient } from "@/src/utils/supabase/client";
 import LoginModal from "./LoginModal";
 import CreateAiSiteModal from "./CreateAiSiteModal";
 import NewSiteMenu from "./NewSiteMenu";
-import SitePreview from "./SitePreview";
+import SiteRow, { SITE_ROW_GRID, type DashboardSite } from "./dashboard/SiteRow";
+import KpiTile from "./dashboard/KpiTile";
+import { KPI_PERIOD_DAYS, conversionPercent, percentChange, sumKpis } from "@/src/lib/kpi";
+import { cn } from "@/src/lib/utils";
+import { SITE_KINDS, type SiteKind } from "@/src/lib/site-kind";
+import SegmentedControl from "@/app/components/ui/segmented-control";
+
+const GROUP_LABELS: Record<SiteKind, string> = {
+  lander: "Landerit",
+  portfolio: "Portfoliot",
+  overlay: "Overlay",
+};
 import { useRouter } from "next/navigation";
 import { togglePagePublish } from "@/app/actions/toggle-publish";
 import { deleteSite } from "@/app/actions";
@@ -17,16 +28,12 @@ import { AccountMenu } from "./AccountMenu";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { useMutation } from "@tanstack/react-query";
 
-interface Site {
-  id: string;
+type Site = DashboardSite & {
   user_id: string;
-  subdomain: string;
-  custom_domain: string | null;
   settings: Record<string, unknown>;
-  published: boolean;
   created_at: string;
   updated_at: string;
-}
+};
 
 interface DashboardClientProps {
   initialSites: Site[];
@@ -37,12 +44,13 @@ export default function DashboardClient({
   initialSites,
   userId,
 }: DashboardClientProps) {
-  const { showToast } = useToast();
+  const { showToast, showConfirm } = useToast();
   const [sites, setSites] = useState(initialSites);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  // Ilman palvelimen validoimaa käyttäjää login-modaali on auki heti.
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(!userId);
   const [isAuthenticated, setIsAuthenticated] = useState(!!userId);
-  const [deletingSiteId, setDeletingSiteId] = useState<string | null>(null);
-  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [query, setQuery] = useState("");
+  const [group, setGroup] = useState<"all" | SiteKind>("all");
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const router = useRouter();
 
@@ -59,7 +67,7 @@ export default function DashboardClient({
           ),
         );
         showToast(
-          variables.published ? "Sivu julkaistu!" : "Sivu piilotettu!",
+          variables.published ? "Sivu julkaistu" : "Sivu piilotettu",
           "success",
         );
       } else {
@@ -76,9 +84,7 @@ export default function DashboardClient({
     onSuccess: (result, siteId) => {
       if (result.success) {
         setSites((prev) => prev.filter((site) => site.id !== siteId));
-        showToast("Sivusto poistettu onnistuneesti!", "success");
-        setIsConfirmingDelete(false);
-        setDeletingSiteId(null);
+        showToast("Sivusto poistettu", "success");
       } else {
         showToast(result.error || "Sivuston poisto epäonnistui.", "error");
       }
@@ -89,12 +95,6 @@ export default function DashboardClient({
   });
 
   useEffect(() => {
-    // Jos serveri on jo validoinut käyttäjän (userId on olemassa),
-    // ei tarvitse avata login-modaalia
-    if (!userId) {
-      setIsLoginModalOpen(true);
-    }
-
     // Kuuntele auth-muutoksia (kirjautuminen/uloskirjautuminen)
     const supabase = createClient();
     const {
@@ -131,21 +131,43 @@ export default function DashboardClient({
     });
   };
 
-  // Poistotoiminto
-  const handleDeleteSite = async (siteId: string) => {
-    setDeletingSiteId(siteId);
-    setIsConfirmingDelete(true);
+  // Poisto on peruuttamaton, joten se vahvistetaan.
+  const handleDeleteSite = async (site: Site) => {
+    const name = site.custom_domain ?? `${site.subdomain}.rascalpages.fi`;
+    const ok = await showConfirm(
+      `Poistetaanko ${name}? Sivut, blogi, overlay-kampanjat ja tilastot poistetaan pysyvästi.`,
+      () => {},
+    );
+    if (ok) deleteSiteMutation.mutate(site.id);
   };
 
-  const confirmDeleteSite = () => {
-    if (!deletingSiteId) return;
-    deleteSiteMutation.mutate(deletingSiteId);
-  };
+  const groupCounts = Object.fromEntries(
+    SITE_KINDS.map((kind) => [kind, sites.filter((site) => site.kind === kind).length]),
+  ) as Record<SiteKind, number>;
+  const groupSites = group === "all" ? sites : sites.filter((site) => site.kind === group);
 
-  const cancelDeleteSite = () => {
-    setDeletingSiteId(null);
-    setIsConfirmingDelete(false);
-  };
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleSites = normalizedQuery
+    ? groupSites.filter((site) =>
+        [site.subdomain, site.custom_domain, site.overlayOrigin]
+          .filter(Boolean)
+          .some((value) => value!.toLowerCase().includes(normalizedQuery)),
+      )
+    : groupSites;
+
+  // Kaikki-näkymässä ryhmät omien väliotsikoidensa alle.
+  const sections =
+    group === "all"
+      ? SITE_KINDS.map((kind) => ({
+          kind,
+          sites: visibleSites.filter((site) => site.kind === kind),
+        })).filter((section) => section.sites.length > 0)
+      : [{ kind: group, sites: visibleSites }];
+
+  const pageSites = groupSites.filter((site) => site.kind !== "overlay");
+  const publishedCount = pageSites.filter((site) => site.published).length;
+  const totals = sumKpis(groupSites.map((site) => site.kpis));
+  const number = new Intl.NumberFormat("fi-FI");
 
   if (!isAuthenticated) {
     return (
@@ -173,265 +195,164 @@ export default function DashboardClient({
 
   return (
     <>
-      <div className="min-h-screen bg-background">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {/* Otsikko */}
-          <div className="mb-8 flex items-center justify-between">
+      <div className="min-h-dvh bg-background text-foreground">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+          <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">
-                Omat sivustot
-              </h1>
+              <h1 className="text-3xl font-bold leading-tight tracking-tight">Sivustot</h1>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Viimeiset {KPI_PERIOD_DAYS} päivää
+              </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <ThemeToggle />
-              <NewSiteMenu onAiClick={() => setIsAiModalOpen(true)} />
+              <NewSiteMenu
+                onAiClick={() => setIsAiModalOpen(true)}
+                className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover active:scale-[0.98] motion-reduce:active:scale-100"
+              />
               <AccountMenu />
             </div>
-          </div>
+          </header>
 
-          {/* Sivustojen ruudukko */}
+          {sites.length > 0 && SITE_KINDS.filter((kind) => groupCounts[kind] > 0).length > 1 && (
+            <SegmentedControl
+              ariaLabel="Sivustoryhmä"
+              value={group}
+              onChange={setGroup}
+              className="mb-4 w-full sm:inline-flex sm:w-auto"
+              options={[
+                { value: "all" as const, label: `Kaikki ${sites.length}` },
+                ...SITE_KINDS.filter((kind) => groupCounts[kind] > 0).map((kind) => ({
+                  value: kind,
+                  label: `${GROUP_LABELS[kind]} ${groupCounts[kind]}`,
+                })),
+              ]}
+            />
+          )}
+
+          {sites.length > 0 && (
+            <section aria-label="Tunnusluvut" className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <KpiTile
+                icon={Eye}
+                label="Näytöt"
+                value={number.format(totals.views.current)}
+                change={percentChange(totals.views)}
+                hint="Ei vertailujaksoa"
+              />
+              <KpiTile
+                icon={Inbox}
+                label="Liidit ja konversiot"
+                value={number.format(totals.leads.current)}
+                change={percentChange(totals.leads)}
+                hint="Ei vertailujaksoa"
+              />
+              <KpiTile
+                icon={Target}
+                label="Konversio"
+                value={`${conversionPercent(totals.leads.current, totals.views.current).toFixed(1).replace(".", ",")} %`}
+                hint="Liidit / näytöt"
+              />
+              <KpiTile
+                icon={CircleCheck}
+                label="Julkaistut sivut"
+                value={`${publishedCount}/${pageSites.length}`}
+                hint={
+                  group === "all" || group === "overlay"
+                    ? `${groupCounts.overlay} overlay-sivustoa`
+                    : "Julkiset / kaikki"
+                }
+              />
+            </section>
+          )}
+
           {sites.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-foreground/20 bg-card p-12 text-center">
-              <div className="mx-auto max-w-md">
-                <svg
-                  className="mx-auto h-12 w-12 text-muted-foreground"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                  />
-                </svg>
-                <h3 className="mt-4 text-lg font-semibold text-foreground">
-                  Ei vielä sivustoja
-                </h3>
-                <p className="mt-2 text-sm text-foreground/70">
-                  Aloita luomalla ensimmäinen sivustosi
-                </p>
-                <div className="mt-6">
-                  <NewSiteMenu
-                    onAiClick={() => setIsAiModalOpen(true)}
-                    className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-hover"
-                  />
-                </div>
+            <div className="flex flex-col items-center rounded-2xl border border-dashed border-border bg-card px-6 py-16 text-center">
+              <span className="flex size-12 items-center justify-center rounded-full bg-accent text-primary">
+                <Globe className="size-6" aria-hidden />
+              </span>
+              <h2 className="mt-4 text-lg font-semibold">Ensimmäinen sivusto</h2>
+              <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+                Anna AI:n rakentaa sivu, aloita valmiista pohjasta tai personoi asiakkaan oma
+                sivusto overlaylla.
+              </p>
+              <div className="mt-6">
+                <NewSiteMenu
+                  onAiClick={() => setIsAiModalOpen(true)}
+                  className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary-hover"
+                />
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {sites.map((site) => (
-                <div
-                  key={site.id}
-                  className="group relative overflow-hidden rounded-lg border border-foreground/10 bg-card shadow-sm transition-shadow hover:shadow-md"
-                >
-                  {/* Saitti-esikatselu */}
-                  <SitePreview
-                    url={`https://${site.subdomain}.rascalpages.fi`}
-                    published={site.published}
-                    title={site.subdomain}
-                  />
-                  <div className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-foreground">
-                          {site.subdomain}.rascalpages.fi
-                        </h3>
-                        {site.custom_domain && (
-                          <p className="mt-1 text-sm text-foreground/70">
-                            {site.custom_domain}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Julkaisutoggle */}
-                    <div className="mt-4 flex items-center justify-between rounded-lg border border-foreground/10 bg-card p-3">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">
-                          Julkaistu
-                        </p>
-                        <p className="mt-0.5 text-xs text-foreground/60">
-                          {site.published
-                            ? "Sivu on julkinen ja näkyy kävijöille"
-                            : "Sivu on piilossa"}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleTogglePublish(site.id, site.published)
-                        }
-                        disabled={
-                          togglePublishMutation.isPending &&
-                          togglePublishMutation.variables?.siteId === site.id
-                        }
-                        className={`
-                          relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
-                          transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary
-                          focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed
-                          ${site.published ? "bg-primary" : "bg-gray-200"}
-                        `}
-                        role="switch"
-                        aria-checked={site.published}
-                        aria-label={
-                          site.published ? "Piilota sivu" : "Julkaise sivu"
-                        }
-                      >
-                        <span
-                          className={`
-                            pointer-events-none inline-block h-5 w-5 transform rounded-full bg-card shadow ring-0 
-                            transition duration-200 ease-in-out
-                            ${site.published ? "translate-x-5" : "translate-x-0"}
-                          `}
-                        />
-                      </button>
-                    </div>
-
-                    {/* URL-kenttä kopiointia varten */}
-                    <div className="mt-4">
-                      <label className="block text-xs font-medium text-foreground/70 mb-1">
-                        Sivuston URL
-                      </label>
-                      <div className="flex items-center gap-2 rounded-md border border-foreground/20 bg-card p-2">
-                        <input
-                          type="text"
-                          value={`https://${site.subdomain}.rascalpages.fi`}
-                          readOnly
-                          className="flex-1 bg-transparent text-sm text-foreground outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const url = `https://${site.subdomain}.rascalpages.fi`;
-                            navigator.clipboard.writeText(url);
-                            showToast("URL kopioitu leikepöydälle!", "success");
-                          }}
-                          className="flex-shrink-0 rounded p-1.5 text-foreground/60 transition-colors hover:bg-background hover:text-foreground"
-                          aria-label="Kopioi URL"
-                        >
-                          <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      <Link
-                        href={`/app/dashboard/${site.id}/pages`}
-                        className="rounded-md border border-foreground/20 bg-card px-2 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:bg-background sm:px-3 sm:text-sm"
-                      >
-                        Sivut
-                      </Link>
-                      <Link
-                        href={`/app/dashboard/${site.id}/posts`}
-                        className="rounded-md border border-foreground/20 bg-card px-2 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:bg-background sm:px-3 sm:text-sm"
-                      >
-                        Blogi
-                      </Link>
-                      <Link
-                        href={`/app/dashboard/${site.id}/overlay`}
-                        className="rounded-md border border-foreground/20 bg-card px-2 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:bg-background sm:px-3 sm:text-sm"
-                      >
-                        Overlay
-                      </Link>
-                      <Link
-                        href={`/app/dashboard/${site.id}/settings`}
-                        className="rounded-md border border-foreground/20 bg-card px-2 py-1.5 text-center text-xs font-medium text-foreground transition-colors hover:bg-background sm:px-3 sm:text-sm"
-                      >
-                        Asetukset
-                      </Link>
-                    </div>
-
-                    <div className="mt-2 flex gap-2">
-                      <Link
-                        href={`/app/dashboard/${site.id}`}
-                        className="flex-1 rounded-md border border-foreground/20 bg-card px-3 py-1.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-background"
-                      >
-                        Muokkaa
-                      </Link>
-                      <Link
-                        href={`/app/dashboard/${site.id}/analytics`}
-                        className="flex-1 rounded-md border border-foreground/20 bg-card px-3 py-1.5 text-center text-sm font-medium text-foreground transition-colors hover:bg-background"
-                      >
-                        Analytiikka
-                      </Link>
-                      <button
-                        onClick={() => handleDeleteSite(site.id)}
-                        className="flex-shrink-0 rounded-md border border-red-300 bg-card px-3 py-1.5 text-center text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-                        disabled={
-                          (togglePublishMutation.isPending &&
-                            togglePublishMutation.variables?.siteId ===
-                              site.id) ||
-                          deleteSiteMutation.isPending
-                        }
-                      >
-                        <svg
-                          className="mx-auto h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
-                    </div>
+            <section className="overflow-hidden rounded-2xl border border-border bg-card">
+              <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+                <h2 className="text-sm font-semibold">
+                  {group === "all" ? "Kaikki sivustot" : GROUP_LABELS[group]}{" "}
+                  <span className="font-normal text-muted-foreground">({groupSites.length})</span>
+                </h2>
+                {sites.length > 5 && (
+                  <div className="relative sm:w-64">
+                    <Search
+                      className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                      aria-hidden
+                    />
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Hae sivustoa"
+                      aria-label="Hae sivustoa"
+                      className="h-8 w-full rounded-lg border border-input bg-background pl-9 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
                   </div>
-                </div>
-              ))}
-            </div>
+                )}
+              </div>
+              <div
+                className={cn(
+                  "hidden border-b border-border bg-muted/40 px-4 py-2 text-xs font-medium text-muted-foreground",
+                  SITE_ROW_GRID,
+                )}
+                aria-hidden
+              >
+                <span>Sivusto</span>
+                <span>Tila</span>
+                <span className="text-right">Näytöt</span>
+                <span className="text-right">Liidit</span>
+                <span className="text-right">Konversio</span>
+                <span />
+              </div>
+              {visibleSites.length === 0 ? (
+                <p className="py-12 text-center text-sm text-muted-foreground">
+                  Ei sivustoja haulla &quot;{query}&quot;.
+                </p>
+              ) : (
+                sections.map((section) => (
+                  <div key={section.kind}>
+                    {group === "all" && sections.length > 1 && (
+                      <h3 className="border-b border-border bg-muted/20 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {GROUP_LABELS[section.kind]} · {section.sites.length}
+                      </h3>
+                    )}
+                    <ul className="divide-y divide-border border-b border-border last:border-b-0">
+                      {section.sites.map((site) => (
+                        <SiteRow
+                          key={site.id}
+                          site={site}
+                          publishing={
+                            togglePublishMutation.isPending &&
+                            togglePublishMutation.variables?.siteId === site.id
+                          }
+                          onTogglePublish={() => handleTogglePublish(site.id, site.published)}
+                          onDelete={() => handleDeleteSite(site)}
+                        />
+                      ))}
+                    </ul>
+                  </div>
+                ))
+              )}
+            </section>
           )}
         </div>
       </div>
-      {/* Poistovahvistusdialogi */}
-      {isConfirmingDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-lg bg-card p-6 shadow-xl">
-            <h3 className="text-lg font-medium text-foreground">
-              Poista sivusto
-            </h3>
-            <p className="mt-2 text-sm text-foreground/70">
-              Oletko varma että haluat poistaa tämän sivuston? Tätä toimintoa ei
-              voi perua.
-            </p>
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={cancelDeleteSite}
-                className="rounded-md border border-foreground/20 bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
-                disabled={deleteSiteMutation.isPending}
-              >
-                Peruuta
-              </button>
-              <button
-                onClick={confirmDeleteSite}
-                className="rounded-md border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-                disabled={deleteSiteMutation.isPending}
-              >
-                {deleteSiteMutation.isPending ? "Poistetaan..." : "Poista"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <LoginModal
         isOpen={isLoginModalOpen}
