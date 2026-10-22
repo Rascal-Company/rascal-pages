@@ -10,6 +10,9 @@ import type { FluidAlign, FluidBlock, TextVariant } from "@/src/lib/fluid";
 import { cn } from "@/src/lib/utils";
 import ImageUploadField from "./fields/ImageUploadField";
 import LinkField from "./fields/LinkField";
+import DownloadUploadField from "./fields/DownloadUploadField";
+import { useEditorSite } from "./EditorSiteContext";
+import { publicDownloadHref } from "@/src/lib/site-downloads";
 import BlockEditor from "./BlockEditor";
 import type { SectionId } from "@/src/lib/types";
 
@@ -50,6 +53,7 @@ export default function FluidBlockInspector({
   onRemove: () => void;
   crmEnabled: boolean;
 }) {
+  const siteId = useEditorSite();
   return (
     <div className="space-y-5">
       {block.type === "component" && (
@@ -162,7 +166,26 @@ export default function FluidBlockInspector({
           <Field label="Linkki">
             <LinkField
               value={block.content.href}
-              onChange={(href) => onChange({ ...block, content: { ...block.content, href } })}
+              onChange={(href) =>
+                // Käsin vaihdettu linkki irrottaa liitetyn tiedoston.
+                onChange({ ...block, content: { ...block.content, href, download: undefined } })
+              }
+            />
+          </Field>
+          <Field label="Tai lataa tiedosto suoraan">
+            <DownloadUploadField
+              kind="public"
+              value={block.content.download}
+              onChange={(download) =>
+                onChange({
+                  ...block,
+                  content: {
+                    ...block.content,
+                    download,
+                    href: download ? publicDownloadHref(siteId, download.path) : "",
+                  },
+                })
+              }
             />
           </Field>
           <Field label="Tyyli">

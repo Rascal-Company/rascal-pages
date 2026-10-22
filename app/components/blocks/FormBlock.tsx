@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Download } from "lucide-react";
 import type { FormContent, HeroContent, FormField } from "@/src/lib/templates";
 import { submitLead } from "@/app/actions/submit-lead";
 import type { SiteId } from "@/src/lib/types";
@@ -62,6 +63,7 @@ export default function FormBlock({
     "idle",
   );
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [download, setDownload] = useState<{ url: string; fileName: string } | null>(null);
   const [formLoadedAt] = useState(() => Date.now());
 
   const fields = content.fields || DEFAULT_FIELDS;
@@ -73,6 +75,7 @@ export default function FormBlock({
 
     if (isPreview) {
       setFormStatus("success");
+      setDownload(content.download ? { url: "#", fileName: content.download.fileName } : null);
       setTimeout(() => setFormStatus("idle"), 2000);
       return;
     }
@@ -98,9 +101,11 @@ export default function FormBlock({
         formFields,
         content.webhookUrl || null,
         { export: content.exportToCrm ?? false, tag: content.crmTag },
+        content.download?.path ?? null,
       );
       if (result.success) {
         setFormStatus("success");
+        setDownload(result.download ?? null);
         setErrorMessage("");
         (e.target as HTMLFormElement).reset();
         if (hero?.ctaLink) {
@@ -138,6 +143,17 @@ export default function FormBlock({
                 {content.successMessage?.description ||
                   "Saat pian lisätietoja sähköpostiisi."}
               </p>
+              {download && (
+                <a
+                  href={download.url}
+                  download={download.fileName}
+                  className="mt-3 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-90"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  <Download className="size-4" aria-hidden />
+                  Lataa {download.fileName}
+                </a>
+              )}
             </div>
           )}
 

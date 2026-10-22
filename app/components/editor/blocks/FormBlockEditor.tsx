@@ -7,6 +7,7 @@ import type {
   FormField,
   FormFieldType,
 } from "@/src/lib/templates";
+import DownloadUploadField from "../fields/DownloadUploadField";
 
 type FormBlockEditorProps = {
   content: FormContent;
@@ -422,6 +423,22 @@ export default function FormBlockEditor({
           )}
         </div>
       )}
+
+      {/* Lahja lomakkeen lähettäjälle */}
+      <div className="pt-4 border-t border-border">
+        <h3 className="text-sm font-medium text-foreground mb-1">
+          Lahja lomakkeen lähettäjälle
+        </h3>
+        <p className="text-xs text-muted-foreground mb-3">
+          Esim. opas tai hinnasto. Latauslinkki näytetään lähetyksen jälkeen ja lähetetään
+          sähköpostiin. Tiedostoa ei saa ilman lomaketta.
+        </p>
+        <DownloadUploadField
+          kind="gated"
+          value={content.download}
+          onChange={(download) => onUpdate({ ...content, download })}
+        />
+      </div>
 
       {/* Success message */}
       <div className="pt-4 border-t border-border">

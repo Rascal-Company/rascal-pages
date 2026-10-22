@@ -4,6 +4,7 @@
  */
 
 import type { FluidContent } from "./fluid";
+import type { SiteDownload } from "./site-downloads";
 import type { SectionId } from "./types";
 
 export type SectionType =
@@ -131,6 +132,8 @@ export type FormContent = {
   };
   exportToCrm?: boolean;
   crmTag?: string;
+  /** Lahja lomakkeen lähettäjälle: latauslinkki kiitosnäkymään ja sähköpostiin (RAS-1115). */
+  download?: SiteDownload;
 };
 
 export type LogosContent = null;

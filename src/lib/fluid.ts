@@ -6,6 +6,7 @@
  * on pinojärjestys (viimeinen päällimmäisenä).
  */
 import type { Brand } from "./types";
+import type { SiteDownload } from "./site-downloads";
 import type { SectionContentMap, SectionType } from "./templates";
 
 export const DESKTOP_COLUMNS = 24;
@@ -29,6 +30,8 @@ export type FluidButtonContent = {
   href: string;
   variant: "primary" | "secondary" | "link";
   align: FluidAlign;
+  /** Liitetty tiedosto: href osoittaa sen suoraan lataukseen (RAS-1115). */
+  download?: SiteDownload;
 };
 
 /** Valmis osio (lomake, UKK, hinnoittelu…) lohkona vapaan osion sisällä. */
