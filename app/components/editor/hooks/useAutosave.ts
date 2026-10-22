@@ -72,6 +72,19 @@ export function useAutosave<T>({
     return () => clearTimeout(timer);
   }, [data, delay, enabled, runSave]);
 
+  // Editorista poistuttaessa (esim. linkki blogiin tai asetuksiin) odottava
+  // muutos tallennetaan heti, ettei viimeisin muokkaus jää debouncen alle.
+  const enabledRef = useRef(enabled);
+  useEffect(() => {
+    enabledRef.current = enabled;
+  });
+  useEffect(
+    () => () => {
+      if (enabledRef.current) void runSave();
+    },
+    [runSave],
+  );
+
   const saveNow = useCallback(async () => {
     await runSave();
   }, [runSave]);

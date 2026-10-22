@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Layers, UsersRound } from "lucide-react";
+import { ChevronRight, Layers, UsersRound } from "lucide-react";
+import SiteAdminNav from "@/app/components/dashboard/SiteAdminNav";
+import { loadSiteAdminNav } from "../site-admin-nav-data";
 import { createSiteId } from "@/src/lib/types";
 import NewCampaignForm from "./NewCampaignForm";
 import SnippetBox from "./SnippetBox";
@@ -36,9 +38,10 @@ export default async function OverlayPage({ params }: PageProps) {
     .order("created_at", { ascending: false });
   const campaigns = (data ?? []) as unknown as CampaignRow[];
 
-  const [stats, pagesTargets] = await Promise.all([
+  const [stats, pagesTargets, nav] = await Promise.all([
     Promise.all(campaigns.map((c) => loadVariantStats(c.id))),
     loadPagesTargets(supabase, orgId),
+    loadSiteAdminNav(supabase, site),
   ]);
   const pagesOrigins = new Set(pagesTargets.map((t) => t.origin));
   // Snippetti tarvitaan vain ulkoisille sivustoille.
@@ -57,14 +60,8 @@ export default async function OverlayPage({ params }: PageProps) {
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
+      <SiteAdminNav {...nav} />
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        <Link
-          href="/app/dashboard"
-          className="-ml-1 mb-6 inline-flex items-center gap-0.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft className="size-4" aria-hidden />
-          Sivustot
-        </Link>
 
         <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>

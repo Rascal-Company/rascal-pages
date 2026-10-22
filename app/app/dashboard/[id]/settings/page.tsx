@@ -1,6 +1,9 @@
 import { createClient } from "@/src/utils/supabase/server";
 import { redirect } from "next/navigation";
 import SettingsClient from "./SettingsClient";
+import SiteAdminNav from "@/app/components/dashboard/SiteAdminNav";
+import { loadSiteAdminNav } from "../site-admin-nav-data";
+
 import { createSiteId } from "@/src/lib/types";
 import { getHomeUrl } from "@/app/lib/navigation";
 
@@ -71,14 +74,19 @@ export default async function SettingsPage({ params }: PageProps) {
     revokedAt: (row.revoked_at as string | null) ?? null,
   }));
 
+  const nav = await loadSiteAdminNav(supabase, site);
+
   return (
-    <SettingsClient
+    <div className="min-h-dvh bg-brand-light">
+      <SiteAdminNav {...nav} />
+      <SettingsClient
       siteId={createSiteId(id)}
       subdomain={site.subdomain}
       rootDomain={rootDomain}
       customDomain={site.custom_domain ?? null}
       initialSettings={initialSettings}
       initialApiKeys={apiKeys}
-    />
+      />
+    </div>
   );
 }

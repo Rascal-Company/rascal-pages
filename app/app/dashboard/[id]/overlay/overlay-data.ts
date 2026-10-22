@@ -32,7 +32,7 @@ export async function loadOverlayContext(siteId: string) {
 
   const { data: site } = await supabase
     .from("sites")
-    .select("id, subdomain")
+    .select("id, subdomain, custom_domain")
     .eq("id", siteId)
     .eq("user_id", orgId)
     .maybeSingle();

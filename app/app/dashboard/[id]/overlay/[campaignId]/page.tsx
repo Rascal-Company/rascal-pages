@@ -10,6 +10,8 @@ import {
 } from "@/src/lib/overlay-campaign";
 import { getAppOrigin } from "../app-origin";
 import { loadOverlayContext, loadProfiles, loadVariantStats, sumStats } from "../overlay-data";
+import SiteAdminNav from "@/app/components/dashboard/SiteAdminNav";
+import { loadSiteAdminNav } from "../../site-admin-nav-data";
 import SnippetBox from "../SnippetBox";
 import StatsRow from "../StatsRow";
 import CreateDialog from "../components/CreateDialog";
@@ -54,7 +56,8 @@ function Chip({ icon: Icon, children }: { icon: typeof Hash; children: React.Rea
 
 export default async function OverlayCampaignPage({ params }: PageProps) {
   const { id, campaignId } = await params;
-  const { supabase, orgId } = await loadOverlayContext(id);
+  const { supabase, orgId, site } = await loadOverlayContext(id);
+  const nav = await loadSiteAdminNav(supabase, site);
 
   const { data: campaign } = await supabase
     .from("overlay_campaigns")
@@ -98,6 +101,7 @@ export default async function OverlayCampaignPage({ params }: PageProps) {
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
+      <SiteAdminNav {...nav} />
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <Link
           href={`/app/dashboard/${id}/overlay`}

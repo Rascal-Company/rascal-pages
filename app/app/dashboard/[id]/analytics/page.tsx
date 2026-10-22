@@ -1,7 +1,9 @@
 import { createClient } from "@/src/utils/supabase/server";
 import { redirect, notFound } from "next/navigation";
-import Link from "next/link";
 import LeadsTable from "./LeadsTable";
+import SiteAdminNav from "@/app/components/dashboard/SiteAdminNav";
+import { loadSiteAdminNav } from "../site-admin-nav-data";
+
 import { getHomeUrl } from "@/app/lib/navigation";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +38,7 @@ export default async function AnalyticsPage({ params }: PageProps) {
   // 3. Verify site ownership
   const { data: site } = await supabase
     .from("sites")
-    .select("subdomain, custom_domain, user_id")
+    .select("id, subdomain, custom_domain, user_id")
     .eq("id", siteId)
     .maybeSingle();
 
@@ -67,19 +69,14 @@ export default async function AnalyticsPage({ params }: PageProps) {
   const totalClicks =
     events?.filter((e) => e.event_type === "cta_click").length || 0;
 
+  const nav = await loadSiteAdminNav(supabase, site);
+
   return (
-    <div className="min-h-screen bg-brand-light">
+    <div className="min-h-dvh bg-brand-light">
+      <SiteAdminNav {...nav} />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="mb-4">
-            <Link
-              href="/app/dashboard"
-              className="text-sm text-brand-dark/60 hover:text-brand-dark"
-            >
-              ← Takaisin sivustoihin
-            </Link>
-          </div>
           <h1 className="text-3xl font-bold text-brand-dark">Analytiikka</h1>
           <p className="mt-2 text-sm text-brand-dark/70">
             {site.subdomain}.rascalpages.fi

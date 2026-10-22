@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { getHomeUrl } from "@/app/lib/navigation";
 import { mapPostRow, type PostRow } from "@/src/lib/posts";
 import PostsClient from "./PostsClient";
+import SiteAdminNav from "@/app/components/dashboard/SiteAdminNav";
+import { loadSiteAdminNav } from "../site-admin-nav-data";
+
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +36,7 @@ export default async function PostsPage({ params }: PageProps) {
 
   const { data: site } = await supabase
     .from("sites")
-    .select("id, subdomain")
+    .select("id, subdomain, custom_domain")
     .eq("id", id)
     .eq("user_id", orgMember.org_id)
     .single();
@@ -49,8 +52,12 @@ export default async function PostsPage({ params }: PageProps) {
     .order("created_at", { ascending: false });
 
   const posts = ((postRows ?? []) as PostRow[]).map(mapPostRow);
+  const nav = await loadSiteAdminNav(supabase, site);
 
   return (
-    <PostsClient siteId={site.id} subdomain={site.subdomain} posts={posts} />
+    <div className="min-h-dvh bg-brand-light">
+      <SiteAdminNav {...nav} />
+      <PostsClient siteId={site.id} subdomain={site.subdomain} posts={posts} />
+    </div>
   );
 }
