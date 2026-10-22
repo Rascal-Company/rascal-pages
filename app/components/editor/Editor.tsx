@@ -294,7 +294,11 @@ export default function Editor({
       selection: fluidSelection,
       select: (sectionId, blockId) => {
         setActiveSectionId(sectionId);
-        setFluidSelection(blockId ? { sectionId, blockId } : null);
+        setFluidSelection(blockId ? { sectionId, blockIds: [blockId] } : null);
+      },
+      selectMany: (sectionId, blockIds) => {
+        setActiveSectionId(sectionId);
+        setFluidSelection(blockIds.length > 0 ? { sectionId, blockIds } : null);
       },
       commit: (sectionId, next) => setContent(updateSectionContent(sectionId, next)),
     }),

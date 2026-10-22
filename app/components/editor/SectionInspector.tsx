@@ -15,7 +15,16 @@ import { sectionDisplayName } from "@/src/lib/section-name";
 import SectionStyleInspector from "./SectionStyleInspector";
 import FluidBlockInspector from "./FluidBlockInspector";
 import { useFluidEditor } from "@/app/components/blocks/fluid/FluidEditorContext";
-import type { FluidBlock, FluidContent } from "@/src/lib/fluid";
+import {
+  autoMobileLayout,
+  clampRect,
+  columnsFor,
+  materializeMobile,
+  rectFor,
+  withRect,
+  type FluidBlock,
+  type FluidContent,
+} from "@/src/lib/fluid";
 
 const BLOCK_LABELS = { text: "Teksti", image: "Kuva", button: "Painike", component: "Valmis osio" } as const;
 
@@ -41,9 +50,11 @@ export default function SectionInspector({
   const [tab, setTab] = useState<"content" | "style">("content");
   const fluid = useFluidEditor();
   const fluidContent = section.type === "fluid" ? (section.content as FluidContent) : null;
+  const selectedIds = fluid?.selection?.sectionId === section.id ? fluid.selection.blockIds : [];
+  // Tarkastin näyttää lohkon ominaisuudet vain, kun valittuna on yksi lohko.
   const selectedBlock =
-    fluidContent && fluid?.selection?.sectionId === section.id
-      ? fluidContent.blocks.find((b) => b.id === fluid.selection?.blockId)
+    fluidContent && selectedIds.length === 1
+      ? fluidContent.blocks.find((b) => b.id === selectedIds[0])
       : undefined;
 
   if (fluid && fluidContent && selectedBlock) {
@@ -85,6 +96,14 @@ export default function SectionInspector({
             key={selectedBlock.id}
             crmEnabled={crmEnabled}
             block={selectedBlock}
+            layout={fluid.layout}
+            rect={rectFor(selectedBlock, fluid.layout, autoMobileLayout(fluidContent.blocks))}
+            onRectChange={(rect) => {
+              const base =
+                fluid.layout === "mobile" ? materializeMobile(fluidContent.blocks) : fluidContent.blocks;
+              const next = clampRect(rect, columnsFor(fluid.layout));
+              commitBlocks(base.map((b) => (b.id === selectedBlock.id ? withRect(b, fluid.layout, next) : b)));
+            }}
             onChange={(next) =>
               commitBlocks(fluidContent.blocks.map((b) => (b.id === next.id ? next : b)))
             }

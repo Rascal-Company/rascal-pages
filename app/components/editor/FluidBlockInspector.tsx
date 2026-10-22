@@ -6,7 +6,8 @@ import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { Textarea } from "@/app/components/ui/textarea";
 import SegmentedControl from "@/app/components/ui/segmented-control";
-import type { FluidAlign, FluidBlock, TextVariant } from "@/src/lib/fluid";
+import { useState } from "react";
+import type { FluidAlign, FluidBlock, FluidLayout, FluidRect, TextVariant } from "@/src/lib/fluid";
 import { cn } from "@/src/lib/utils";
 import ImageUploadField from "./fields/ImageUploadField";
 import LinkField from "./fields/LinkField";
@@ -41,14 +42,84 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-/** Valitun lohkon ominaisuudet. Sijainti ja koko muutetaan suoraan sivulla. */
+const RECT_FIELDS: { key: keyof FluidRect; label: string; min: number }[] = [
+  { key: "x", label: "Sarake", min: 1 },
+  { key: "y", label: "Rivi", min: 1 },
+  { key: "w", label: "Leveys", min: 1 },
+  { key: "h", label: "Korkeus", min: 1 },
+];
+
+/**
+ * Sijainti ja koko numeroina (ruudukon sarakkeina ja riveinä). Sarake ja rivi
+ * näytetään 1:stä alkaen. Arvo tallennetaan, kun kenttä menettää fokuksen tai
+ * painetaan Enter.
+ */
+function RectFields({
+  rect,
+  layout,
+  onChange,
+}: {
+  rect: FluidRect;
+  layout: FluidLayout;
+  onChange: (rect: FluidRect) => void;
+}) {
+  const shown = (r: FluidRect) => ({ x: r.x + 1, y: r.y + 1, w: r.w, h: r.h });
+  const [values, setValues] = useState<Record<keyof FluidRect, string>>(() => {
+    const v = shown(rect);
+    return { x: String(v.x), y: String(v.y), w: String(v.w), h: String(v.h) };
+  });
+
+  function commit() {
+    const n = (key: keyof FluidRect) => Number.parseInt(values[key], 10);
+    if (RECT_FIELDS.some(({ key }) => !Number.isFinite(n(key)))) {
+      const v = shown(rect);
+      setValues({ x: String(v.x), y: String(v.y), w: String(v.w), h: String(v.h) });
+      return;
+    }
+    const next = { x: n("x") - 1, y: n("y") - 1, w: n("w"), h: n("h") };
+    if (next.x !== rect.x || next.y !== rect.y || next.w !== rect.w || next.h !== rect.h) onChange(next);
+  }
+
+  return (
+    <Field label={`Sijainti ja koko (${layout === "desktop" ? "työpöytä" : "mobiili"})`}>
+      <div className="grid grid-cols-4 gap-1.5">
+        {RECT_FIELDS.map(({ key, label, min }) => (
+          <label key={key} className="space-y-1">
+            <span className="block text-[11px] text-muted-foreground">{label}</span>
+            <Input
+              type="number"
+              inputMode="numeric"
+              min={min}
+              value={values[key]}
+              onChange={(e) => setValues((v) => ({ ...v, [key]: e.target.value }))}
+              onBlur={commit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commit();
+              }}
+              className="h-8 px-2 text-sm tabular-nums"
+            />
+          </label>
+        ))}
+      </div>
+    </Field>
+  );
+}
+
+/** Valitun lohkon ominaisuudet, sijainti ja koko. */
 export default function FluidBlockInspector({
   block,
+  rect,
+  layout,
+  onRectChange,
   onChange,
   onRemove,
   crmEnabled,
 }: {
   block: FluidBlock;
+  /** Lohkon suorakulmio muokattavassa asettelussa. */
+  rect: FluidRect;
+  layout: FluidLayout;
+  onRectChange: (rect: FluidRect) => void;
   onChange: (block: FluidBlock) => void;
   onRemove: () => void;
   crmEnabled: boolean;
@@ -213,10 +284,18 @@ export default function FluidBlockInspector({
         </>
       )}
 
+      {/* Avain arvoista: kentät alustuvat uudelleen, kun lohkoa siirretään sivulla. */}
+      <RectFields
+        key={`${layout}-${rect.x}-${rect.y}-${rect.w}-${rect.h}`}
+        rect={rect}
+        layout={layout}
+        onChange={onRectChange}
+      />
+
       <p className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">
         {block.type === "component"
           ? "Siirrä osiota sen vasemman reunan kahvasta ja muuta kokoa kulmista. Tekstejä voi muokata suoraan sivulla."
-          : "Raahaa lohkoa sivulla siirtääksesi sitä ja vedä kulmista muuttaaksesi kokoa. Nuolinäppäimet siirtävät ruudun kerrallaan (Shift = 4)."}
+          : "Raahaa lohkoa sivulla siirtääksesi sitä ja vedä kulmista muuttaaksesi kokoa. Nuolinäppäimet siirtävät ruudun kerrallaan (Shift = 4). Shift-klikkaus tai valintalaatikko valitsee useamman lohkon."}
       </p>
 
       <Button

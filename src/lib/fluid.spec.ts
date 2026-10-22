@@ -16,6 +16,10 @@ import {
   rectFor,
   resizeRect,
   rowCount,
+  moveGroup,
+  rowsForHeight,
+  sectionRows,
+  withMinRows,
   type FluidBlock,
   type FluidBlockId,
 } from "./fluid";
@@ -133,5 +137,51 @@ describe("paljas komponenttiosio", () => {
   it("löytää komponentin datan", () => {
     expect(findComponentData([text("t", 0, 0), faq], "faq")).toEqual([{ question: "K", answer: "V" }]);
     expect(findComponentData([faq], "hero")).toBeUndefined();
+  });
+});
+
+describe("osion korkeus", () => {
+  const rects = [{ x: 0, y: 0, w: 6, h: 4 }];
+  it("on vähintään lohkojen korkeus", () => {
+    expect(sectionRows({ blocks: [] }, rects, "desktop")).toBe(4);
+    expect(sectionRows({ blocks: [], minRows: { desktop: 10 } }, rects, "desktop")).toBe(10);
+    expect(sectionRows({ blocks: [], minRows: { desktop: 10 } }, rects, "mobile")).toBe(4);
+  });
+
+  it("palaa automaattiseksi, kun korkeus ei ylitä lohkoja", () => {
+    expect(withMinRows({ blocks: [] }, "desktop", 12, rects).minRows).toEqual({ desktop: 12 });
+    const auto = withMinRows({ blocks: [], minRows: { desktop: 12 } }, "desktop", 3, rects);
+    expect(auto).not.toHaveProperty("minRows");
+    expect(withMinRows({ blocks: [], minRows: { mobile: 8 } }, "desktop", 2, rects).minRows).toEqual({
+      mobile: 8,
+    });
+  });
+});
+
+describe("moveGroup", () => {
+  const group = new Map([
+    ["a", { x: 2, y: 1, w: 4, h: 2 }],
+    ["b", { x: 10, y: 5, w: 6, h: 2 }],
+  ]);
+
+  it("siirtää kaikkia samalla siirtymällä", () => {
+    const moved = moveGroup(group, 3, 2, 24);
+    expect(moved.get("a")).toEqual({ x: 5, y: 3, w: 4, h: 2 });
+    expect(moved.get("b")).toEqual({ x: 13, y: 7, w: 6, h: 2 });
+  });
+
+  it("rajaa siirron reunoihin ja säilyttää muodon", () => {
+    const left = moveGroup(group, -10, -10, 24);
+    expect(left.get("a")).toEqual({ x: 0, y: 0, w: 4, h: 2 });
+    expect(left.get("b")).toEqual({ x: 8, y: 4, w: 6, h: 2 });
+    expect(moveGroup(group, 20, 0, 24).get("b")?.x).toBe(18);
+  });
+});
+
+describe("rowsForHeight", () => {
+  it("pyöristää ylöspäin riveiksi", () => {
+    expect(rowsForHeight(72, "desktop")).toBe(3);
+    expect(rowsForHeight(73, "desktop")).toBe(4);
+    expect(rowsForHeight(10, "mobile")).toBe(1);
   });
 });

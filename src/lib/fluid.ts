@@ -59,6 +59,11 @@ export type FluidContent = {
   navLabel?: string;
   /** "cta" = näytetään navigaation korostettuna painikkeena. */
   navStyle?: "link" | "cta";
+  /**
+   * Osion vähimmäiskorkeus riveinä asettelukohtaisesti. Ilman arvoa osio
+   * päättyy alimman lohkon alareunaan; arvolla osion alle jää tyhjää tilaa.
+   */
+  minRows?: Partial<Record<FluidLayout, number>>;
 };
 
 export function columnsFor(layout: FluidLayout): number {
@@ -138,6 +143,54 @@ export function rectFor(
 /** Osion rivimäärä: alimman lohkon alareuna. */
 export function rowCount(rects: FluidRect[]): number {
   return rects.reduce((max, r) => Math.max(max, r.y + r.h), 0);
+}
+
+/** Osion rivimäärä: alimman lohkon alareuna tai asetettu vähimmäiskorkeus. */
+export function sectionRows(content: FluidContent, rects: FluidRect[], layout: FluidLayout): number {
+  return Math.max(rowCount(rects), content.minRows?.[layout] ?? 0);
+}
+
+/** Asettaa osion vähimmäiskorkeuden; 0 tai alle lohkojen korkeuden = automaattinen. */
+export function withMinRows(
+  content: FluidContent,
+  layout: FluidLayout,
+  rows: number,
+  rects: FluidRect[],
+): FluidContent {
+  const minRows = { ...content.minRows };
+  if (rows > rowCount(rects)) minRows[layout] = Math.round(rows);
+  else delete minRows[layout];
+  const rest: FluidContent = { ...content };
+  delete rest.minRows;
+  return Object.keys(minRows).length > 0 ? { ...rest, minRows } : rest;
+}
+
+/**
+ * Lohkoryhmän siirto: sama siirtymä kaikille, rajattuna niin, ettei yksikään
+ * lohko mene ruudukon ulkopuolelle (ryhmän muoto säilyy).
+ */
+export function moveGroup<K extends string>(
+  rects: Map<K, FluidRect>,
+  dx: number,
+  dy: number,
+  columns: number,
+): Map<K, FluidRect> {
+  const all = [...rects.values()];
+  if (all.length === 0) return new Map();
+  const minX = Math.min(...all.map((r) => r.x));
+  const maxRight = Math.max(...all.map((r) => r.x + r.w));
+  const minY = Math.min(...all.map((r) => r.y));
+  const sx = Math.min(Math.max(Math.round(dx), -minX), columns - maxRight);
+  const sy = Math.max(Math.round(dy), -minY);
+  const result = new Map<K, FluidRect>();
+  for (const [id, r] of rects) result.set(id, { ...r, x: r.x + sx, y: r.y + sy });
+  return result;
+}
+
+/** Rivit, joihin annetun korkuinen sisältö mahtuu (tekstilohkon kasvatus). */
+export function rowsForHeight(px: number, layout: FluidLayout): number {
+  const row = layout === "desktop" ? DESKTOP_ROW_PX : MOBILE_ROW_PX;
+  return Math.max(1, Math.ceil((px - 0.5) / row));
 }
 
 const DEFAULT_SIZE: Record<FluidBlockType, { w: number; h: number }> = {

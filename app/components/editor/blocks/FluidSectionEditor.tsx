@@ -8,10 +8,14 @@ import { Label } from "@/app/components/ui/label";
 import { getDefaultSectionContent } from "../utils/contentUtils";
 import type { SectionId } from "@/src/lib/types";
 import {
+  autoMobileLayout,
   newBlock,
   newComponentBlock,
   readingOrder,
+  rectFor,
+  rowCount,
   slugifyAnchor,
+  withMinRows,
   type FluidBlock,
   type FluidBlockType,
   type TextVariant,
@@ -140,6 +144,8 @@ export default function FluidSectionEditor({
         </div>
       </div>
 
+      <SectionHeightField content={content} onUpdate={onUpdate} />
+
       <div>
         <p className="mb-2 text-xs font-medium text-muted-foreground">Lohkot ({blocks.length})</p>
         <ul className="space-y-1">
@@ -184,6 +190,65 @@ export default function FluidSectionEditor({
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Osion korkeus riveinä muokattavassa asettelussa. Tyhjä = automaattinen
+ * (osio päättyy alimpaan lohkoon). Samaa voi säätää osion alareunan kahvasta.
+ */
+function SectionHeightField({
+  content,
+  onUpdate,
+}: {
+  content: SectionContentMap["fluid"];
+  onUpdate: (content: SectionContentMap["fluid"]) => void;
+}) {
+  const fluid = useFluidEditor();
+  const layout = fluid?.layout ?? "desktop";
+  const blocks = content.blocks ?? [];
+  const auto = autoMobileLayout(blocks);
+  const rects = blocks.map((b) => rectFor(b, layout, auto));
+  const minimum = rowCount(rects);
+  const value = content.minRows?.[layout];
+
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor="section-height" className="text-xs text-muted-foreground">
+        Osion korkeus, rivejä ({layout === "desktop" ? "työpöytä" : "mobiili"})
+      </Label>
+      <div className="flex items-center gap-2">
+        <Input
+          id="section-height"
+          key={`${layout}-${value ?? "auto"}`}
+          type="number"
+          inputMode="numeric"
+          min={minimum}
+          defaultValue={value ?? ""}
+          placeholder={`Automaattinen (${minimum})`}
+          onBlur={(e) => {
+            const rows = Number.parseInt(e.target.value, 10);
+            onUpdate(withMinRows(content, layout, Number.isFinite(rows) ? rows : 0, rects));
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") e.currentTarget.blur();
+          }}
+          className="h-9 tabular-nums"
+        />
+        {value !== undefined && (
+          <button
+            type="button"
+            onClick={() => onUpdate(withMinRows(content, layout, 0, rects))}
+            className="shrink-0 text-xs font-medium text-primary hover:underline"
+          >
+            Automaattinen
+          </button>
+        )}
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Jätä tyhjää tilaa osion alle tai vedä osion alareunan kahvasta.
+      </p>
     </div>
   );
 }
