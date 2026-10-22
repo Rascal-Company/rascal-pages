@@ -2,12 +2,54 @@
 
 import { headers } from "next/headers";
 import { createClient } from "@/src/utils/supabase/server";
+import { createAdminClient } from "@/src/utils/supabase/admin";
 import { ipLimiter, ipSiteLimiter } from "@/src/lib/rate-limit";
+import {
+  DOWNLOAD_BUCKET,
+  GATED_LINK_SECONDS,
+  downloadFileName,
+  isSiteDownloadPath,
+} from "@/src/lib/site-downloads";
 import type { SiteId } from "@/src/lib/types";
+
+type LeadDownload = { url: string; fileName: string };
 
 interface SubmitLeadResult {
   success?: boolean;
   error?: string;
+  /** Lomakkeen lahja: allekirjoitettu latauslinkki (RAS-1115). */
+  download?: LeadDownload;
+}
+
+/** Allekirjoittaa yksityisen tiedoston latauslinkin; null jos ei onnistu. */
+export type DownloadSigner = (path: string, fileName: string) => Promise<string | null>;
+
+async function signWithAdmin(path: string, fileName: string): Promise<string | null> {
+  const { data, error } = await createAdminClient()
+    .storage.from(DOWNLOAD_BUCKET)
+    .createSignedUrl(path, GATED_LINK_SECONDS, { download: fileName });
+  if (error || !data) {
+    console.error("Latauslinkin allekirjoitus epäonnistui:", error);
+    return null;
+  }
+  return data.signedUrl;
+}
+
+/**
+ * Lomakkeen lahjan linkki. Polku tulee kävijän selaimesta, joten se
+ * tarkistetaan kuuluvaksi juuri tämän sivuston lomaketiedostoihin.
+ */
+async function resolveLeadDownload(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  siteId: SiteId,
+  path: string,
+  sign: DownloadSigner,
+): Promise<LeadDownload | null> {
+  const { data: site } = await supabase.from("sites").select("user_id").eq("id", siteId).maybeSingle();
+  if (!site || !isSiteDownloadPath(path, site.user_id as string, siteId, "gated")) return null;
+  const fileName = downloadFileName(path);
+  const url = await sign(path, fileName);
+  return url ? { url, fileName } : null;
 }
 
 type CrmExport = { export: boolean; tag?: string };
@@ -68,6 +110,8 @@ export async function submitLeadCore(
   fields: Record<string, string | boolean>,
   customWebhookUrl?: string | null,
   crm?: CrmExport,
+  downloadPath?: string | null,
+  sign: DownloadSigner = signWithAdmin,
 ): Promise<SubmitLeadResult> {
   // 0. Bot protection: honeypot + timing check
   if (isBotSubmission(fields)) {
@@ -95,6 +139,7 @@ export async function submitLeadCore(
     fields: Record<string, string | boolean>;
     timestamp: string;
     crm?: { export: true; tag: string | null };
+    download?: LeadDownload;
   } = {
     type: "new_lead",
     siteId,
@@ -108,6 +153,12 @@ export async function submitLeadCore(
   if (crm?.export === true) {
     payload.crm = { export: true, tag: crm.tag?.trim() || null };
   }
+
+  // Lahja kulkee webhookin mukana, jotta workflow voi lähettää linkin sähköpostiin.
+  const download = downloadPath
+    ? await resolveLeadDownload(supabase, siteId, downloadPath, sign)
+    : null;
+  if (download) payload.download = download;
 
   // 4. Send to default n8n webhook (always)
   const defaultWebhook = process.env.N8N_RASCALPAGES_LEADS;
@@ -146,7 +197,7 @@ export async function submitLeadCore(
     }
   }
 
-  return { success: true };
+  return download ? { success: true, download } : { success: true };
 }
 
 /**
@@ -158,6 +209,7 @@ export async function submitLead(
   fields: Record<string, string | boolean>,
   customWebhookUrl?: string | null,
   crm?: CrmExport,
+  downloadPath?: string | null,
 ): Promise<SubmitLeadResult> {
   const headerStore = await headers();
   const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -171,5 +223,5 @@ export async function submitLead(
   }
 
   const supabase = await createClient();
-  return submitLeadCore(supabase, siteId, fields, customWebhookUrl, crm);
+  return submitLeadCore(supabase, siteId, fields, customWebhookUrl, crm, downloadPath);
 }
