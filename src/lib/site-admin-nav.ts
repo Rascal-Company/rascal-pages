@@ -40,3 +40,11 @@ export function activeSiteAdminNavKey(pathname: string, siteId: string): SiteAdm
 export function siteAdminNavKind(input: { hasHomePage: boolean; campaignCount: number }): SiteAdminNavKind {
   return !input.hasHomePage && input.campaignCount > 0 ? "overlay" : "pages";
 }
+
+/** Näkymät, jotka avautuvat editorin päälle ikkunana (Pages-sivustolla). */
+export const SITE_MODAL_KEYS = ["pages", "posts", "analytics", "settings"] as const;
+export type SiteModalKey = (typeof SITE_MODAL_KEYS)[number];
+
+export function isSiteModalKey(value: string | null | undefined): value is SiteModalKey {
+  return SITE_MODAL_KEYS.includes(value as SiteModalKey);
+}
