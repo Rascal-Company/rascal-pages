@@ -39,20 +39,69 @@ async function signWithAdmin(path: string, fileName: string): Promise<string | n
  * Lomakkeen lahjan linkki. Polku tulee kävijän selaimesta, joten se
  * tarkistetaan kuuluvaksi juuri tämän sivuston lomaketiedostoihin.
  */
+async function siteOwner(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  siteId: SiteId,
+): Promise<{ userId: string } | null> {
+  const { data } = await supabase.from("sites").select("user_id").eq("id", siteId).maybeSingle();
+  return data?.user_id ? { userId: data.user_id as string } : null;
+}
+
 async function resolveLeadDownload(
   supabase: Awaited<ReturnType<typeof createClient>>,
   siteId: SiteId,
   path: string,
   sign: DownloadSigner,
 ): Promise<LeadDownload | null> {
-  const { data: site } = await supabase.from("sites").select("user_id").eq("id", siteId).maybeSingle();
-  if (!site || !isSiteDownloadPath(path, site.user_id as string, siteId, "gated")) return null;
+  const site = await siteOwner(supabase, siteId);
+  if (!site || !isSiteDownloadPath(path, site.userId, siteId, "gated")) return null;
   const fileName = downloadFileName(path);
   const url = await sign(path, fileName);
   return url ? { url, fileName } : null;
 }
 
 type CrmExport = { export: boolean; tag?: string };
+
+/** Kuka lähettää lahjalinkin sähköpostiin: Rascal (n8n + Brevo) vai asiakkaan oma CRM-automaatio. */
+export type GiftDelivery = "rascal" | "crm";
+
+/** Lähettää liidin CRM:ään; false jos CRM-rajapintaa ei ole konfiguroitu tai kutsu epäonnistui. */
+export type CrmLeadSender = (lead: CrmLead) => Promise<boolean>;
+
+export type CrmLead = {
+  organizationId: string;
+  submissionId: string;
+  email: string;
+  name?: string;
+  marketingConsent: boolean;
+  tag?: string | null;
+  siteId: string;
+  download?: LeadDownload;
+};
+
+/**
+ * Liidi suoraan Rascal CRM:n rajapintaan (RAS-1117), jolloin CRM:n omat
+ * automaatiot käynnistyvät. Ilman konfiguraatiota palautetaan false ja liidi
+ * kulkee vanhaa n8n-polkua.
+ */
+async function sendLeadToCrm(lead: CrmLead): Promise<boolean> {
+  const baseUrl = process.env.RASCAL_CRM_URL;
+  const secret = process.env.RASCAL_PAGES_LEADS_SECRET;
+  if (!baseUrl || !secret) return false;
+  try {
+    const res = await fetch(new URL("/api/integrations/rascal-pages/leads", baseUrl), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-rascal-pages-secret": secret },
+      body: JSON.stringify(lead),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) console.error("CRM lead error:", res.status);
+    return res.ok;
+  } catch (err) {
+    console.error("CRM lead error:", err);
+    return false;
+  }
+}
 
 function isValidEmail(email: string): boolean {
   if (!email) return false;
@@ -112,6 +161,7 @@ export async function submitLeadCore(
   crm?: CrmExport,
   downloadPath?: string | null,
   sign: DownloadSigner = signWithAdmin,
+  options: { giftDelivery?: GiftDelivery; sendToCrm?: CrmLeadSender } = {},
 ): Promise<SubmitLeadResult> {
   // 0. Bot protection: honeypot + timing check
   if (isBotSubmission(fields)) {
@@ -150,15 +200,34 @@ export async function submitLeadCore(
     timestamp: new Date().toISOString(),
   };
 
-  if (crm?.export === true) {
-    payload.crm = { export: true, tag: crm.tag?.trim() || null };
-  }
-
-  // Lahja kulkee webhookin mukana, jotta workflow voi lähettää linkin sähköpostiin.
   const download = downloadPath
     ? await resolveLeadDownload(supabase, siteId, downloadPath, sign)
     : null;
-  if (download) payload.download = download;
+
+  // CRM-vienti suoraan CRM:n rajapintaan; jos se ei ole käytössä, n8n hoitaa
+  // viennin vanhaan tapaan (payload.crm).
+  let sentToCrm = false;
+  if (crm?.export === true) {
+    const site = await siteOwner(supabase, siteId);
+    if (site) {
+      sentToCrm = await (options.sendToCrm ?? sendLeadToCrm)({
+        organizationId: site.userId,
+        submissionId: crypto.randomUUID(),
+        email: normalizedEmail,
+        name: typeof cleanFields.name === "string" ? cleanFields.name : undefined,
+        marketingConsent: cleanFields.marketingConsent === true,
+        tag: crm.tag?.trim() || null,
+        siteId,
+        ...(download ? { download } : {}),
+      });
+    }
+    if (!sentToCrm) payload.crm = { export: true, tag: crm.tag?.trim() || null };
+  }
+
+  // Lahjaviesti: Rascal lähettää linkin n8n:n kautta, ellei asiakkaan oma
+  // CRM-automaatio hoida sitä (linkki on silloin CRM-aktiviteetin metadatassa).
+  const crmDeliversGift = options.giftDelivery === "crm" && sentToCrm;
+  if (download && !crmDeliversGift) payload.download = download;
 
   // 4. Send to default n8n webhook (always)
   const defaultWebhook = process.env.N8N_RASCALPAGES_LEADS;
@@ -210,6 +279,7 @@ export async function submitLead(
   customWebhookUrl?: string | null,
   crm?: CrmExport,
   downloadPath?: string | null,
+  giftDelivery?: GiftDelivery,
 ): Promise<SubmitLeadResult> {
   const headerStore = await headers();
   const ip = headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
@@ -223,5 +293,7 @@ export async function submitLead(
   }
 
   const supabase = await createClient();
-  return submitLeadCore(supabase, siteId, fields, customWebhookUrl, crm, downloadPath);
+  return submitLeadCore(supabase, siteId, fields, customWebhookUrl, crm, downloadPath, undefined, {
+    giftDelivery,
+  });
 }

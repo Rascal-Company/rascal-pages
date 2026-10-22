@@ -134,6 +134,11 @@ export type FormContent = {
   crmTag?: string;
   /** Lahja lomakkeen lähettäjälle: latauslinkki kiitosnäkymään ja sähköpostiin (RAS-1115). */
   download?: SiteDownload;
+  /**
+   * Kuka lähettää lahjalinkin sähköpostiin: Rascal (oletus) vai asiakkaan oma
+   * uutiskirjealusta CRM-automaation kautta (RAS-1117).
+   */
+  giftDelivery?: "rascal" | "crm";
 };
 
 export type LogosContent = null;
