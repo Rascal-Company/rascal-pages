@@ -969,15 +969,6 @@ export default function LandingPageEditor({
                   </StatusPill>
                 </label>
                 <IconButton
-                  label={copied === "share" ? "Kopioitu" : "Kopioi esikatselulinkki"}
-                  onClick={() => copy("share")}
-                >
-                  {copied === "share" ? <Check className="text-success" /> : <Copy />}
-                </IconButton>
-                <IconButton label="Avaa esikatselu" onClick={() => window.open(shareUrl, "_blank", "noopener")}>
-                  <ExternalLink />
-                </IconButton>
-                <IconButton
                   label="Poista variaatio"
                   onClick={handleDeleteVariant}
                   disabled={busy}
@@ -987,9 +978,25 @@ export default function LandingPageEditor({
                 </IconButton>
               </div>
             )}
+            {variant && (
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={() => copy("share")} className="flex-1">
+                  {copied === "share" ? <Check className="text-success" aria-hidden /> : <Copy aria-hidden />}
+                  {copied === "share" ? "Linkki kopioitu" : "Jaa esikatselu"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(shareUrl, "_blank", "noopener")}
+                >
+                  <ExternalLink aria-hidden />
+                  Avaa
+                </Button>
+              </div>
+            )}
             {variantDirty && (
               <p className="text-xs text-muted-foreground">
-                Esikatselulinkki näyttää tallennetun version.
+                Esikatselulinkki näyttää tallennetun version. Tallenna ennen jakamista.
               </p>
             )}
           </div>
