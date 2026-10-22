@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import {
   DndContext,
   closestCenter,
@@ -56,7 +57,6 @@ import {
 } from "@/app/components/blocks/fluid/FluidEditorContext";
 import AddSectionButton from "./AddSectionButton";
 import SectionPicker from "./SectionPicker";
-import SettingsModal from "./SettingsModal";
 import { EditorSiteProvider } from "./EditorSiteContext";
 import { SitePagesProvider } from "./SitePagesContext";
 import { useHistoryState } from "./hooks/useHistoryState";
@@ -71,11 +71,6 @@ type EditorProps = {
   siteCustomDomain?: string | null;
   initialContent: TemplateConfig | Record<string, unknown>;
   initialPublished?: boolean;
-  initialSettings?: {
-    googleTagManagerId?: string;
-    googleAnalyticsId?: string;
-    metaPixelId?: string;
-  };
   crmEnabled: boolean;
 };
 
@@ -88,7 +83,6 @@ export default function Editor({
   siteCustomDomain = null,
   initialContent,
   initialPublished = false,
-  initialSettings = {},
   crmEnabled,
 }: EditorProps) {
   const { showToast, showConfirm } = useToast();
@@ -115,7 +109,6 @@ export default function Editor({
   const [previewMode, setPreviewMode] = useState<PreviewDevice>("desktop");
   const [panelTab, setPanelTab] = useState<"sections" | "style" | "page">("sections");
   const [isPublishing, setIsPublishing] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [insertAfterId, setInsertAfterId] = useState<SectionId | null>(null);
 
   const [fluidSelection, setFluidSelection] = useState<FluidSelection | null>(null);
@@ -339,7 +332,6 @@ export default function Editor({
             onTogglePanel={() => setIsSidebarOpen((open) => !open)}
             fullPreview={isFullPreview}
             onToggleFullPreview={() => setIsFullPreview((full) => !full)}
-            onOpenSettings={() => setIsSettingsOpen(true)}
           />
 
           <div className="flex min-h-0 flex-1">
@@ -428,13 +420,10 @@ export default function Editor({
                         ogImage={content.seo?.ogImage}
                         onUpdate={(field, value) => setContent(updateSeoField(field, value))}
                       />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => setIsSettingsOpen(true)}
-                      >
-                        Sivuston asetukset (domain, analytiikka)
+                      <Button variant="outline" size="sm" className="w-full" asChild>
+                        <Link href={`/app/dashboard/${siteId}/settings`}>
+                          Sivuston asetukset (verkkotunnus, analytiikka)
+                        </Link>
                       </Button>
                     </div>
                   )}
@@ -480,15 +469,6 @@ export default function Editor({
             )}
           </div>
 
-          <SettingsModal
-            isOpen={isSettingsOpen}
-            onClose={() => setIsSettingsOpen(false)}
-            siteId={siteId}
-            subdomain={siteSubdomain}
-            rootDomain={rootDomain}
-            customDomain={siteCustomDomain}
-            initialSettings={initialSettings}
-          />
           <SectionPicker
             open={insertAfterId !== null}
             onClose={() => setInsertAfterId(null)}

@@ -2,6 +2,9 @@ import { createClient } from "@/src/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { getHomeUrl } from "@/app/lib/navigation";
 import PagesClient, { type PageListItem } from "./PagesClient";
+import SiteAdminNav from "@/app/components/dashboard/SiteAdminNav";
+import { loadSiteAdminNav } from "../site-admin-nav-data";
+
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +35,7 @@ export default async function SitePagesPage({ params }: PageProps) {
 
   const { data: site } = await supabase
     .from("sites")
-    .select("id, subdomain")
+    .select("id, subdomain, custom_domain")
     .eq("id", id)
     .eq("user_id", orgMember.org_id)
     .single();
@@ -48,6 +51,12 @@ export default async function SitePagesPage({ params }: PageProps) {
     .order("created_at", { ascending: true });
 
   const pages = (rows ?? []) as PageListItem[];
+  const nav = await loadSiteAdminNav(supabase, site);
 
-  return <PagesClient siteId={site.id} subdomain={site.subdomain} pages={pages} />;
+  return (
+    <div className="min-h-dvh bg-brand-light">
+      <SiteAdminNav {...nav} />
+      <PagesClient siteId={site.id} subdomain={site.subdomain} pages={pages} />
+    </div>
+  );
 }

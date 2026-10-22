@@ -88,14 +88,6 @@ export default async function SiteEditorPage({
   const initialPublished = page?.published ?? false;
   const pageTitle = page?.title || "Etusivu";
 
-  // Hae analytiikka-asetukset
-  const siteSettings = (site.settings as Record<string, unknown>) || {};
-  const initialSettings = {
-    googleTagManagerId: (siteSettings.googleTagManagerId as string) || "",
-    googleAnalyticsId: (siteSettings.googleAnalyticsId as string) || "",
-    metaPixelId: (siteSettings.metaPixelId as string) || "",
-  };
-
   return (
     <Editor
       siteId={createSiteId(id)}
@@ -106,7 +98,6 @@ export default async function SiteEditorPage({
       siteCustomDomain={site.custom_domain ?? null}
       initialContent={pageContent}
       initialPublished={initialPublished}
-      initialSettings={initialSettings}
       crmEnabled={crmEnabled}
     />
   );

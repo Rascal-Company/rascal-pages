@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Post } from "@/src/lib/posts";
 import { formatPostDate } from "@/src/lib/posts";
@@ -118,15 +117,9 @@ export default function PostsClient({
   };
 
   return (
-    <div className="min-h-screen bg-brand-light">
+    <div>
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <Link
-            href="/app/dashboard"
-            className="mb-4 inline-flex items-center text-sm text-brand-dark/70 hover:text-brand-dark"
-          >
-            ← Takaisin dashboardille
-          </Link>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-brand-dark">Blogi</h1>

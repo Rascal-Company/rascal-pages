@@ -57,15 +57,9 @@ export default function SettingsClient({
   const [activeSection, setActiveSection] = useState<SectionId>("general");
 
   return (
-    <div className="min-h-screen bg-brand-light">
+    <div>
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <Link
-            href={`/app/dashboard/${siteId}`}
-            className="mb-4 inline-flex items-center text-sm text-brand-dark/70 hover:text-brand-dark"
-          >
-            ← Takaisin editoriin
-          </Link>
           <h1 className="text-3xl font-bold text-brand-dark">
             Sivuston asetukset
           </h1>

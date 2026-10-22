@@ -29,6 +29,7 @@ import { cn } from "@/src/lib/utils";
 import { conversionPercent, percentChange, type SiteKpis } from "@/src/lib/kpi";
 import type { SiteKind } from "@/src/lib/site-kind";
 import { Change } from "./KpiTile";
+import { siteAdminNavItems } from "@/src/lib/site-admin-nav";
 
 export type DashboardSite = {
   id: string;
@@ -82,6 +83,10 @@ export default function SiteRow({
     ? (site.overlayOrigin ?? url).replace(/^https?:\/\/(www\.)?/, "")
     : url.replace(/^https:\/\//, "");
   const { views, leads } = site.kpis;
+  // Suorat linkit sivuston osioihin (pääpainike vie editoriin tai kampanjoihin).
+  const quickLinks = siteAdminNavItems(site.id, isOverlay ? "overlay" : "pages").filter(
+    (item) => item.key !== "editor" && item.key !== "overlay",
+  );
 
   async function copyUrl() {
     await navigator.clipboard.writeText(url);
@@ -138,6 +143,17 @@ export default function SiteRow({
               )}
             </button>
           )}
+          <nav aria-label={`${title}: osiot`} className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+            {quickLinks.map((item) => (
+              <Link
+                key={item.key}
+                href={item.href}
+                className="text-xs font-medium text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </div>
       </div>
 
