@@ -89,10 +89,7 @@ async function getOrgId(client: SupabaseClient): Promise<string | null> {
   return orgMember?.org_id ?? null;
 }
 
-async function session(): Promise<{
-  client: SupabaseClient;
-  orgId: string;
-} | null> {
+async function session(): Promise<{ client: SupabaseClient; orgId: string } | null> {
   const client = await createClient();
   const orgId = await getOrgId(client);
   return orgId ? { client, orgId } : null;
@@ -145,11 +142,7 @@ async function getOwnedVariantLandingPage(
     .eq("id", variantId)
     .maybeSingle();
   if (!data?.landing_page_id) return null;
-  return getOwnedLandingPage(
-    client,
-    createOverlayLandingPageId(data.landing_page_id),
-    orgId,
-  );
+  return getOwnedLandingPage(client, createOverlayLandingPageId(data.landing_page_id), orgId);
 }
 
 function revalidateOverlay(siteId: string) {
@@ -219,11 +212,7 @@ export async function createOverlayVariant(
 ): Promise<ActionResult<OverlayVariation>> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
-  const landingPage = await getOwnedLandingPage(
-    s.client,
-    landingPageId,
-    s.orgId,
-  );
+  const landingPage = await getOwnedLandingPage(s.client, landingPageId, s.orgId);
   if (!landingPage) return { success: false, error: NO_ACCESS };
   const result = await insertVariant(s.client, landingPage, input);
   if (result.success) revalidateOverlay(landingPage.campaign.site_id);
@@ -236,11 +225,7 @@ export async function saveOverlayVariant(
 ): Promise<ActionResult> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
-  const landingPage = await getOwnedVariantLandingPage(
-    s.client,
-    variantId,
-    s.orgId,
-  );
+  const landingPage = await getOwnedVariantLandingPage(s.client, variantId, s.orgId);
   if (!landingPage) return { success: false, error: NO_ACCESS };
 
   const name = input.name.trim();
@@ -277,11 +262,7 @@ export async function setOverlayVariantActive(
 ): Promise<ActionResult> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
-  const landingPage = await getOwnedVariantLandingPage(
-    s.client,
-    variantId,
-    s.orgId,
-  );
+  const landingPage = await getOwnedVariantLandingPage(s.client, variantId, s.orgId);
   if (!landingPage) return { success: false, error: NO_ACCESS };
 
   const { error } = await s.client
@@ -296,22 +277,13 @@ export async function setOverlayVariantActive(
   return { success: true };
 }
 
-export async function deleteOverlayVariant(
-  variantId: OverlayVariantId,
-): Promise<ActionResult> {
+export async function deleteOverlayVariant(variantId: OverlayVariantId): Promise<ActionResult> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
-  const landingPage = await getOwnedVariantLandingPage(
-    s.client,
-    variantId,
-    s.orgId,
-  );
+  const landingPage = await getOwnedVariantLandingPage(s.client, variantId, s.orgId);
   if (!landingPage) return { success: false, error: NO_ACCESS };
 
-  const { error } = await s.client
-    .from("overlay_variants")
-    .delete()
-    .eq("id", variantId);
+  const { error } = await s.client.from("overlay_variants").delete().eq("id", variantId);
   if (error) {
     console.error("Delete overlay variant error:", error);
     return { success: false, error: "Poisto epäonnistui." };
@@ -329,21 +301,12 @@ function withRpCode(match: OverlayMatch): OverlayMatch {
 async function insertLandingPage(
   client: SupabaseClient,
   campaign: CampaignRow,
-  input: {
-    name: string;
-    path: string;
-    profileId?: string | null;
-    match?: OverlayMatch;
-  },
+  input: { name: string; path: string; profileId?: string | null; match?: OverlayMatch },
 ): Promise<ActionResult<{ landingPageId: OverlayLandingPageId }>> {
   const name = input.name.trim().slice(0, 120);
   if (!name) return { success: false, error: "Anna laskeutumissivulle nimi." };
   const path = validPath(input.path);
-  if (!path)
-    return {
-      success: false,
-      error: "Polun pitää alkaa /-merkillä (tai olla *).",
-    };
+  if (!path) return { success: false, error: "Polun pitää alkaa /-merkillä (tai olla *)." };
 
   const { data, error } = await client
     .from("overlay_landing_pages")
@@ -351,10 +314,7 @@ async function insertLandingPage(
       campaign_id: campaign.id,
       name,
       path_pattern: path,
-      profile_id:
-        input.profileId && isValidUuid(input.profileId)
-          ? input.profileId
-          : null,
+      profile_id: input.profileId && isValidUuid(input.profileId) ? input.profileId : null,
       // Ilman omaa UTM-kohdennusta sivu saa valmiin linkkitunnisteen (?rp=).
       match: withRpCode(parseMatch(input.match)),
     })
@@ -374,20 +334,12 @@ async function insertLandingPage(
   );
   if (!variant.success) return variant;
 
-  return {
-    success: true,
-    data: { landingPageId: createOverlayLandingPageId(data.id) },
-  };
+  return { success: true, data: { landingPageId: createOverlayLandingPageId(data.id) } };
 }
 
 export async function createOverlayLandingPage(
   campaignId: OverlayCampaignId,
-  input: {
-    name: string;
-    path: string;
-    profileId: string | null;
-    utmTerm: string;
-  },
+  input: { name: string; path: string; profileId: string | null; utmTerm: string },
 ): Promise<ActionResult<{ landingPageId: OverlayLandingPageId }>> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
@@ -420,21 +372,13 @@ export async function saveOverlayLandingPage(
 ): Promise<ActionResult> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
-  const landingPage = await getOwnedLandingPage(
-    s.client,
-    landingPageId,
-    s.orgId,
-  );
+  const landingPage = await getOwnedLandingPage(s.client, landingPageId, s.orgId);
   if (!landingPage) return { success: false, error: NO_ACCESS };
 
   const name = input.name.trim();
   if (!name) return { success: false, error: "Anna laskeutumissivulle nimi." };
   const path = validPath(input.pathPattern);
-  if (!path)
-    return {
-      success: false,
-      error: "Polun pitää alkaa /-merkillä (tai olla *).",
-    };
+  if (!path) return { success: false, error: "Polun pitää alkaa /-merkillä (tai olla *)." };
   const parsed = parseSlots(input.slots);
   if (!parsed.ok) return { success: false, error: parsed.error };
 
@@ -444,8 +388,7 @@ export async function saveOverlayLandingPage(
     .eq("landing_page_id", landingPageId);
 
   // Lasketaan kaikki muutokset ennen kirjoituksia, ettei puolikasta tilaa jää.
-  const updates: { id: string; changes: unknown; values: OverlaySlotValues }[] =
-    [];
+  const updates: { id: string; changes: unknown; values: OverlaySlotValues }[] = [];
   for (const variant of variants ?? []) {
     const values = parseSlotValues(variant.slot_values, parsed.slots);
     const changes = buildChanges(parsed.slots, values);
@@ -460,10 +403,7 @@ export async function saveOverlayLandingPage(
       name: name.slice(0, 120),
       path_pattern: path,
       match: parseMatch(input.match),
-      profile_id:
-        input.profileId && isValidUuid(input.profileId)
-          ? input.profileId
-          : null,
+      profile_id: input.profileId && isValidUuid(input.profileId) ? input.profileId : null,
       slots: parsed.slots,
       updated_at: now,
     })
@@ -476,11 +416,7 @@ export async function saveOverlayLandingPage(
   for (const update of updates) {
     const { error: variantError } = await s.client
       .from("overlay_variants")
-      .update({
-        changes: update.changes,
-        slot_values: update.values,
-        updated_at: now,
-      })
+      .update({ changes: update.changes, slot_values: update.values, updated_at: now })
       .eq("id", update.id);
     if (variantError) {
       console.error("Sync overlay variant error:", variantError);
@@ -497,17 +433,10 @@ export async function deleteOverlayLandingPage(
 ): Promise<ActionResult> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
-  const landingPage = await getOwnedLandingPage(
-    s.client,
-    landingPageId,
-    s.orgId,
-  );
+  const landingPage = await getOwnedLandingPage(s.client, landingPageId, s.orgId);
   if (!landingPage) return { success: false, error: NO_ACCESS };
 
-  const { error } = await s.client
-    .from("overlay_landing_pages")
-    .delete()
-    .eq("id", landingPageId);
+  const { error } = await s.client.from("overlay_landing_pages").delete().eq("id", landingPageId);
   if (error) {
     console.error("Delete overlay landing page error:", error);
     return { success: false, error: "Poisto epäonnistui." };
@@ -519,11 +448,7 @@ export async function deleteOverlayLandingPage(
 // ---- Kampanjat ---------------------------------------------------------------
 
 /** Kampanjan kohde: ulkoinen sivu (URL) tai organisaation oma Pages-sivusto. */
-export type CampaignTargetInput = {
-  name: string;
-  targetUrl: string;
-  pagesSiteId?: string;
-};
+export type CampaignTargetInput = { name: string; targetUrl: string; pagesSiteId?: string };
 
 /** Oman Pages-sivuston ensisijainen origin, jos sivusto kuuluu organisaatiolle. */
 async function ownPagesOrigin(
@@ -546,12 +471,7 @@ async function createCampaignCore(
   orgId: string,
   siteId: SiteId,
   input: CampaignTargetInput,
-): Promise<
-  ActionResult<{
-    campaignId: OverlayCampaignId;
-    landingPageId: OverlayLandingPageId;
-  }>
-> {
+): Promise<ActionResult<{ campaignId: OverlayCampaignId; landingPageId: OverlayLandingPageId }>> {
   const name = input.name.trim();
   if (!name) return { success: false, error: "Anna kampanjalle nimi." };
 
@@ -563,11 +483,7 @@ async function createCampaignCore(
   }
   const target = parseTargetUrl(targetUrl);
   if (!target) {
-    return {
-      success: false,
-      error:
-        "Anna kelvollinen sivun osoite, esim. https://asiakas.fi/hinnasto.",
-    };
+    return { success: false, error: "Anna kelvollinen sivun osoite, esim. https://asiakas.fi/hinnasto." };
   }
 
   const { data: site } = await client
@@ -576,19 +492,11 @@ async function createCampaignCore(
     .eq("id", siteId)
     .eq("user_id", orgId)
     .maybeSingle();
-  if (!site)
-    return {
-      success: false,
-      error: "Sivustoa ei löydy tai sinulla ei ole oikeuksia.",
-    };
+  if (!site) return { success: false, error: "Sivustoa ei löydy tai sinulla ei ole oikeuksia." };
 
   const { data, error } = await client
     .from("overlay_campaigns")
-    .insert({
-      site_id: siteId,
-      name: name.slice(0, 120),
-      target_origin: target.origin,
-    })
+    .insert({ site_id: siteId, name: name.slice(0, 120), target_origin: target.origin })
     .select("id, site_id, name, target_origin")
     .single();
   if (error || !data) {
@@ -614,12 +522,7 @@ async function createCampaignCore(
 export async function createOverlayCampaign(
   siteId: SiteId,
   input: CampaignTargetInput,
-): Promise<
-  ActionResult<{
-    campaignId: OverlayCampaignId;
-    landingPageId: OverlayLandingPageId;
-  }>
-> {
+): Promise<ActionResult<{ campaignId: OverlayCampaignId; landingPageId: OverlayLandingPageId }>> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
   const result = await createCampaignCore(s.client, s.orgId, siteId, input);
@@ -643,33 +546,19 @@ export async function createOverlaySite(input: { targetUrl: string }): Promise<
 
   const target = parseTargetUrl(input.targetUrl);
   if (!target) {
-    return {
-      success: false,
-      error: "Anna kelvollinen sivun osoite, esim. https://asiakas.fi.",
-    };
+    return { success: false, error: "Anna kelvollinen sivun osoite, esim. https://asiakas.fi." };
   }
 
   // Subdomain on uniikki: kokeillaan perusnimeä ja tarvittaessa satunnaista päätettä.
   const base = subdomainFromOrigin(target.origin);
-  const suffix = () =>
-    nanoid(4)
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "x");
-  const candidates = [
-    base,
-    ...Array.from({ length: 3 }, () => `${base}${suffix()}`),
-  ];
+  const suffix = () => nanoid(4).toLowerCase().replace(/[^a-z0-9]/g, "x");
+  const candidates = [base, ...Array.from({ length: 3 }, () => `${base}${suffix()}`)];
 
   let siteId: SiteId | null = null;
   for (const subdomain of candidates) {
     const { data, error } = await s.client
       .from("sites")
-      .insert({
-        user_id: s.orgId,
-        subdomain,
-        custom_domain: null,
-        settings: {},
-      })
+      .insert({ user_id: s.orgId, subdomain, custom_domain: null, settings: {} })
       .select("id")
       .single();
     if (data) {
@@ -702,9 +591,7 @@ export async function updateOverlayCampaign(
   const campaign = await getOwnedCampaign(s.client, campaignId, s.orgId);
   if (!campaign) return { success: false, error: NO_ACCESS };
 
-  const patch: Record<string, unknown> = {
-    updated_at: new Date().toISOString(),
-  };
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (input.name !== undefined) {
     const name = input.name.trim();
     if (!name) return { success: false, error: "Anna kampanjalle nimi." };
@@ -712,10 +599,7 @@ export async function updateOverlayCampaign(
   }
   if (input.active !== undefined) patch.active = input.active === true;
 
-  const { error } = await s.client
-    .from("overlay_campaigns")
-    .update(patch)
-    .eq("id", campaignId);
+  const { error } = await s.client.from("overlay_campaigns").update(patch).eq("id", campaignId);
   if (error) {
     console.error("Update overlay campaign error:", error);
     return { success: false, error: "Tallennus epäonnistui." };
@@ -724,18 +608,13 @@ export async function updateOverlayCampaign(
   return { success: true };
 }
 
-export async function deleteOverlayCampaign(
-  campaignId: OverlayCampaignId,
-): Promise<ActionResult> {
+export async function deleteOverlayCampaign(campaignId: OverlayCampaignId): Promise<ActionResult> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
   const campaign = await getOwnedCampaign(s.client, campaignId, s.orgId);
   if (!campaign) return { success: false, error: NO_ACCESS };
 
-  const { error } = await s.client
-    .from("overlay_campaigns")
-    .delete()
-    .eq("id", campaignId);
+  const { error } = await s.client.from("overlay_campaigns").delete().eq("id", campaignId);
   if (error) {
     console.error("Delete overlay campaign error:", error);
     return { success: false, error: "Poisto epäonnistui." };
@@ -765,12 +644,7 @@ function toProfile(row: {
 async function insertProfile(
   client: SupabaseClient,
   orgId: string,
-  input: {
-    name: string;
-    description: string;
-    source: OverlayProfile["source"];
-    sourceId?: string;
-  },
+  input: { name: string; description: string; source: OverlayProfile["source"]; sourceId?: string },
 ): Promise<ActionResult<OverlayProfile>> {
   const name = input.name.trim().slice(0, 120);
   if (!name) return { success: false, error: "Anna profiilille nimi." };
@@ -822,14 +696,11 @@ export async function updateOverlayProfile(
     .eq("id", profileId)
     .eq("org_id", s.orgId)
     .select("id");
-  if (error || !data?.length)
-    return { success: false, error: "Tallennus epäonnistui." };
+  if (error || !data?.length) return { success: false, error: "Tallennus epäonnistui." };
   return { success: true };
 }
 
-export async function deleteOverlayProfile(
-  profileId: OverlayProfileId,
-): Promise<ActionResult> {
+export async function deleteOverlayProfile(profileId: OverlayProfileId): Promise<ActionResult> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
   const { error } = await s.client
@@ -842,9 +713,7 @@ export async function deleteOverlayProfile(
 }
 
 /** Profiili Rascal AI:n ihanneasiakkaasta (icp_summary + ostajapersoona). */
-export async function importRascalProfile(): Promise<
-  ActionResult<OverlayProfile>
-> {
+export async function importRascalProfile(): Promise<ActionResult<OverlayProfile>> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
 
@@ -863,8 +732,7 @@ export async function importRascalProfile(): Promise<
   if (!description) {
     return {
       success: false,
-      error:
-        "Rascal AI -profiilissa ei ole vielä ihanneasiakasta. Täydennä se Rascal AI:ssa.",
+      error: "Rascal AI -profiilissa ei ole vielä ihanneasiakasta. Täydennä se Rascal AI:ssa.",
     };
   }
 
@@ -902,10 +770,7 @@ export async function importCrmSegmentProfile(
 // ---- AI-personointi ------------------------------------------------------------
 
 /** AI-generointien rajoitus organisaatiota kohden. */
-const copyLimiter = new RateLimiter({
-  maxRequests: 30,
-  windowMs: 15 * 60 * 1000,
-});
+const copyLimiter = new RateLimiter({ maxRequests: 30, windowMs: 15 * 60 * 1000 });
 
 /**
  * Personoi variaation tekstit laskeutumissivun tallennettuihin
@@ -917,18 +782,11 @@ export async function personalizeOverlayVariant(
 ): Promise<ActionResult<{ values: OverlaySlotValues }>> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
-  const landingPage = await getOwnedLandingPage(
-    s.client,
-    landingPageId,
-    s.orgId,
-  );
+  const landingPage = await getOwnedLandingPage(s.client, landingPageId, s.orgId);
   if (!landingPage) return { success: false, error: NO_ACCESS };
 
   if (!copyLimiter.check(s.orgId).allowed) {
-    return {
-      success: false,
-      error: "Liian monta generointia. Yritä hetken päästä uudelleen.",
-    };
+    return { success: false, error: "Liian monta generointia. Yritä hetken päästä uudelleen." };
   }
 
   let profile: { name: string; description: string } | null = null;
