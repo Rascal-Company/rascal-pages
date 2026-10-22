@@ -14,7 +14,7 @@ function publishedSupabaseStub(): SupabaseClient {
     .fn()
     .mockResolvedValue({ data: { published: true }, error: null });
   const eqSlug = vi.fn().mockReturnValue({ maybeSingle });
-  const eqSite = vi.fn().mockReturnValue({ eq: eqSlug });
+  const eqSite = vi.fn().mockReturnValue({ eq: eqSlug, maybeSingle });
   const select = vi.fn().mockReturnValue({ eq: eqSite });
   const from = vi.fn().mockReturnValue({ select });
   return { from } as unknown as SupabaseClient;
@@ -193,5 +193,85 @@ describe("submitLeadCore: lomakkeen lahja", () => {
     const result = await submitLeadCore(stub(), siteId, { email: VALID_EMAIL }, null, undefined, GIFT, async () => null);
     expect(result).toEqual({ success: true });
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("submitLeadCore: CRM-vienti rajapinnan kautta", () => {
+  const siteId: SiteId = createSiteId("site-123");
+  const GIFT = "org-1/site-123/gated/abcDEF12_x-Opas.pdf";
+  const sign = async () => "https://storage.test/signed";
+  let fetchMock: ReturnType<typeof vi.fn>;
+
+  function stub(): SupabaseClient {
+    const from = vi.fn((table: string) => {
+      const result =
+        table === "sites"
+          ? { data: { user_id: "org-1" }, error: null }
+          : { data: { published: true }, error: null };
+      const builder = { eq: () => builder, maybeSingle: () => Promise.resolve(result) };
+      return { select: () => builder };
+    });
+    return { from } as unknown as SupabaseClient;
+  }
+
+  function webhookBody() {
+    const [, init] = fetchMock.mock.calls[0];
+    return JSON.parse((init as RequestInit).body as string);
+  }
+
+  beforeEach(() => {
+    fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubEnv("N8N_RASCALPAGES_LEADS", TEST_WEBHOOK_URL);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+
+  test("vie liidin CRM:ään eikä pyydä n8n:ää tekemään sitä uudelleen", async () => {
+    const sendToCrm = vi.fn().mockResolvedValue(true);
+    await submitLeadCore(
+      stub(),
+      siteId,
+      { email: VALID_EMAIL, name: "Maija", marketingConsent: true },
+      null,
+      { export: true, tag: " Opas " },
+      GIFT,
+      sign,
+      { sendToCrm },
+    );
+    expect(sendToCrm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: "org-1",
+        email: VALID_EMAIL,
+        name: "Maija",
+        marketingConsent: true,
+        tag: "Opas",
+        siteId,
+        download: { url: "https://storage.test/signed", fileName: "Opas.pdf" },
+      }),
+    );
+    expect(webhookBody().crm).toBeUndefined();
+    // Oletuksena Rascal lähettää lahjaviestin.
+    expect(webhookBody().download).toBeDefined();
+  });
+
+  test("asiakkaan CRM-automaatio lähettää lahjan: n8n ei saa linkkiä", async () => {
+    await submitLeadCore(stub(), siteId, { email: VALID_EMAIL }, null, { export: true }, GIFT, sign, {
+      giftDelivery: "crm",
+      sendToCrm: async () => true,
+    });
+    expect(webhookBody().download).toBeUndefined();
+  });
+
+  test("palaa n8n-polkuun, jos CRM-kutsu epäonnistuu", async () => {
+    await submitLeadCore(stub(), siteId, { email: VALID_EMAIL }, null, { export: true, tag: "x" }, GIFT, sign, {
+      giftDelivery: "crm",
+      sendToCrm: async () => false,
+    });
+    expect(webhookBody().crm).toEqual({ export: true, tag: "x" });
+    expect(webhookBody().download).toBeDefined();
   });
 });

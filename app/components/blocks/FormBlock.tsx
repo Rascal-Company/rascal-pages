@@ -102,6 +102,7 @@ export default function FormBlock({
         content.webhookUrl || null,
         { export: content.exportToCrm ?? false, tag: content.crmTag },
         content.download?.path ?? null,
+        content.giftDelivery,
       );
       if (result.success) {
         setFormStatus("success");

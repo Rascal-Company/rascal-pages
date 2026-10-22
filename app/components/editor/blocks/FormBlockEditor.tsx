@@ -438,6 +438,38 @@ export default function FormBlockEditor({
           value={content.download}
           onChange={(download) => onUpdate({ ...content, download })}
         />
+        {content.download && crmEnabled && content.exportToCrm && (
+          <fieldset className="mt-4 space-y-2">
+            <legend className="text-sm font-medium text-foreground mb-1">
+              Kuka lähettää latauslinkin sähköpostiin?
+            </legend>
+            {(
+              [
+                { value: "rascal", label: "Rascal lähettää viestin" },
+                { value: "crm", label: "Oma uutiskirjealusta CRM-automaation kautta" },
+              ] as const
+            ).map((option) => (
+              <label key={option.value} className="flex items-center gap-2 text-sm text-foreground">
+                <input
+                  type="radio"
+                  name="gift-delivery"
+                  checked={(content.giftDelivery ?? "rascal") === option.value}
+                  onChange={() => onUpdate({ ...content, giftDelivery: option.value })}
+                />
+                {option.label}
+              </label>
+            ))}
+            {content.giftDelivery === "crm" && (
+              <p className="text-xs text-muted-foreground">
+                Tee Rascal CRM:ssä automaatio: kun aktiviteetti luodaan (tyyppi form_filled,
+                metadata.marketing_consent = true) → Synkronoi uutiskirjekontakti. Sähköposti on{" "}
+                <code>{"{{trigger.data.metadata.email}}"}</code> ja latauslinkki{" "}
+                <code>{"{{trigger.data.metadata.download_url}}"}</code> (vie se listan kenttään,
+                jota tervetuloviestisi käyttää).
+              </p>
+            )}
+          </fieldset>
+        )}
       </div>
 
       {/* Success message */}
