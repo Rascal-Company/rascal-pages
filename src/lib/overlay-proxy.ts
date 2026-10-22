@@ -65,7 +65,7 @@ async function assertPublicUrl(url: URL): Promise<void> {
   }
 }
 
-async function readLimited(res: Response): Promise<string> {
+async function readLimited(res: Response, maxBytes = MAX_BYTES): Promise<string> {
   const reader = res.body?.getReader();
   if (!reader) return "";
   const chunks: Uint8Array[] = [];
@@ -74,7 +74,7 @@ async function readLimited(res: Response): Promise<string> {
     const { done, value } = await reader.read();
     if (done) break;
     total += value.byteLength;
-    if (total > MAX_BYTES) {
+    if (total > maxBytes) {
       await reader.cancel();
       throw new Error("Sivu on liian suuri.");
     }
@@ -83,13 +83,21 @@ async function readLimited(res: Response): Promise<string> {
   return new TextDecoder("utf-8").decode(Buffer.concat(chunks));
 }
 
+type FetchOptions = {
+  accept: string;
+  /** Hyväksytyt content-typet (osamerkkijonona). */
+  contentTypes: string[];
+  maxBytes?: number;
+};
+
 /**
- * Hakee sivun HTML:n. Uudelleenohjaukset seurataan käsin, jotta jokainen
- * hyppy tarkistetaan (SSRF). Palauttaa lopullisen URL:n base-tagia varten.
+ * Hakee julkisen resurssin tekstinä. Uudelleenohjaukset seurataan käsin, jotta
+ * jokainen hyppy tarkistetaan (SSRF). Palauttaa lopullisen URL:n.
  */
-export async function fetchPublicHtml(
+export async function fetchPublicText(
   start: URL,
-): Promise<{ html: string; finalUrl: URL }> {
+  options: FetchOptions,
+): Promise<{ text: string; finalUrl: URL }> {
   let url = start;
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     await assertPublicUrl(url);
@@ -99,7 +107,7 @@ export async function fetchPublicHtml(
       headers: {
         "User-Agent":
           "Mozilla/5.0 (compatible; RascalPagesOverlay/1.0; +https://rascalpages.fi)",
-        Accept: "text/html,application/xhtml+xml",
+        Accept: options.accept,
       },
     });
 
@@ -111,11 +119,24 @@ export async function fetchPublicHtml(
     }
     if (!res.ok) throw new Error(`Sivu vastasi virheellä ${res.status}.`);
     const type = res.headers.get("content-type") || "";
-    if (!type.includes("text/html")) throw new Error("Osoite ei ole HTML-sivu.");
+    if (!options.contentTypes.some((t) => type.includes(t))) {
+      throw new Error("Osoite ei ole HTML-sivu.");
+    }
 
-    return { html: await readLimited(res), finalUrl: url };
+    return { text: await readLimited(res, options.maxBytes), finalUrl: url };
   }
   throw new Error("Liian monta uudelleenohjausta.");
+}
+
+/** Hakee sivun HTML:n (ks. fetchPublicText). */
+export async function fetchPublicHtml(
+  start: URL,
+): Promise<{ html: string; finalUrl: URL }> {
+  const { text, finalUrl } = await fetchPublicText(start, {
+    accept: "text/html,application/xhtml+xml",
+    contentTypes: ["text/html"],
+  });
+  return { html: text, finalUrl };
 }
 
 function escapeAttr(value: string): string {
