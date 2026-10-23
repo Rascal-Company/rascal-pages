@@ -15,7 +15,8 @@ const Editor = dynamic(() => import("@/app/components/editor/Editor"), {
     <div className="flex h-dvh flex-col bg-background">
       <div className="h-14 border-b border-border bg-card" />
       <div className="flex min-h-0 flex-1">
-        <div className="hidden w-[340px] border-r border-border bg-card lg:block" />
+        <div className="w-16 border-r border-border bg-card" />
+        <div className="hidden w-[300px] border-r border-border bg-card lg:block" />
         <div className="flex flex-1 items-center justify-center bg-muted/70">
           <div className="size-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
         </div>

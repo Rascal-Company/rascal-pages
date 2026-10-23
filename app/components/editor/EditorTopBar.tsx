@@ -34,54 +34,7 @@ import type { SiteId } from "@/src/lib/types";
 import type { AutosaveStatus } from "./hooks/useAutosave";
 import type { PreviewDevice } from "./EditorPreview";
 import { useSitePages } from "./SitePagesContext";
-import { siteAdminNavItems } from "@/src/lib/site-admin-nav";
-import { SITE_ADMIN_NAV_ICONS } from "@/app/components/dashboard/SiteAdminNav";
 
-/**
- * Sivuston muut osiot (sivut, blogi, analytiikka, asetukset) editorista:
- * leveällä näytöllä suorina linkkeinä, kapealla yhden "Sivusto"-valikon takana.
- */
-function SiteSectionLinks({ siteId }: { siteId: SiteId }) {
-  const items = siteAdminNavItems(siteId, "pages").filter((item) => item.key !== "editor");
-  return (
-    <>
-      <nav aria-label="Sivuston osiot" className="ml-1 hidden items-center gap-0.5 xl:flex">
-        {items.map((item) => {
-          const Icon = SITE_ADMIN_NAV_ICONS[item.key];
-          return (
-            <Link
-              key={item.key}
-              href={item.href}
-              className="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&_svg]:size-4"
-            >
-              <Icon aria-hidden />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-      <DropdownMenu>
-        <DropdownMenuTrigger className="ml-1 inline-flex h-8 shrink-0 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground xl:hidden">
-          Sivusto
-          <ChevronDown className="size-3.5" aria-hidden />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
-          {items.map((item) => {
-            const Icon = SITE_ADMIN_NAV_ICONS[item.key];
-            return (
-              <DropdownMenuItem key={item.key} asChild>
-                <Link href={item.href}>
-                  <Icon className="size-4" aria-hidden />
-                  {item.label}
-                </Link>
-              </DropdownMenuItem>
-            );
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
-  );
-}
 
 function IconButton({
   label,
@@ -243,7 +196,6 @@ export default function EditorTopBar({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        {!fullPreview && <SiteSectionLinks siteId={siteId} />}
       </div>
 
       {/* Miten katson */}

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { isSiteModalKey } from "@/src/lib/site-admin-nav";
 import {
   DndContext,
   closestCenter,
@@ -40,7 +42,7 @@ import {
 import type { SiteId, SectionId } from "@/src/lib/types";
 import { useToast } from "@/app/components/ui/ToastContainer";
 import EditorTopBar from "./EditorTopBar";
-import SegmentedControl from "@/app/components/ui/segmented-control";
+import EditorRail, { type PanelTab } from "./EditorRail";
 import StatusMessages from "./StatusMessages";
 import TemplateSelector from "./TemplateSelector";
 import ThemeFields from "./fields/ThemeFields";
@@ -107,7 +109,24 @@ export default function Editor({
   const [isFullPreview, setIsFullPreview] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [previewMode, setPreviewMode] = useState<PreviewDevice>("desktop");
-  const [panelTab, setPanelTab] = useState<"sections" | "style" | "page">("sections");
+  const [panelTab, setPanelTab] = useState<PanelTab>("sections");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // ?open=settings (dashboardin linkki tai päivitetty hallintaikkuna): editori
+  // aukeaa ja hallintaikkuna sen päälle. Parametri poistetaan historiasta,
+  // jotta ikkunan sulkeminen palaa puhtaaseen editoriin.
+  useEffect(() => {
+    const open = searchParams.get("open");
+    if (!isSiteModalKey(open)) return;
+    const rest = new URLSearchParams(searchParams.toString());
+    rest.delete("open");
+    const query = rest.toString();
+    window.history.replaceState(null, "", `/app/dashboard/${siteId}${query ? `?${query}` : ""}`);
+    router.push(`/app/dashboard/${siteId}/${open}`, { scroll: false });
+    // Vain editorin avautuessa.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [isPublishing, setIsPublishing] = useState(false);
   const [insertAfterId, setInsertAfterId] = useState<SectionId | null>(null);
 
@@ -196,7 +215,10 @@ export default function Editor({
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
-      const typing = (e.target as HTMLElement | null)?.closest?.("input, textarea, [contenteditable]");
+      const target = e.target as HTMLElement | null;
+      // Hallintaikkunan (dialogi) näppäimet eivät koske editoria (esim. ⌘Z tekstikentässä).
+      if (target?.closest?.("[role='dialog']")) return;
+      const typing = target?.closest?.("input, textarea, [contenteditable]");
       if (e.key === "Escape" && !typing) {
         setActiveSectionId(null);
         setFluidSelection(null);
@@ -339,20 +361,28 @@ export default function Editor({
           />
 
           <div className="flex min-h-0 flex-1">
+            {!isFullPreview && (
+              <EditorRail
+                siteId={siteId}
+                panelTab={panelTab}
+                panelOpen={isSidebarOpen}
+                onPanel={(tab) => {
+                  if (isSidebarOpen && tab === panelTab) {
+                    setIsSidebarOpen(false);
+                  } else {
+                    setPanelTab(tab);
+                    setIsSidebarOpen(true);
+                  }
+                }}
+              />
+            )}
             {/* Paneeli */}
             {!isFullPreview && isSidebarOpen && (
-              <aside className="flex w-[340px] shrink-0 flex-col border-r border-border bg-card">
-                <div className="border-b border-border p-3">
-                  <SegmentedControl
-                    ariaLabel="Paneelin näkymä"
-                    value={panelTab}
-                    onChange={setPanelTab}
-                    options={[
-                      { value: "sections", label: "Osiot" },
-                      { value: "style", label: "Tyyli" },
-                      { value: "page", label: "Sivu" },
-                    ]}
-                  />
+              <aside className="flex w-[300px] shrink-0 flex-col border-r border-border bg-card">
+                <div className="flex h-11 shrink-0 items-center border-b border-border px-4">
+                  <h2 className="text-sm font-semibold">
+                    {panelTab === "sections" ? "Osiot" : panelTab === "style" ? "Tyyli" : "Sivun SEO"}
+                  </h2>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto p-4">
                   <StatusMessages error={error} success={success} />

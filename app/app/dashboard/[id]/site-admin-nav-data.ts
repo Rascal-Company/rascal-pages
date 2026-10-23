@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { siteAdminNavKind } from "@/src/lib/site-admin-nav";
+import { loadOverlayContext } from "./overlay/overlay-data";
 import type { SiteAdminNavProps } from "@/app/components/dashboard/SiteAdminNav";
 
 type SiteHosts = { id: string; subdomain: string; custom_domain: string | null };
@@ -23,4 +24,10 @@ export async function loadSiteAdminNav(supabase: SupabaseClient, site: SiteHosts
     label: url.replace(/^https?:\/\/(www\.)?/, ""),
     url,
   };
+}
+
+/** Sama kuin loadSiteAdminNav, mutta tarkistaa ensin käyttäjän ja omistuksen. */
+export async function loadSiteAdminNavForUser(siteId: string): Promise<SiteAdminNavProps> {
+  const { supabase, site } = await loadOverlayContext(siteId);
+  return loadSiteAdminNav(supabase, site);
 }

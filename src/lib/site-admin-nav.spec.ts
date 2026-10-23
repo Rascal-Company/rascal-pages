@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { activeSiteAdminNavKey, siteAdminNavItems, siteAdminNavKind } from "./site-admin-nav";
+import { activeSiteAdminNavKey, isSiteModalKey, siteAdminNavItems, siteAdminNavKind } from "./site-admin-nav";
 
 describe("siteAdminNavItems", () => {
   it("Pages-sivustolla editori, sivut, blogi, analytiikka ja asetukset", () => {
@@ -32,5 +32,13 @@ describe("siteAdminNavKind", () => {
     expect(siteAdminNavKind({ hasHomePage: false, campaignCount: 2 })).toBe("overlay");
     expect(siteAdminNavKind({ hasHomePage: true, campaignCount: 2 })).toBe("pages");
     expect(siteAdminNavKind({ hasHomePage: false, campaignCount: 0 })).toBe("pages");
+  });
+});
+
+describe("isSiteModalKey", () => {
+  it("hyväksyy vain ikkunana avautuvat näkymät", () => {
+    expect(isSiteModalKey("posts")).toBe(true);
+    expect(isSiteModalKey("editor")).toBe(false);
+    expect(isSiteModalKey(null)).toBe(false);
   });
 });
