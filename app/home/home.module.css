@@ -1,0 +1,414 @@
+/* Rascal Pages -markkinointisivu. Tokenit Rascal-brändistä (globals.css);
+   tekstiin tummempi oranssi, koska #e87b4e ei riitä kontrastiksi valkoisella. */
+.page {
+  --paper: #fdf9f6;
+  --panel: #ffffff;
+  --ink: #1a1a1a;
+  --ink-muted: #5c564f;
+  --line: #e8e0d8;
+  --accent: #e87b4e;
+  --accent-hover: #d66a3d;
+  --accent-ink: #b0532b;
+  --variant-b: #2563eb;
+
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* Typografia: tracking ja riviväli koon mukaan (negatiivinen isolla, ~0 leipätekstillä). */
+.display {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-weight: 650;
+  text-wrap: balance;
+}
+
+.h2 {
+  font-size: clamp(1.875rem, 3.6vw, 2.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: 640;
+  text-wrap: balance;
+}
+
+.h3 {
+  font-size: 1.125rem;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
+  font-weight: 600;
+}
+
+.lead {
+  font-size: clamp(1.125rem, 1.6vw, 1.3125rem);
+  line-height: 1.5;
+  letter-spacing: -0.008em;
+  color: var(--ink-muted);
+  max-width: 36em;
+  text-wrap: pretty;
+}
+
+.body {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  text-wrap: pretty;
+}
+
+/* Kelluva, läpikuultava navigaatio: sisältö rullaa alta. */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(253, 249, 246, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 1px 0 rgba(26, 26, 26, 0.06);
+}
+
+/* Painikkeet: palaute heti painalluksessa. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  transition:
+    background-color 150ms ease,
+    transform 100ms ease-out;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:focus-visible,
+.focusRing:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.btnPrimary {
+  background: var(--ink);
+  color: #fff;
+}
+
+.btnPrimary:hover {
+  background: #333;
+}
+
+.btnAccent {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btnAccent:hover {
+  background: var(--accent-hover);
+}
+
+.btnGhost {
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line);
+  background: var(--panel);
+}
+
+.btnGhost:hover {
+  box-shadow: inset 0 0 0 1px #cfc5bb;
+}
+
+.btnLarge {
+  min-height: 3.25rem;
+  padding: 0 1.75rem;
+  font-size: 1rem;
+}
+
+.link {
+  color: var(--accent-ink);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* Hero-demo: selainikkuna, jonka sisältö vaihtuu valitun mainoksen mukaan. */
+.browser {
+  background: var(--panel);
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 1px rgba(26, 26, 26, 0.06),
+    0 24px 60px -24px rgba(60, 40, 20, 0.28);
+  overflow: hidden;
+}
+
+.browserBar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--line);
+  background: #faf6f2;
+}
+
+.dots {
+  display: flex;
+  gap: 6px;
+}
+
+.dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e2d9cf;
+}
+
+.url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 0.375rem 0.75rem;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.urlParam {
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+/* Valittu lohko editorin tapaan: oranssi kehys ja kulmakahvat. */
+.selected {
+  position: relative;
+  outline: 1.5px solid var(--accent);
+  outline-offset: 6px;
+  border-radius: 2px;
+}
+
+.selected::before,
+.selected::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background: var(--panel);
+  border: 1.5px solid var(--accent);
+  border-radius: 2px;
+}
+
+.selected::before {
+  top: -10px;
+  left: -10px;
+}
+
+.selected::after {
+  bottom: -10px;
+  right: -10px;
+}
+
+/* Uusi versio tulee näkyviin vaihdon jälkeen (key vaihtuu → animaatio alusta). */
+@keyframes swapIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.swapIn {
+  animation: swapIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Segmentoitu valitsin; ilmaisin liukuu nykyisestä kohdasta (CSS-transitio
+   lähtee aina näytöllä olevasta arvosta, joten nopea klikkailu ei hyppää). */
+.segmented {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding: 4px;
+  border-radius: 999px;
+  background: #efe7df;
+}
+
+.segmentIndicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  border-radius: 999px;
+  background: var(--panel);
+  box-shadow:
+    0 1px 2px rgba(26, 26, 26, 0.08),
+    0 0 0 0.5px rgba(26, 26, 26, 0.06);
+  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.segment {
+  position: relative;
+  z-index: 1;
+  min-height: 2.25rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  transition: color 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.segment[aria-checked="true"] {
+  color: var(--ink);
+}
+
+.segment:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.variantTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+.variantDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Editori-kuvitus: 24 sarakkeen ruudukko apuviivoineen. */
+.gridArt {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  grid-auto-rows: 22px;
+  gap: 0 6px;
+  padding: 20px;
+  background: var(--panel);
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px rgba(26, 26, 26, 0.06);
+}
+
+.gridGuides {
+  position: absolute;
+  inset: 0 20px;
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  gap: 6px;
+  pointer-events: none;
+}
+
+.gridGuides span {
+  background: rgba(232, 123, 78, 0.07);
+}
+
+.gridBlock {
+  position: relative;
+  border-radius: 6px;
+  background: #f3ece5;
+}
+
+/* Listat hiusviivoilla korttien sijaan. */
+.rows > * + * {
+  border-top: 1px solid var(--line);
+}
+
+.stepNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-size: 0.875rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  background: var(--ink);
+  color: #fff;
+}
+
+.faq summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.faqIcon {
+  transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.faq[open] .faqIcon {
+  transform: rotate(45deg);
+}
+
+.dark {
+  background: var(--ink);
+  color: #fff;
+}
+
+.dark .lead,
+.dark .body {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swapIn {
+    animation-name: none;
+  }
+
+  .segmentIndicator,
+  .faqIcon,
+  .btn {
+    transition: none;
+  }
+
+  .btn:active {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .header {
+    background: var(--paper);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .page {
+    --ink-muted: #3a3530;
+    --line: #9c9087;
+  }
+
+  .header {
+    background: var(--paper);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: 0 1px 0 var(--ink);
+  }
+}

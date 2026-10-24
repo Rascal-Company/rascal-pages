@@ -1,345 +1,475 @@
-'use client';
+import type { CSSProperties } from "react";
+import type { Metadata } from "next";
+import Link from "next/link";
+import CampaignDemo from "./_components/CampaignDemo";
+import TrialLink from "./_components/TrialLink";
+import styles from "./home.module.css";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import LoginModal from '@/app/components/LoginModal';
+export const metadata: Metadata = {
+  title: "Rascal Pages – laskeutumissivut, jotka puhuvat jokaiselle mainokselle",
+  description:
+    "Rakenna laskeutumissivut, blogi ja portfolio ilman koodia, personoi sisältö mainoskampanjan mukaan ja vie liidit suoraan Rascal CRM:ään. Kokeile ilmaiseksi.",
+  openGraph: {
+    title: "Rascal Pages",
+    description:
+      "Laskeutumissivut, blogi ja kampanjakohtainen personointi. Liidit suoraan Rascal CRM:ään.",
+    locale: "fi_FI",
+    type: "website",
+  },
+};
+
+const PRICING_URL = "https://www.rascal.fi/hinnat";
+const CONTACT_URL = "mailto:info@rascal.fi";
+
+type Item = { title: string; body: string };
+
+const STARTS: Item[] = [
+  {
+    title: "Kerro yrityksestäsi",
+    body: "Kirjoita muutama lause siitä, mitä teet ja kenelle. AI tekee sivun valmiiksi. Portfolion voi tehdä myös puhumalla: vastaat haastattelijan kysymyksiin, ja vastauksista syntyy sivu projekteineen.",
+  },
+  {
+    title: "Näytä sivu, josta pidät",
+    body: "Anna enintään kolme osoitetta. AI rakentaa samantyylisen sivun ja täyttää tekstit Rascal AI -profiilistasi. Omasta nykyisestä sivustasi se voi käyttää myös tekstit ja kuvat.",
+  },
+  {
+    title: "Valitse pohja tai tyhjä sivu",
+    body: "Kahdeksan pohjaa e-kirjasta portfolioon, tai aloitat tyhjästä ja lisäät osiot itse.",
+  },
+];
+
+const EDITOR_FEATURES: Item[] = [
+  {
+    title: "Lohkot minne haluat",
+    body: "Teksti, kuva ja painike asettuvat 24 sarakkeen ruudukkoon. Raahaa, muuta kokoa kulmista ja muokkaa tekstiä suoraan sivulla.",
+  },
+  {
+    title: "Valmiit osiot",
+    body: "Lomake, UKK, hinnoittelu, galleria, suosittelut, logot, video, blogi ja projektit lisätään yhdellä valinnalla.",
+  },
+  {
+    title: "Mobiili hoituu",
+    body: "Mobiiliasettelu syntyy automaattisesti. Halutessasi järjestät sen itse mobiiliesikatselussa.",
+  },
+  {
+    title: "Ei pelkoa virheistä",
+    body: "Kumoa ja tee uudelleen, automaattinen tallennus ja esikatselu työpöydällä, tabletilla ja puhelimella ennen julkaisua.",
+  },
+];
+
+const PERSONALIZATION: Item[] = [
+  {
+    title: "Kohdenna mainoksen mukaan",
+    body: "Versio valitaan utm_campaign-, utm_content- tai utm_term-parametrin perusteella. Uusi laskeutumissivu saa valmiin mainoslinkin.",
+  },
+  {
+    title: "Testaa A ja B",
+    body: "Kävijät jaetaan variaatioille. Näet näytöt, kävijät ja konversiot variaatioittain.",
+  },
+  {
+    title: "Personoi AI:lla",
+    body: "AI kirjoittaa version kohderyhmälle: Rascal AI:n ihanneasiakkaalle, CRM-segmentille tai itse kuvaamallesi ryhmälle.",
+  },
+  {
+    title: "Jaa ennen julkaisua",
+    body: "Lähetä esikatselulinkki asiakkaalle tai tiimille ennen kuin variaatio menee mainoksiin.",
+  },
+];
+
+const LEAD_STEPS: Item[] = [
+  {
+    title: "Kävijä täyttää lomakkeen",
+    body: "Kentät, suostumukset ja kiitosviesti määritetään lomakkeessa. Roskapostibotit suodatetaan pois.",
+  },
+  {
+    title: "Hän saa lahjansa heti",
+    body: "Liitä lomakkeeseen e-kirja tai muu tiedosto. Lataus aukeaa lähetyksen jälkeen, ja linkki menee myös sähköpostiin.",
+  },
+  {
+    title: "Liidi on CRM:ssä",
+    body: "Yhteystieto tallentuu Rascal CRM:ään valitsemallasi tagilla, ja CRM:n automaatiot käynnistyvät. Liidit voi lähettää myös omaan webhookiin.",
+  },
+];
+
+const PUBLISHING: Item[] = [
+  {
+    title: "Oma verkkotunnus",
+    body: "Julkaise heti osoitteessa nimi.rascalpages.fi tai liitä oma domain. Saat DNS-ohjeet ja näet, milloin yhteys on valmis.",
+  },
+  {
+    title: "Blogi hakukoneille",
+    body: "Kirjoita postaukset editorissa tai julkaise ne rajapinnan kautta API-avaimella, esimerkiksi suoraan Rascal AI:sta.",
+  },
+  {
+    title: "Monisivuinen sivusto",
+    body: "Alasivut ja yhteinen navigaatio. Hakukoneotsikot, kuvaukset ja rakenteinen data sivukohtaisesti.",
+  },
+  {
+    title: "Analytiikka",
+    body: "Näytöt, liidit ja konversio sivustoittain. Lisää GA4, Google Tag Manager tai Meta Pixel tunnisteella.",
+  },
+];
+
+const TEMPLATES = [
+  { name: "E-kirja / Lead magnet", body: "Hyödyt ja lomake rinnakkain." },
+  { name: "Odotuslista", body: "Yksi viesti ja iso sähköpostikenttä." },
+  { name: "SaaS Modern", body: "Ominaisuudet, hinnoittelu ja UKK." },
+  { name: "VSL", body: "Otsikko, video ja painike." },
+  { name: "Personal", body: "Profiilikuva, tarina ja suosittelut." },
+  { name: "Henkilöbrändi + blogi", body: "Esittely ja uusimmat kirjoitukset." },
+  { name: "Portfolio", body: "Projektit, osaaminen ja yhteydenotto." },
+  { name: "Mobiilisovellus / tuote", body: "Tuotteen esittely ja latauslinkit." },
+];
+
+const AUDIENCES: Item[] = [
+  {
+    title: "Yrittäjät ja pk-yritykset",
+    body: "Laskeutumissivu jokaiselle kampanjalle ilman verkkotoimistoa. Lomakkeen liidit menevät suoraan myyntiin.",
+  },
+  {
+    title: "Asiantuntijat ja konsultit",
+    body: "Portfolio ja henkilöbrändisivu blogeineen. Löydyt hausta, ja yhteydenotot tulevat lomakkeelta.",
+  },
+  {
+    title: "Rascal AI -käyttäjät",
+    body: "Brändiprofiilisi, ihanneasiakkaasi ja kirjoittamasi sisältö ovat jo valmiina. Sivu, blogi ja liidit jatkavat samassa ketjussa.",
+  },
+  {
+    title: "Markkinointitoimistot",
+    body: "Personoi asiakkaan nykyinen sivusto kampanjoille ilman uudelleenrakennusta. Jaa esikatselu hyväksyttäväksi ja raportoi konversiot.",
+  },
+];
+
+const FAQ = [
+  {
+    q: "Tarvitsenko koodaustaitoja?",
+    a: "Et tarvitse. Sivut tehdään editorissa raahaamalla ja kirjoittamalla. Koodia tarvitaan vain, jos personoit muulla työkalulla tehtyä sivustoa: silloin sivulle lisätään yksi skriptirivi.",
+  },
+  {
+    q: "Pitääkö sivuston olla tehty Rascal Pagesilla, jotta voin personoida sen?",
+    a: "Ei tarvitse. Personointi toimii myös nykyisellä sivustollasi. Valitset muutettavat tekstit, kuvat ja linkit editorissa, joka näyttää sivustosi sellaisena kuin se on.",
+  },
+  {
+    q: "Voinko käyttää omaa verkko-osoitettani?",
+    a: "Voit. Sivu julkaistaan heti rascalpages.fi-alidomainissa, ja oman domainin liität asetuksista. Saat tarvittavan DNS-tietueen ja näet, milloin domain on aktiivinen.",
+  },
+  {
+    q: "Tarvitsenko Rascal AI:n tai Rascal CRM:n?",
+    a: "Rascal Pages toimii yksinään. Rascal AI:n kanssa AI saa käyttöönsä brändiprofiilisi ja ihanneasiakkaasi, ja Rascal CRM:n kanssa liidit siirtyvät suoraan myyntiin. Kirjaudut kaikkiin samalla Rascal ID:llä.",
+  },
+  {
+    q: "Mitä kokeilu maksaa?",
+    a: "Kokeilu on ilmainen. Kokeilun jälkeiset hinnat näet hinnastosta.",
+    pricingLink: true,
+  },
+];
+
+// side-by-side: otsikko ja teksti rinnakkain (vain leveään palstaan).
+function FeatureRows({ items, sideBySide = false }: { items: Item[]; sideBySide?: boolean }) {
+  return (
+    <dl className={`${styles.rows} m-0`}>
+      {items.map((item) => (
+        <div
+          key={item.title}
+          className={`grid gap-1.5 py-5 ${sideBySide ? "sm:grid-cols-[13rem_1fr] sm:gap-8" : ""}`}
+        >
+          <dt className={styles.h3}>{item.title}</dt>
+          <dd className={`${styles.body} m-0`}>{item.body}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+// Kuvitus vapaasta osiosta: sarakeohjaimet ja yksi valittu lohko.
+function EditorArt() {
+  const blocks: { col: string; row: string; style?: CSSProperties; selected?: boolean }[] = [
+    { col: "2 / 15", row: "1 / 3" },
+    { col: "2 / 12", row: "4 / 5", style: { opacity: 0.6 } },
+    { col: "2 / 10", row: "5 / 6", style: { opacity: 0.6 } },
+    { col: "16 / 24", row: "1 / 8", style: { background: "#f6d9cb" }, selected: true },
+    { col: "2 / 7", row: "7 / 8", style: { background: "var(--ink)" } },
+    { col: "2 / 9", row: "10 / 14" },
+    { col: "9 / 16", row: "10 / 14" },
+    { col: "16 / 24", row: "10 / 14" },
+  ];
+  return (
+    <div className={styles.gridArt} aria-hidden>
+      <div className={styles.gridGuides}>
+        {Array.from({ length: 24 }, (_, i) => (
+          <span key={i} />
+        ))}
+      </div>
+      {blocks.map((b) => (
+        <div
+          key={`${b.col}-${b.row}`}
+          className={`${styles.gridBlock} ${b.selected ? styles.selected : ""}`}
+          style={{ gridColumn: b.col, gridRow: b.row, ...b.style }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function VariantArt() {
+  const variants = [
+    { label: "Variaatio A", color: "var(--accent)", lines: ["78%", "56%"] },
+    { label: "Variaatio B", color: "var(--variant-b)", lines: ["64%", "82%"] },
+  ];
+  return (
+    <div className="grid grid-cols-2 gap-3" aria-hidden>
+      {variants.map((v) => (
+        <div key={v.label} className="rounded-2xl bg-white p-4 shadow-[0_0_0_1px_rgba(26,26,26,0.06)]">
+          <span className={styles.variantTag}>
+            <span className={styles.variantDot} style={{ background: v.color }} />
+            {v.label}
+          </span>
+          <div className="mt-4 h-3 rounded-full bg-[#ece4dc]" style={{ width: v.lines[0] }} />
+          <div className="mt-2 h-3 rounded-full bg-[#ece4dc]" style={{ width: v.lines[1] }} />
+          <div className="mt-5 h-7 w-24 rounded-full" style={{ background: v.color }} />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function Home() {
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br from-brand-light via-brand-beige to-brand-light">
-        {/* Header/Navigation */}
-        <header className="bg-brand-dark sticky top-0 z-50 shadow-lg">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
-              <div className="flex items-center">
-                <h1 className="text-2xl font-bold text-white">Rascal Pages</h1>
-              </div>
-              <nav className="hidden md:flex space-x-8">
-                <Link href="#features" className="text-white/70 hover:text-white transition-colors">
-                  Ominaisuudet
-                </Link>
-                <Link href="#templates" className="text-white/70 hover:text-white transition-colors">
-                  Mallit
-                </Link>
-                <Link href="#faq" className="text-white/70 hover:text-white transition-colors">
-                  UKK
-                </Link>
-              </nav>
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => setIsLoginModalOpen(true)}
-                  className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:bg-brand-accent-hover"
-                >
-                  Kirjaudu sisään
-                </button>
-                <button
-                  onClick={() => setIsLoginModalOpen(true)}
-                  className="rounded-lg border border-white/30 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-white/10"
-                >
-                  Aloita ilmaiseksi
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
+    <div className={`${styles.page} min-h-screen`}>
+      <a
+        href="#sisalto"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-full focus:bg-white focus:px-4 focus:py-2"
+      >
+        Siirry sisältöön
+      </a>
 
-        {/* Hero Section */}
-        <section id="hero" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-          <div className="mx-auto max-w-4xl text-center">
-            <h1 className="text-5xl font-bold tracking-tight text-brand-dark sm:text-6xl lg:text-7xl">
-              Luo konvertoiva landing page alle 60 sekunnissa
-            </h1>
-            <p className="mt-6 text-xl leading-8 text-brand-dark/70 max-w-3xl mx-auto">
-              Unohda raskaat verkkosivutyökalut ja koodaaminen. Rascal Pages on tehty yrittäjille, jotka haluavat tuloksia heti – ei viikon päästä. Valitse pohja, kirjoita sisältö ja julkaise.
+      <header className={styles.header}>
+        <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-4 px-4 sm:px-6">
+          <Link href="/" className={`${styles.focusRing} whitespace-nowrap rounded text-[1.0625rem] font-semibold tracking-[-0.02em]`}>
+            Rascal Pages
+          </Link>
+          <nav
+            aria-label="Päävalikko"
+            className="hidden items-center gap-7 text-[0.9375rem] text-[color:var(--ink-muted)] md:flex"
+          >
+            <a href="#aloitus" className="hover:text-[color:var(--ink)]">Aloitus</a>
+            <a href="#personointi" className="hover:text-[color:var(--ink)]">Personointi</a>
+            <a href="#liidit" className="hover:text-[color:var(--ink)]">Liidit</a>
+            <a href="#kenelle" className="hover:text-[color:var(--ink)]">Kenelle</a>
+            <a href={PRICING_URL} className="hover:text-[color:var(--ink)]">Hinnat</a>
+          </nav>
+          <div className="flex items-center gap-1">
+            {/* Piilotus wrapperissa: .btn:n display ohittaisi Tailwindin hidden-luokan. */}
+            <span className="hidden sm:contents">
+              <TrialLink className={`${styles.btn} text-[color:var(--ink-muted)] hover:text-[color:var(--ink)]`}>
+                Kirjaudu
+              </TrialLink>
+            </span>
+            <TrialLink className={`${styles.btn} ${styles.btnPrimary} whitespace-nowrap`}>
+              Kokeile ilmaiseksi
+            </TrialLink>
+          </div>
+        </div>
+      </header>
+
+      <main id="sisalto">
+        <section className="mx-auto grid max-w-[1200px] items-center gap-12 px-4 pb-20 pt-14 sm:px-6 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:pb-28 lg:pt-20">
+          <div>
+            <h1 className={styles.display}>Oma sivu jokaiselle mainokselle.</h1>
+            <p className={`${styles.lead} mt-6`}>
+              Tee laskeutumissivut, blogi ja portfolio ilman koodia. Näytä
+              jokaiselle kampanjalle sille kirjoitettu viesti ja vie lomakkeen
+              liidit suoraan Rascal CRM:ään.
             </p>
-            <div className="mt-10 flex justify-center gap-4">
-              <button
-                onClick={() => setIsLoginModalOpen(true)}
-                className="rounded-lg bg-brand-accent px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:bg-brand-accent-hover hover:shadow-xl"
-              >
-                Rakenna sivustosi nyt →
-              </button>
-              <button
-                onClick={() => setIsLoginModalOpen(true)}
-                className="rounded-lg border border-brand-accent px-8 py-4 text-lg font-semibold text-brand-accent transition-all hover:bg-brand-accent/10"
-              >
-                Aloita ilmaiseksi
-              </button>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <TrialLink className={`${styles.btn} ${styles.btnAccent} ${styles.btnLarge}`}>
+                Kokeile ilmaiseksi
+              </TrialLink>
+              <a href={PRICING_URL} className={`${styles.btn} ${styles.btnGhost} ${styles.btnLarge}`}>
+                Katso hinnat
+              </a>
             </div>
-            <p className="mt-4 text-sm text-brand-dark/60">
-              Ei vaadi luottokorttia aloitukseen
+            <p className="mt-5 text-sm text-[color:var(--ink-muted)]">
+              Kirjaudut Rascal ID:llä, samoilla tunnuksilla kuin Rascal AI:hin
+              ja Rascal CRM:ään.
             </p>
           </div>
+          <CampaignDemo />
         </section>
 
-        {/* Problem/Solution Section */}
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-4xl font-bold tracking-tight text-brand-dark sm:text-5xl">
-              Miksi tuhlata päiviä, kun voit käyttää minuutteja?
-            </h2>
-            <p className="mt-6 text-lg leading-8 text-brand-dark/70">
-              Useimmat sivustorakentajat ovat täynnä turhia ominaisuuksia, jotka vain hidastavat sinua. Rascal Pages karsii kohinan pois. Olemme keskittyneet olennaiseen: siihen, että saat ideasi julki ja alat kerätä asiakkaita ennätysajassa.
+        <section id="aloitus" className="scroll-mt-20 border-t border-[color:var(--line)] bg-white">
+          <div className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6 lg:py-28">
+            <h2 className={`${styles.h2} max-w-[18em]`}>Aloita siitä, mitä sinulla jo on.</h2>
+            <p className={`${styles.lead} mt-5`}>
+              Ensimmäinen versio syntyy muutamassa minuutissa. Sen jälkeen
+              muokkaat sitä kuten mitä tahansa sivua.
             </p>
-          </div>
-        </section>
-
-        {/* Features Section */}
-        <section id="features" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 bg-brand-highlight/50">
-          <div className="mx-auto max-w-4xl text-center">
-            <h2 className="text-4xl font-bold tracking-tight text-brand-dark sm:text-5xl mb-16">
-              Salamannopea sivustorakentaja
-            </h2>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-xl bg-white p-6 text-center shadow-md hover:shadow-lg transition-shadow">
-                <div className="mb-4 flex justify-center">
-                  <div className="rounded-full bg-brand-accent/10 p-3">
-                    <svg className="w-8 h-8 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
+            <div className="mt-14 grid gap-10 md:grid-cols-3 md:gap-12">
+              {STARTS.map((s) => (
+                <div key={s.title} className="border-t-2 border-[color:var(--ink)] pt-5">
+                  <h3 className={styles.h3}>{s.title}</h3>
+                  <p className={`${styles.body} mt-3`}>{s.body}</p>
                 </div>
-                <h3 className="text-lg font-semibold text-brand-dark mb-2">
-                  Salamannopea editori
-                </h3>
-                <p className="text-sm text-brand-dark/70">
-                  Näet muutokset reaaliajassa. Ei monimutkaisia valikoita, vaan intuitiivinen tapa muokata tekstejä, värejä ja kuvia.
-                </p>
-              </div>
-              <div className="rounded-xl bg-white p-6 text-center shadow-md hover:shadow-lg transition-shadow">
-                <div className="mb-4 flex justify-center">
-                  <div className="rounded-full bg-brand-accent/10 p-3">
-                    <svg className="w-8 h-8 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                    </svg>
-                  </div>
-                </div>
-                <h3 className="text-lg font-semibold text-brand-dark mb-2">
-                  Konversio-optimoidut pohjat
-                </h3>
-                <p className="text-sm text-brand-dark/70">
-                  Älä arvaile, mikä toimii. Pohjamme on suunniteltu ohjaamaan kävijä kohti ostopäätöstä tai yhteydenottoa.
-                </p>
-              </div>
-              <div className="rounded-xl bg-white p-6 text-center shadow-md hover:shadow-lg transition-shadow">
-                <div className="mb-4 flex justify-center">
-                  <div className="rounded-full bg-brand-accent/10 p-3">
-                    <svg className="w-8 h-8 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                    </svg>
-                  </div>
-                </div>
-                <h3 className="text-lg font-semibold text-brand-dark mb-2">
-                  Julkaise omalla domainilla
-                </h3>
-                <p className="text-sm text-brand-dark/70">
-                  Käytä ilmaista rascalpages.fi -alihakemistoa tai liitä oma domainisi (tulossa) ammattimaista lopputulosta varten.
-                </p>
-              </div>
-              <div className="rounded-xl bg-white p-6 text-center shadow-md hover:shadow-lg transition-shadow">
-                <div className="mb-4 flex justify-center">
-                  <div className="rounded-full bg-brand-accent/10 p-3">
-                    <svg className="w-8 h-8 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                </div>
-                <h3 className="text-lg font-semibold text-brand-dark mb-2">
-                  Täysin mobiilioptimoitu
-                </h3>
-                <p className="text-sm text-brand-dark/70">
-                  Sivustosi näyttävät upeilta kaikilla laitteilla automaattisesti. Ei erillistä mobiilisäätöä.
-                </p>
-              </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Templates Section */}
-        <section id="templates" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-4xl text-center">
-            <h2 className="text-4xl font-bold tracking-tight text-brand-dark sm:text-5xl mb-16">
-              Valmis pohja jokaiseen tarpeeseen
-            </h2>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="rounded-xl bg-white p-6 shadow-md hover:shadow-lg transition-shadow">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="rounded-lg bg-brand-accent/10 p-2">
-                    <svg className="w-6 h-6 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-brand-dark">SaaS & Startupit</h3>
-                </div>
-                <p className="text-sm text-brand-dark/70">
-                  Moderni pohja tuotteesi esittelyyn. Ominaisuudet, hinnoittelu ja UKK valmiina rakenteena.
-                </p>
-              </div>
-              <div className="rounded-xl bg-white p-6 shadow-md hover:shadow-lg transition-shadow">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="rounded-lg bg-brand-accent/10 p-2">
-                    <svg className="w-6 h-6 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-brand-dark">Lead Magnet / E-kirjat</h3>
-                </div>
-                <p className="text-sm text-brand-dark/70">
-                  Kerää sähköposteja tehokkaasti. Vasemmalla hyödyt, oikealla lomake – klassinen ja toimiva asettelu.
-                </p>
-              </div>
-              <div className="rounded-xl bg-white p-6 shadow-md hover:shadow-lg transition-shadow">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="rounded-lg bg-brand-accent/10 p-2">
-                    <svg className="w-6 h-6 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-brand-dark">Odotuslistat (Waitlist)</h3>
-                </div>
-                <p className="text-sm text-brand-dark/70">
-                  Testaa ideaasi ennen tuotteen rakentamista. Minimalistinen sivu, joka maksimoi kiinnostuksen.
-                </p>
-              </div>
-              <div className="rounded-xl bg-white p-6 shadow-md hover:shadow-lg transition-shadow">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="rounded-lg bg-brand-accent/10 p-2">
-                    <svg className="w-6 h-6 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-brand-dark">Personal Branding</h3>
-                </div>
-                <p className="text-sm text-brand-dark/70">
-                  Rakenna asiantuntijabrändiäsi. Tyylikäs pohja biolle, referensseille ja yhteydenotoille.
-                </p>
-              </div>
-              <div className="rounded-xl bg-white p-6 shadow-md hover:shadow-lg transition-shadow">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="rounded-lg bg-brand-accent/10 p-2">
-                    <svg className="w-6 h-6 text-brand-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-brand-dark">VSL (Video Sales Letter)</h3>
-                </div>
-                <p className="text-sm text-brand-dark/70">
-                  Anna videon myydä puolestasi. Yksinkertainen rakenne, joka pitää huomion videossa ja CTA-napissa.
-                </p>
-              </div>
-            </div>
+        <section className="mx-auto grid max-w-[1200px] items-start gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:gap-20 lg:py-28">
+          <div className="lg:sticky lg:top-28">
+            <EditorArt />
           </div>
-        </section>
-
-        {/* Social Proof Section */}
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 bg-brand-highlight/50">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-4xl font-bold tracking-tight text-brand-dark sm:text-5xl">
-              Rakennettu modernilla teknologialla
-            </h2>
-            <p className="mt-6 text-lg leading-8 text-brand-dark/70">
-              Rascal Pages on salamannopea ja turvallinen. Sivustosi latautuvat välittömästi Next.js-teknologian ansiosta, missä päin maailmaa tahansa.
-            </p>
-          </div>
-        </section>
-
-        {/* FAQ Section */}
-        <section id="faq" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-3xl">
-            <h2 className="text-4xl font-bold tracking-tight text-brand-dark sm:text-5xl text-center mb-16">
-              Usein kysytyt kysymykset
-            </h2>
-            <div className="space-y-8">
-              <div className="border-b border-brand-dark/10 pb-8">
-                <h3 className="text-lg font-semibold text-brand-dark mb-2">
-                  Tarvitsenko koodaustaitoja?
-                </h3>
-                <p className="text-brand-dark/70">
-                  Et tarvitse. Jos osaat käyttää tekstinkäsittelyohjelmaa, osaat käyttää Rascal Pagesia.
-                </p>
-              </div>
-              <div className="border-b border-brand-dark/10 pb-8">
-                <h3 className="text-lg font-semibold text-brand-dark mb-2">
-                  Mitä "konversio-optimoitu" tarkoittaa?
-                </h3>
-                <p className="text-brand-dark/70">
-                  Se tarkoittaa, että sivupohjat on suunniteltu siten, että ne ohjaavat kävijää tekemään halutun toiminnon (esim. tilaamaan uutiskirjeen tai ostamaan tuotteen), sen sijaan että ne olisivat vain "nättejä".
-                </p>
-              </div>
-              <div className="border-b border-brand-dark/10 pb-8">
-                <h3 className="text-lg font-semibold text-brand-dark mb-2">
-                  Voinko käyttää omaa verkko-osoitettani?
-                </h3>
-                <p className="text-brand-dark/70">
-                  Kyllä. Voit julkaista sivun heti ilmaisella alidomainilla tai liittää oman www-osoitteesi palveluun.
-                </p>
-              </div>
-              <div className="border-b border-brand-dark/10 pb-8">
-                <h3 className="text-lg font-semibold text-brand-dark mb-2">
-                  Onko tämä osa Rascal AI:ta?
-                </h3>
-                <p className="text-brand-dark/70">
-                  Kyllä, Rascal Pages on osa Rascal AI -ekosysteemiä, suunniteltu helpottamaan digitaalista markkinointia ja myyntiä.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Footer CTA */}
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 bg-brand-dark text-white">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">
-              Ideasta valmiiksi sivuksi tänään
-            </h2>
-            <p className="mt-6 text-lg leading-8 text-white/80">
-              Älä anna teknologian olla esteenä menestyksellesi. Luo ensimmäinen sivusi täysin ilmaiseksi.
+          <div>
+            <h2 className={styles.h2}>Muokkaa suoraan sivulla.</h2>
+            <p className={`${styles.lead} mt-5`}>
+              Mitä näet editorissa, sen kävijä näkee julkaistuna. Ei erillisiä
+              lomakkeita tai sisällönhallintaa.
             </p>
             <div className="mt-10">
-              <button
-                onClick={() => setIsLoginModalOpen(true)}
-                className="rounded-lg bg-brand-accent px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:bg-brand-accent-hover hover:shadow-xl"
-              >
-                Aloita nyt →
-              </button>
+              <FeatureRows items={EDITOR_FEATURES} />
             </div>
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="border-t border-brand-dark/10 bg-brand-highlight/30 backdrop-blur-sm">
-          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="text-center md:text-left mb-4 md:mb-0">
-                <p className="text-sm text-brand-dark/60">
-                  © {new Date().getFullYear()} Rascal Pages / Rascal AI
-                </p>
-              </div>
-              <div className="flex space-x-6">
-                <Link href="#" className="text-sm text-brand-dark/60 hover:text-brand-dark transition-colors">
-                  Tietosuoja
-                </Link>
-                <Link href="#" className="text-sm text-brand-dark/60 hover:text-brand-dark transition-colors">
-                  Käyttöehdot
-                </Link>
-                <Link href="#" className="text-sm text-brand-dark/60 hover:text-brand-dark transition-colors">
-                  Ota yhteyttä
-                </Link>
+        <section id="personointi" className="scroll-mt-20 bg-[#f5ede5]">
+          <div className="mx-auto grid max-w-[1200px] items-start gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:gap-20 lg:py-28">
+            <div>
+              <h2 className={styles.h2}>Personoi myös nykyinen sivustosi.</h2>
+              <p className={`${styles.lead} mt-5`}>
+                Sivustoa ei tarvitse rakentaa uudelleen. Lisää sivulle yksi
+                skriptirivi, klikkaa muutettavaa tekstiä, kuvaa tai linkkiä ja
+                kirjoita sille uusi versio. Kävijä näkee oikean version heti,
+                ilman välähdystä.
+              </p>
+              <div className="mt-10">
+                <VariantArt />
               </div>
             </div>
+            <div className="lg:pt-2">
+              <FeatureRows items={PERSONALIZATION} />
+            </div>
           </div>
-        </footer>
-      </div>
+        </section>
 
-      {/* Login Modal */}
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-      />
-    </>
+        <section id="liidit" className="mx-auto max-w-[1200px] scroll-mt-20 px-4 py-20 sm:px-6 lg:py-28">
+          <h2 className={`${styles.h2} max-w-[18em]`}>Liidi ei jää sähköpostiin odottamaan.</h2>
+          <p className={`${styles.lead} mt-5`}>Lomakkeelta myyntiin ilman välivaiheita.</p>
+          <ol className="mt-14 grid list-none gap-10 p-0 md:grid-cols-3 md:gap-12">
+            {LEAD_STEPS.map((step, i) => (
+              <li key={step.title}>
+                <span className={styles.stepNumber}>{i + 1}</span>
+                <h3 className={`${styles.h3} mt-5`}>{step.title}</h3>
+                <p className={`${styles.body} mt-3`}>{step.body}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="border-t border-[color:var(--line)] bg-white">
+          <div className="mx-auto grid max-w-[1200px] gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_1.6fr] lg:gap-20 lg:py-28">
+            <div>
+              <h2 className={styles.h2}>Julkaise ja seuraa.</h2>
+              <p className={`${styles.lead} mt-5`}>Kaikki, mitä sivu tarvitsee julkaisun jälkeen.</p>
+            </div>
+            <FeatureRows items={PUBLISHING} sideBySide />
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6 lg:py-28">
+          <h2 className={styles.h2}>Kahdeksan pohjaa.</h2>
+          <p className={`${styles.lead} mt-5`}>
+            Jokainen pohja on tavallinen sivu: vaihda osiot, värit ja fontit vapaasti.
+          </p>
+          <ul className="mt-12 grid list-none gap-x-10 p-0 sm:grid-cols-2 lg:grid-cols-4">
+            {TEMPLATES.map((t) => (
+              <li key={t.name} className="border-t border-[color:var(--line)] py-5">
+                <p className="font-semibold tracking-[-0.01em]">{t.name}</p>
+                <p className="mt-1 text-[0.9375rem] text-[color:var(--ink-muted)]">{t.body}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section id="kenelle" className="scroll-mt-20 border-t border-[color:var(--line)] bg-white">
+          <div className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6 lg:py-28">
+            <h2 className={styles.h2}>Kenelle Rascal Pages sopii.</h2>
+            <div className="mt-12 grid gap-x-16 gap-y-12 md:grid-cols-2">
+              {AUDIENCES.map((a) => (
+                <div key={a.title}>
+                  <h3 className="text-[1.375rem] font-semibold leading-tight tracking-[-0.02em]">{a.title}</h3>
+                  <p className={`${styles.body} mt-3 max-w-[34em]`}>{a.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="ukk" className="mx-auto max-w-[820px] scroll-mt-20 px-4 py-20 sm:px-6 lg:py-28">
+          <h2 className={styles.h2}>Kysymyksiä</h2>
+          <div className={`${styles.rows} mt-10 border-y border-[color:var(--line)]`}>
+            {FAQ.map((item) => (
+              <details key={item.q} className={styles.faq}>
+                <summary className={`${styles.focusRing} flex items-center justify-between gap-6 rounded py-5`}>
+                  <span className="text-[1.0625rem] font-semibold tracking-[-0.01em]">{item.q}</span>
+                  <svg
+                    className={`${styles.faqIcon} size-5 shrink-0 text-[color:var(--ink-muted)]`}
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.75}
+                    strokeLinecap="round"
+                    aria-hidden
+                  >
+                    <path d="M10 4v12M4 10h12" />
+                  </svg>
+                </summary>
+                <p className={`${styles.body} pb-6 pr-10`}>
+                  {item.a}
+                  {item.pricingLink && (
+                    <>
+                      {" "}
+                      <a href={PRICING_URL} className={styles.link}>
+                        Avaa hinnasto
+                      </a>
+                    </>
+                  )}
+                </p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.dark}>
+          <div className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6 lg:py-28">
+            <h2 className={`${styles.h2} max-w-[16em]`}>Tee ensimmäinen kampanjasivusi tänään.</h2>
+            <p className={`${styles.lead} mt-5`}>
+              Kokeilu on ilmainen. Kirjaudu Rascal ID:llä ja valitse, mistä aloitat.
+            </p>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <TrialLink className={`${styles.btn} ${styles.btnAccent} ${styles.btnLarge}`}>
+                Kokeile ilmaiseksi
+              </TrialLink>
+              <a
+                href={CONTACT_URL}
+                className={`${styles.btn} ${styles.btnLarge} text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.3)] hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)]`}
+              >
+                Kysy lisää
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-[color:var(--line)]">
+        <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-4 py-10 text-sm text-[color:var(--ink-muted)] sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <p>© {new Date().getFullYear()} Rascal Pages on osa Rascal-tuoteperhettä.</p>
+          <nav aria-label="Alavalikko" className="flex flex-wrap gap-x-6 gap-y-2">
+            <a href={PRICING_URL} className="hover:text-[color:var(--ink)]">Hinnat</a>
+            <a href="https://www.rascal.fi" className="hover:text-[color:var(--ink)]">Rascal AI</a>
+            <a href={CONTACT_URL} className="hover:text-[color:var(--ink)]">info@rascal.fi</a>
+          </nav>
+        </div>
+      </footer>
+    </div>
   );
 }
