@@ -5,7 +5,8 @@
  */
 
 export type SitePlanTier = "draft" | "basic" | "rascal";
-export type SiteBillingStatus = "none" | "active" | "past_due" | "canceled";
+/** `comped` = pysyvästi ilmainen ilman Stripe-tilausta (maksumuuria edeltäneet sivustot). */
+export type SiteBillingStatus = "none" | "active" | "past_due" | "canceled" | "comped";
 
 export type SitePlan = {
   tier: SitePlanTier;
@@ -77,7 +78,7 @@ export function rascalQuotaFromProduct(row: OrganizationProductRow | null): Rasc
 }
 
 function isBillingLive(plan: SitePlan, now: Date): boolean {
-  if (plan.billingStatus === "active") return true;
+  if (plan.billingStatus === "active" || plan.billingStatus === "comped") return true;
   if (plan.billingStatus !== "past_due" || !plan.pastDueSince) return false;
   return now.getTime() - plan.pastDueSince.getTime() < PAST_DUE_GRACE_DAYS * DAY_MS;
 }

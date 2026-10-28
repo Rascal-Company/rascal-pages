@@ -67,6 +67,8 @@ describe("resolveEntitlements: julkaisuoikeus", () => {
     ["draft Rascal-orgissa", plan(), RASCAL_480, false],
     ["basic aktiivinen", plan({ tier: "basic", billingStatus: "active" }), null, true],
     ["basic peruttu", plan({ tier: "basic", billingStatus: "canceled" }), null, false],
+    ["basic pysyvästi ilmainen (comped)", plan({ tier: "basic", billingStatus: "comped" }), null, true],
+    ["draft comped ei silti julkaise", plan({ tier: "draft", billingStatus: "comped" }), null, false],
     ["basic ilman laskutusta", plan({ tier: "basic", billingStatus: "none" }), null, false],
     ["rascal-paikka Rascal-orgissa", plan({ tier: "rascal" }), RASCAL_480, true],
     ["rascal-paikka kun Rascal päättyi", plan({ tier: "rascal" }), null, false],

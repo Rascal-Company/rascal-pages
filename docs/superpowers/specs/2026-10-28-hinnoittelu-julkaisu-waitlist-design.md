@@ -204,10 +204,10 @@ function resolveEntitlements(input: {
 - Basic sallii myös `blank`-pohjan (oma sivu tyhjästä). Template-gating on
   siksi ohjauskeino, ei tekninen este landerin rakentamiselle — overlayt ja
   personointi ovat varsinainen Rascal-raja.
-- **Nykyiset julkaistut sivustot:** kun lukupuolen tarkistus menee päälle,
-  sivusto ilman `site_plans`-riviä on `draft` ja piiloutuisi. Ennen RAS-1169:n
-  julkaisua päätettävä grandfathering (esim. backfill `tier='rascal'` orgeille,
-  joilla rascal-pages-rivi, muille määräaikainen `basic`/`active`).
+- **Nykyiset sivustot (päätös 28.10.2026): pysyvästi ilmaisia.** Migraatio
+  backfillaa: Rascal-oikeuden orgit → `rascal`; muut julkaistut → `basic` +
+  `billing_status = 'comped'` (aina julkaistavissa, ei Stripeä);
+  julkaisemattomat → `draft`. Prod-tilanne 28.10.: 12 rascal, 1 comped, 1 draft.
 
 ### Downgrade / peruutus
 - Mitään ei poisteta. Sivusto piilotetaan (lukupuoli), editori pysyy

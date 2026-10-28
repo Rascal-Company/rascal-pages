@@ -7,8 +7,9 @@ do $$ begin
   create type site_plan_tier as enum ('draft', 'basic', 'rascal');
 exception when duplicate_object then null; end $$;
 
+-- comped = pysyvästi ilmainen ilman Stripe-tilausta (maksumuuria edeltäneet sivustot).
 do $$ begin
-  create type site_billing_status as enum ('none', 'active', 'past_due', 'canceled');
+  create type site_billing_status as enum ('none', 'active', 'past_due', 'canceled', 'comped');
 exception when duplicate_object then null; end $$;
 
 create table if not exists site_plans (
@@ -23,6 +24,39 @@ create table if not exists site_plans (
 );
 
 alter table site_plans enable row level security;
+
+-- Backfill (päätös 28.10.2026): nykyiset sivustot eivät piiloudu maksumuurin
+-- tullessa. Rascal-oikeuden orgit → rascal; muut julkaistut → pysyvästi
+-- ilmainen basic (comped); julkaisemattomat → draft.
+insert into site_plans (site_id, tier, billing_status)
+select
+  s.id,
+  (case
+    when exists (
+      select 1 from organization_products op
+      join products p on p.id = op.product_id
+      where op.org_id = s.user_id
+        and p.slug = 'rascal-pages'
+        and op.is_enabled
+        and coalesce(op.plan_tier, '') <> 'trial'
+    ) then 'rascal'
+    when exists (select 1 from pages pg where pg.site_id = s.id and pg.published) then 'basic'
+    else 'draft'
+  end)::site_plan_tier,
+  (case
+    when exists (
+      select 1 from organization_products op
+      join products p on p.id = op.product_id
+      where op.org_id = s.user_id
+        and p.slug = 'rascal-pages'
+        and op.is_enabled
+        and coalesce(op.plan_tier, '') <> 'trial'
+    ) then 'none'
+    when exists (select 1 from pages pg where pg.site_id = s.id and pg.published) then 'comped'
+    else 'none'
+  end)::site_billing_status
+from sites s
+on conflict (site_id) do nothing;
 
 create policy "Org members can read their site plans"
   on site_plans for select
