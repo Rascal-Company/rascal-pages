@@ -200,6 +200,15 @@ function resolveEntitlements(input: {
   tai `?preview=` + allekirjoitettu token). `noindex`, yläbanneri
   "Julkaise sivustosi →". Tarkempi mekanismi toteutussuunnitelmaan.
 
+### Tunnetut rajat ja avoimet (RAS-1168:n havainnot)
+- Basic sallii myös `blank`-pohjan (oma sivu tyhjästä). Template-gating on
+  siksi ohjauskeino, ei tekninen este landerin rakentamiselle — overlayt ja
+  personointi ovat varsinainen Rascal-raja.
+- **Nykyiset julkaistut sivustot:** kun lukupuolen tarkistus menee päälle,
+  sivusto ilman `site_plans`-riviä on `draft` ja piiloutuisi. Ennen RAS-1169:n
+  julkaisua päätettävä grandfathering (esim. backfill `tier='rascal'` orgeille,
+  joilla rascal-pages-rivi, muille määräaikainen `basic`/`active`).
+
 ### Downgrade / peruutus
 - Mitään ei poisteta. Sivusto piilotetaan (lukupuoli), editori pysyy
   käytössä, ja käyttäjä voi aktivoida uudelleen.
