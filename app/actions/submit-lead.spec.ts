@@ -4,6 +4,9 @@ import { createSiteId } from "@/src/lib/types";
 import type { SiteId } from "@/src/lib/types";
 import type { createClient } from "@/src/utils/supabase/server";
 
+// Pakettitila haetaan oikeasti Supabasesta; testeissä sivusto on julkinen.
+vi.mock("@/src/lib/site-plan-server", () => ({ isSiteLive: vi.fn().mockResolvedValue(true) }));
+
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 const TEST_WEBHOOK_URL = "https://n8n.test/webhook/leads";
@@ -187,6 +190,17 @@ describe("submitLeadCore: lomakkeen lahja", () => {
     );
     expect(sign).not.toHaveBeenCalled();
     expect(result).toEqual({ success: true });
+  });
+
+  test("maksumuurin takana oleva sivusto hylkää liidin", async () => {
+    const isLive = vi.fn().mockResolvedValue(false);
+    const result = await submitLeadCore(stub(), siteId, { email: VALID_EMAIL }, null, undefined, null, undefined, {
+      isLive,
+    });
+    expect(isLive).toHaveBeenCalledWith(siteId, "org-1");
+    expect(result.success).toBeUndefined();
+    expect(result.error).toBe("Sivusto ei ole julkaistu.");
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   test("liidi tallentuu, vaikka allekirjoitus epäonnistuu", async () => {

@@ -34,6 +34,8 @@ import { generateVariantCopy } from "@/src/lib/overlay-ai";
 import { createPreviewToken, previewSecret } from "@/src/lib/overlay-token";
 import { pagesSiteOrigins } from "@/src/lib/overlay-pages";
 import { describeProfileData } from "@/src/lib/overlay-profile";
+import { DRAFT_LIMIT_MESSAGE, OVERLAY_UPGRADE_MESSAGE } from "@/src/lib/entitlements";
+import { canOrgCreateSite, orgHasOverlays } from "@/src/lib/site-plan-server";
 
 type ActionResult<T = undefined> =
   | ({ success: true } & (T extends undefined ? object : { data: T }))
@@ -474,6 +476,7 @@ async function createCampaignCore(
 ): Promise<ActionResult<{ campaignId: OverlayCampaignId; landingPageId: OverlayLandingPageId }>> {
   const name = input.name.trim();
   if (!name) return { success: false, error: "Anna kampanjalle nimi." };
+  if (!(await orgHasOverlays(orgId))) return { success: false, error: OVERLAY_UPGRADE_MESSAGE };
 
   let targetUrl = input.targetUrl;
   if (input.pagesSiteId) {
@@ -548,6 +551,8 @@ export async function createOverlaySite(input: { targetUrl: string }): Promise<
   if (!target) {
     return { success: false, error: "Anna kelvollinen sivun osoite, esim. https://asiakas.fi." };
   }
+  if (!(await orgHasOverlays(s.orgId))) return { success: false, error: OVERLAY_UPGRADE_MESSAGE };
+  if (!(await canOrgCreateSite(s.orgId))) return { success: false, error: DRAFT_LIMIT_MESSAGE };
 
   // Subdomain on uniikki: kokeillaan perusnimeä ja tarvittaessa satunnaista päätettä.
   const base = subdomainFromOrigin(target.origin);

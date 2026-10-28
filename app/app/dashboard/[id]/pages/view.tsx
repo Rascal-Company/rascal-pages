@@ -2,6 +2,9 @@ import { createClient } from "@/src/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { getHomeUrl } from "@/app/lib/navigation";
 import PagesClient, { type PageListItem } from "./PagesClient";
+import { getDefaultTemplate } from "@/src/lib/templates";
+import { allowedTemplateList, defaultTemplateIdFor } from "@/src/lib/entitlements";
+import { getSiteEntitlements } from "@/src/lib/site-plan-server";
 
 
 /** Sisältö sekä editorin päälle avautuvaan ikkunaan että erilliselle sivulle. */
@@ -44,7 +47,20 @@ export default async function SitePagesView({ siteId: id }: { siteId: string }) 
 
   const pages = (rows ?? []) as PageListItem[];
 
+  // Lukitut pohjat (RAS-1169); virheessä näytetään kaikki, palvelin tarkistaa silti.
+  const entitlements = await getSiteEntitlements(site.id, orgMember.org_id).catch(() => null);
+  const allowedTemplateIds = entitlements ? allowedTemplateList(entitlements) : null;
+  const defaultTemplateId = entitlements
+    ? defaultTemplateIdFor(entitlements, getDefaultTemplate().id)
+    : getDefaultTemplate().id;
+
   return (
-    <PagesClient siteId={site.id} subdomain={site.subdomain} pages={pages} />
+    <PagesClient
+      siteId={site.id}
+      subdomain={site.subdomain}
+      pages={pages}
+      allowedTemplateIds={allowedTemplateIds}
+      defaultTemplateId={defaultTemplateId}
+    />
   );
 }

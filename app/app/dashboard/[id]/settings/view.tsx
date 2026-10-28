@@ -4,6 +4,9 @@ import SettingsClient from "./SettingsClient";
 
 import { createSiteId } from "@/src/lib/types";
 import { getHomeUrl } from "@/app/lib/navigation";
+import { createAdminClient } from "@/src/utils/supabase/admin";
+import { sitePlanLabel } from "@/src/lib/billing";
+import type { SiteBillingStatus } from "@/src/lib/entitlements";
 
 /** Sisältö sekä editorin päälle avautuvaan ikkunaan että erilliselle sivulle. */
 export default async function SettingsView({ siteId: id }: { siteId: string }) {
@@ -66,9 +69,24 @@ export default async function SettingsView({ siteId: id }: { siteId: string }) {
     revokedAt: (row.revoked_at as string | null) ?? null,
   }));
 
+  // Tilaus (RAS-1170): site_plans luetaan palvelimella; puuttuva rivi = luonnos.
+  const { data: planRow } = await createAdminClient()
+    .from("site_plans")
+    .select("tier, billing_status, stripe_customer_id, current_period_end")
+    .eq("site_id", id)
+    .maybeSingle();
+  const plan = {
+    label: sitePlanLabel(
+      (planRow?.tier as string | undefined) ?? "draft",
+      (planRow?.billing_status as SiteBillingStatus | undefined) ?? "none",
+    ),
+    hasSubscription: Boolean(planRow?.stripe_customer_id),
+    currentPeriodEnd: (planRow?.current_period_end as string | null | undefined) ?? null,
+  };
 
   return (
     <SettingsClient
+      plan={plan}
       siteId={createSiteId(id)}
       subdomain={site.subdomain}
       rootDomain={rootDomain}

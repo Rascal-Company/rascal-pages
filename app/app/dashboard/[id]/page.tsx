@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import Editor from "./EditorClient";
 import { createSiteId } from "@/src/lib/types";
 import { getHomeUrl } from "@/app/lib/navigation";
+import { allowedTemplateList, defaultTemplateIdFor } from "@/src/lib/entitlements";
+import { getSiteEntitlements } from "@/src/lib/site-plan-server";
 
 // Estetään pre-rendering build-aikana, koska sivu vaatii käyttäjäsession
 export const dynamic = "force-dynamic";
@@ -77,9 +79,20 @@ export default async function SiteEditorPage({
     redirect(`/app/dashboard/${id}/pages`);
   }
 
+  // Paketin oikeudet: lukitut pohjat ja oletuspohja (RAS-1169). Virheessä
+  // editori näyttää kaikki pohjat; julkaisu tarkistetaan silti palvelimella.
+  const entitlements = await getSiteEntitlements(id, orgMember.org_id).catch((error) => {
+    console.error("Pakettioikeuksien haku epäonnistui:", error);
+    return null;
+  });
+  const allowedTemplateIds = entitlements ? allowedTemplateList(entitlements) : null;
+
   // Oletussisältö jos sivua ei ole - käytä oletustemplatea
-  const { getDefaultTemplate } = await import("@/src/lib/templates");
-  const defaultTemplate = getDefaultTemplate();
+  const { getDefaultTemplate, getTemplateById } = await import("@/src/lib/templates");
+  const preferredTemplate = getDefaultTemplate();
+  const defaultTemplate = entitlements
+    ? (getTemplateById(defaultTemplateIdFor(entitlements, preferredTemplate.id)) ?? preferredTemplate)
+    : preferredTemplate;
   const defaultContent = defaultTemplate.defaultContent;
 
   // Jos sivulla on sisältö, käytä sitä. Muuten käytä oletustemplatea.
@@ -99,6 +112,7 @@ export default async function SiteEditorPage({
       initialContent={pageContent}
       initialPublished={initialPublished}
       crmEnabled={crmEnabled}
+      allowedTemplateIds={allowedTemplateIds}
     />
   );
 }

@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/src/utils/supabase/server";
+import { DRAFT_LIMIT_MESSAGE } from "@/src/lib/entitlements";
+import { canOrgCreateSite } from "@/src/lib/site-plan-server";
 
 type CreateAiSiteInput = {
   title: string;
@@ -34,6 +36,10 @@ export async function createAiSite(
 
   if (!orgMember) {
     return { success: false, error: "Organisaatiota ei löydy" };
+  }
+
+  if (!(await canOrgCreateSite(orgMember.org_id))) {
+    return { success: false, error: DRAFT_LIMIT_MESSAGE };
   }
 
   const webhookUrl = process.env.N8N_LANDINGPAGE_BUILDER;

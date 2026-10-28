@@ -1,6 +1,12 @@
 "use client";
 
-import { fetchProducts, fetchProfile, type RascalProduct, type RascalProfile } from "@rascal/auth";
+import {
+  RASCAL_PRODUCTS,
+  fetchProducts,
+  fetchProfile,
+  type RascalProduct,
+  type RascalProfile,
+} from "@rascal/auth";
 import { Check, LogOut, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -15,6 +21,9 @@ import { createClient } from "@/src/utils/supabase/client";
 
 const ID_ACCOUNT_URL = "https://id.rascalai.fi/account";
 const CURRENT_SLUG = "rascal-pages";
+// Ristiinmyynti (RAS-1172): tuotteet, joita tarjotaan kokeiltavaksi jos orgilla ei ole niitä.
+const TRY_SLUGS = ["rascal-ai", "rascal-crm"] as const;
+const TRY_URL = "https://www.rascal.fi";
 
 // Google-tyylinen tilivalikko Pagesin dashboard-headeriin: yrityksen logo +
 // avatar -pilleri (tai pelkkä avatar) → dropdown (yrityskonteksti, Hallitse
@@ -37,6 +46,10 @@ export function AccountMenu() {
       cancelled = true;
     };
   }, []);
+
+  const owned = new Set(products.map((p) => p.slug));
+  // Vasta kun tuotelista on ladattu, ettei omistettua tuotetta tarjota hetkeksi.
+  const tryProducts = products.length > 0 ? TRY_SLUGS.filter((slug) => !owned.has(slug)) : [];
 
   const initial = (profile?.name || profile?.email || "?").charAt(0).toUpperCase();
 
@@ -146,6 +159,31 @@ export function AccountMenu() {
                 </a>
               );
             })}
+          </div>
+        )}
+
+        {tryProducts.length > 0 && (
+          <div className="border-t border-border py-1.5">
+            <p className="px-4 pt-1.5 pb-1 text-xs font-medium text-muted-foreground">Kokeile myös</p>
+            {tryProducts.map((slug) => (
+              <a
+                key={slug}
+                href={TRY_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 px-4 py-2 transition-colors hover:bg-accent"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-[11px] font-semibold text-muted-foreground">
+                  {RASCAL_PRODUCTS[slug].glyph}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                  {RASCAL_PRODUCTS[slug].name}
+                </span>
+                <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[11px] font-medium text-primary">
+                  Kokeile
+                </span>
+              </a>
+            ))}
           </div>
         )}
 

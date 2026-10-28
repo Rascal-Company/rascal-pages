@@ -3,12 +3,14 @@
 import { createClient } from '@/src/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { SiteId } from '@/src/lib/types';
+import { checkPagePublish } from '@/src/lib/site-plan-server';
+import { publishBlockError, templateIdOf, type PublishErrorResult } from './utils/publish-gate';
 
 export async function togglePagePublish(
   siteId: SiteId,
   published: boolean,
   pageSlug: string = 'home'
-): Promise<{ error?: string } | void> {
+): Promise<PublishErrorResult | void> {
   const supabase = await createClient();
 
   // 1. Tarkista käyttäjä
@@ -49,7 +51,7 @@ export async function togglePagePublish(
   // 4. Hae sivuston sivu pyydetyllä slugilla (oletus 'home')
   const { data: page, error: pageError } = await supabase
     .from('pages')
-    .select('id')
+    .select('id, published, content')
     .eq('site_id', siteId)
     .eq('slug', pageSlug)
     .maybeSingle();
@@ -61,7 +63,18 @@ export async function togglePagePublish(
     };
   }
 
-  // 5. Päivitä tai luo sivu julkaisutilalla
+  // 5. Maksumuuri: tarkistetaan vain kun sivu siirtyy julkaistuksi (RAS-1169)
+  if (page && published && !page.published) {
+    const check = await checkPagePublish({
+      siteId,
+      orgId: orgMember.org_id,
+      pageSlug,
+      templateId: templateIdOf(page.content),
+    });
+    if (!check.ok) return publishBlockError(check.code);
+  }
+
+  // 6. Päivitä tai luo sivu julkaisutilalla
   if (page) {
     // Päivitä olemassa oleva sivu
     const { error: updateError } = await supabase
@@ -85,7 +98,7 @@ export async function togglePagePublish(
     };
   }
 
-  // 6. Revalidate path
+  // 7. Revalidate path
   revalidatePath(`/app/dashboard`);
   revalidatePath(`/app/dashboard/${siteId}`);
 }

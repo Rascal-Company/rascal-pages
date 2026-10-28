@@ -8,6 +8,7 @@ import type {
   FormFieldType,
 } from "@/src/lib/templates";
 import DownloadUploadField from "../fields/DownloadUploadField";
+import CrmUpsell from "../CrmUpsell";
 
 type FormBlockEditorProps = {
   content: FormContent;
@@ -423,6 +424,7 @@ export default function FormBlockEditor({
           )}
         </div>
       )}
+      {!crmEnabled && <CrmUpsell />}
 
       {/* Lahja lomakkeen lähettäjälle */}
       <div className="pt-4 border-t border-border">

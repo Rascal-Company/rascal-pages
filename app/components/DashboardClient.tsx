@@ -26,6 +26,7 @@ import { useToast } from "@/app/components/ui/ToastContainer";
 import ThemeToggle from "@/app/components/ThemeToggle";
 import { createSiteId } from "@/src/lib/types";
 import { AccountMenu } from "./AccountMenu";
+import PublishPlanDialog from "./billing/PublishPlanDialog";
 import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { useMutation } from "@tanstack/react-query";
 
@@ -54,6 +55,8 @@ export default function DashboardClient({
   const [group, setGroup] = useState<"all" | SiteKind>("all");
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const router = useRouter();
+  // Julkaisun maksu (RAS-1170): sivusto, jonka julkaisu vaatii tilauksen.
+  const [planSiteId, setPlanSiteId] = useState<string | null>(null);
 
   const togglePublishMutation = useMutation({
     mutationFn: (params: { siteId: string; published: boolean }) =>
@@ -71,6 +74,8 @@ export default function DashboardClient({
           variables.published ? "Sivu julkaistu" : "Sivu piilotettu",
           "success",
         );
+      } else if (result.code === "PAYMENT_REQUIRED") {
+        setPlanSiteId(variables.siteId);
       } else {
         showToast(result.error, "error");
       }
@@ -196,6 +201,14 @@ export default function DashboardClient({
 
   return (
     <>
+      {planSiteId && (
+        <PublishPlanDialog
+          siteId={planSiteId}
+          open
+          onOpenChange={(open) => !open && setPlanSiteId(null)}
+          onActivated={() => togglePublishMutation.mutate({ siteId: planSiteId, published: true })}
+        />
+      )}
       <div className="min-h-dvh bg-background text-foreground">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
           <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

@@ -196,9 +196,24 @@ function resolveEntitlements(input: {
 - `submitLead` hylkää lähetykset sivustoilta, joilla `!canPublish`.
 
 ### Esikatselu
-- Luonnossivustolle jaettava esikatselulinkki (`/preview/{token}` app-hostilla
-  tai `?preview=` + allekirjoitettu token). `noindex`, yläbanneri
-  "Julkaise sivustosi →". Tarkempi mekanismi toteutussuunnitelmaan.
+- Toteutettu (RAS-1169): omistaja-orgin kirjautunut jäsen näkee piilotetun
+  sivuston omalla domainillaan esikatseluna (noindex + yläbanneri
+  "Julkaise sivusto →"). Muut näkevät "Tulossa pian".
+- Jaettava esikatselulinkki ulkopuolisille (allekirjoitettu token) jätetty
+  myöhemmäksi.
+
+### Overlayt
+- Uuden overlay-kampanjan/-sivuston luonti vaatii Rascal-oikeuden.
+  Olemassa olevat kampanjat toimivat edelleen (config-endpointia ei rajattu).
+
+### Tunnetut rajat ja avoimet (RAS-1168:n havainnot)
+- Basic sallii myös `blank`-pohjan (oma sivu tyhjästä). Template-gating on
+  siksi ohjauskeino, ei tekninen este landerin rakentamiselle — overlayt ja
+  personointi ovat varsinainen Rascal-raja.
+- **Nykyiset sivustot (päätös 28.10.2026): pysyvästi ilmaisia.** Migraatio
+  backfillaa: Rascal-oikeuden orgit → `rascal`; muut julkaistut → `basic` +
+  `billing_status = 'comped'` (aina julkaistavissa, ei Stripeä);
+  julkaisemattomat → `draft`. Prod-tilanne 28.10.: 12 rascal, 1 comped, 1 draft.
 
 ### Downgrade / peruutus
 - Mitään ei poisteta. Sivusto piilotetaan (lukupuoli), editori pysyy
