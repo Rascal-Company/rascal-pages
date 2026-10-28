@@ -43,6 +43,7 @@ import type { SiteId, SectionId } from "@/src/lib/types";
 import { useToast } from "@/app/components/ui/ToastContainer";
 import EditorTopBar from "./EditorTopBar";
 import PublishPlanDialog from "@/app/components/billing/PublishPlanDialog";
+import PublishedShareCard from "./PublishedShareCard";
 import EditorRail, { type PanelTab } from "./EditorRail";
 import StatusMessages from "./StatusMessages";
 import TemplateSelector from "./TemplateSelector";
@@ -134,6 +135,8 @@ export default function Editor({
   const [isPublishing, setIsPublishing] = useState(false);
   // Julkaisun maksu (RAS-1170): avautuu kun julkaisu vaatii tilauksen.
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
+  // Julkaisun jälkeen kehotus somepostaukseen Rascal AI:lla (RAS-1172).
+  const [showShareCard, setShowShareCard] = useState(false);
 
   // Paluu Stripe Checkoutista: tilaus aktivoituu webhookin kautta hetken päästä.
   useEffect(() => {
@@ -223,6 +226,7 @@ export default function Editor({
       } else {
         markSaved(nextState);
         showToast(next ? "Sivu julkaistu" : "Sivu piilotettu", "success");
+        setShowShareCard(next);
       }
     } catch {
       setPublished(!next);
@@ -358,6 +362,9 @@ export default function Editor({
     <EditorSiteProvider siteId={siteId}>
       <SitePagesProvider siteId={siteId}>
         <div className="flex h-dvh flex-col bg-background text-foreground">
+          {showShareCard && (
+            <PublishedShareCard siteUrl={siteUrl} onClose={() => setShowShareCard(false)} />
+          )}
           <PublishPlanDialog
             siteId={siteId}
             open={planDialogOpen}

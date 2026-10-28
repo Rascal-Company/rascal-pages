@@ -11,6 +11,7 @@ import SortableFieldList from "../fields/SortableFieldList";
 import ImageUploadField from "../fields/ImageUploadField";
 import ImageDisplayControls from "../fields/ImageDisplayControls";
 import LinkField from "../fields/LinkField";
+import CrmUpsell from "../CrmUpsell";
 
 type HeroBlockEditorProps = {
   content: HeroContent;
@@ -502,6 +503,7 @@ export default function HeroBlockEditor({
                     )}
                   </div>
                 )}
+                {!crmEnabled && <CrmUpsell />}
 
                 {/* Success message */}
                 <div className="pt-4 border-t border-border">
