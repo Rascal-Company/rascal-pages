@@ -1,14 +1,22 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getWaitlistCount } from "@/app/actions/waitlist";
 import CampaignDemo from "./_components/CampaignDemo";
 import TrialLink from "./_components/TrialLink";
+import WaitlistForm from "./_components/WaitlistForm";
 import styles from "./home.module.css";
+
+// Jonon pituus päivittyy etusivulle viiden minuutin välein.
+export const revalidate = 300;
+
+// Pieni luku näyttäisi tyhjältä jonolta, joten pituus näytetään vasta tästä alkaen.
+const MIN_COUNT_SHOWN = 50;
 
 export const metadata: Metadata = {
   title: "Rascal Pages – laskeutumissivut, jotka puhuvat jokaiselle mainokselle",
   description:
-    "Rakenna laskeutumissivut, blogi ja portfolio ilman koodia, personoi sisältö mainoskampanjan mukaan ja vie liidit suoraan Rascal CRM:ään. Kokeile ilmaiseksi.",
+    "Rakenna laskeutumissivut, blogi ja portfolio ilman koodia, personoi sisältö mainoskampanjan mukaan ja vie liidit suoraan Rascal CRM:ään. Liity jonoon.",
   openGraph: {
     title: "Rascal Pages",
     description:
@@ -158,9 +166,9 @@ const FAQ = [
     a: "Rascal Pages toimii yksinään. Rascal AI:n kanssa AI saa käyttöönsä brändiprofiilisi ja ihanneasiakkaasi, ja Rascal CRM:n kanssa liidit siirtyvät suoraan myyntiin. Kirjaudut kaikkiin samalla Rascal ID:llä.",
   },
   {
-    q: "Mitä kokeilu maksaa?",
-    a: "Kokeilu on ilmainen. Kokeilun jälkeiset hinnat näet hinnastosta.",
-    pricingLink: true,
+    q: "Milloin Rascal Pages avataan?",
+    a: "Avaamme Rascal Pagesin pian. Jonoon liittyneet pääsevät mukaan ensimmäisinä ja saavat ensimmäisen vuoden 40 % alennuksella.",
+    pricingLink: false,
   },
 ];
 
@@ -233,7 +241,10 @@ function VariantArt() {
   );
 }
 
-export default function Home() {
+export default async function Home() {
+  const waitlistCount = await getWaitlistCount();
+  const showCount = waitlistCount !== null && waitlistCount >= MIN_COUNT_SHOWN;
+
   return (
     <div className={`${styles.page} min-h-screen`}>
       <a
@@ -265,9 +276,9 @@ export default function Home() {
                 Kirjaudu
               </TrialLink>
             </span>
-            <TrialLink className={`${styles.btn} ${styles.btnPrimary} whitespace-nowrap`}>
-              Kokeile ilmaiseksi
-            </TrialLink>
+            <a href="#jono" className={`${styles.btn} ${styles.btnPrimary} whitespace-nowrap`}>
+              Liity jonoon
+            </a>
           </div>
         </div>
       </header>
@@ -281,17 +292,12 @@ export default function Home() {
               jokaiselle kampanjalle sille kirjoitettu viesti ja vie lomakkeen
               liidit suoraan Rascal CRM:ään.
             </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <TrialLink className={`${styles.btn} ${styles.btnAccent} ${styles.btnLarge}`}>
-                Kokeile ilmaiseksi
-              </TrialLink>
-              <a href={PRICING_URL} className={`${styles.btn} ${styles.btnGhost} ${styles.btnLarge}`}>
-                Katso hinnat
-              </a>
+            <div id="jono" className="mt-9 scroll-mt-28">
+              <WaitlistForm />
             </div>
             <p className="mt-5 text-sm text-[color:var(--ink-muted)]">
-              Kirjaudut Rascal ID:llä, samoilla tunnuksilla kuin Rascal AI:hin
-              ja Rascal CRM:ään.
+              Tulossa pian. Jonoon liittyneet saavat ensimmäisen vuoden −40 %.
+              {showCount && ` Jonossa jo ${waitlistCount} ilmoittautunutta.`}
             </p>
           </div>
           <CampaignDemo />
@@ -441,21 +447,20 @@ export default function Home() {
 
         <section className={styles.dark}>
           <div className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6 lg:py-28">
-            <h2 className={`${styles.h2} max-w-[16em]`}>Tee ensimmäinen kampanjasivusi tänään.</h2>
+            <h2 className={`${styles.h2} max-w-[16em]`}>Pääse ensimmäisten joukkoon.</h2>
             <p className={`${styles.lead} mt-5`}>
-              Kokeilu on ilmainen. Kirjaudu Rascal ID:llä ja valitse, mistä aloitat.
+              Avaamme Rascal Pagesin pian. Jonoon liittyneet pääsevät mukaan
+              ensimmäisinä ja saavat ensimmäisen vuoden −40 %.
             </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <TrialLink className={`${styles.btn} ${styles.btnAccent} ${styles.btnLarge}`}>
-                Kokeile ilmaiseksi
-              </TrialLink>
-              <a
-                href={CONTACT_URL}
-                className={`${styles.btn} ${styles.btnLarge} text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.3)] hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)]`}
-              >
-                Kysy lisää
-              </a>
+            <div className="mt-9">
+              <WaitlistForm tone="dark" />
             </div>
+            <a
+              href={CONTACT_URL}
+              className={`${styles.btn} mt-6 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.3)] hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)]`}
+            >
+              Kysy lisää
+            </a>
           </div>
         </section>
       </main>
