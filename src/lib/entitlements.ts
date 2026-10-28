@@ -157,6 +157,11 @@ export function publishBlockReason(input: {
   return null;
 }
 
+/** Onko Rascal-paketissa vapaa sisältyvä sivustopaikka (RAS-1171). */
+export function hasFreeRascalSlot(rascal: RascalPagesQuota | null, usedRascalSites: number): boolean {
+  return rascal !== null && usedRascalSites < rascal.includedSites;
+}
+
 /** Saako organisaatio luoda uuden luonnossivuston (maksetut eivät laske rajaan). */
 export function canCreateDraftSite(draftSiteCount: number): boolean {
   return draftSiteCount < DRAFT_SITE_LIMIT;

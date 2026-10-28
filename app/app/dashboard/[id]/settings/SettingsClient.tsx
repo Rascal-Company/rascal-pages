@@ -16,18 +16,28 @@ import { useToast } from "@/app/components/ui/ToastContainer";
 import Link from "next/link";
 import type { SiteId } from "@/src/lib/types";
 import { Button } from "@/app/components/ui/button";
+import { openBillingPortal } from "@/app/actions/billing";
+import PublishPlanDialog from "@/app/components/billing/PublishPlanDialog";
 
-type SectionId = "general" | "domain" | "analytics" | "apikeys" | "blog";
+type SectionId = "general" | "plan" | "domain" | "analytics" | "apikeys" | "blog";
 
 const SECTIONS: { id: SectionId; label: string }[] = [
   { id: "general", label: "Yleiset" },
+  { id: "plan", label: "Tilaus" },
   { id: "domain", label: "Verkkotunnus" },
   { id: "analytics", label: "Analytiikka" },
   { id: "apikeys", label: "API-avaimet" },
   { id: "blog", label: "Blogi" },
 ];
 
+type SitePlanSummary = {
+  label: string;
+  hasSubscription: boolean;
+  currentPeriodEnd: string | null;
+};
+
 interface SettingsClientProps {
+  plan: SitePlanSummary;
   siteId: SiteId;
   subdomain: string;
   rootDomain: string;
@@ -46,6 +56,7 @@ const inputClass =
 const POSTS_ENDPOINT = "https://app.rascalpages.fi/api/posts";
 
 export default function SettingsClient({
+  plan,
   siteId,
   subdomain,
   rootDomain,
@@ -91,6 +102,7 @@ export default function SettingsClient({
             {activeSection === "general" && (
               <GeneralSection subdomain={subdomain} rootDomain={rootDomain} />
             )}
+            {activeSection === "plan" && <PlanSection siteId={siteId} plan={plan} showToast={showToast} />}
             {activeSection === "domain" && (
               <DomainSection
                 siteId={siteId}
@@ -139,6 +151,56 @@ function SectionCard({
       )}
       <div className="mt-4">{children}</div>
     </div>
+  );
+}
+
+function PlanSection({
+  siteId,
+  plan,
+  showToast,
+}: {
+  siteId: SiteId;
+  plan: SitePlanSummary;
+  showToast: ShowToast;
+}) {
+  const [opening, setOpening] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const openPortal = async () => {
+    setOpening(true);
+    const result = await openBillingPortal(siteId);
+    if (result.url) {
+      window.location.assign(result.url);
+      return;
+    }
+    setOpening(false);
+    showToast(result.error ?? "Laskutusportaalin avaus epäonnistui.", "error");
+  };
+
+  return (
+    <SectionCard title="Tilaus" description="Sivuston paketti ja laskutus.">
+      <p className="text-sm font-medium text-brand-dark">{plan.label}</p>
+      {plan.currentPeriodEnd && (
+        <p className="mt-1 text-sm text-brand-dark/60">
+          Nykyinen jakso päättyy {new Date(plan.currentPeriodEnd).toLocaleDateString("fi-FI")}.
+        </p>
+      )}
+      <div className="mt-4">
+        {plan.hasSubscription ? (
+          <Button onClick={openPortal} disabled={opening}>
+            {opening ? "Avataan…" : "Hallinnoi tilausta"}
+          </Button>
+        ) : (
+          <Button onClick={() => setDialogOpen(true)}>Julkaise sivusto</Button>
+        )}
+      </div>
+      <PublishPlanDialog
+        siteId={siteId}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onActivated={() => showToast("Sivusto aktivoitu Rascal-paketista. Voit nyt julkaista sen.", "success")}
+      />
+    </SectionCard>
   );
 }
 

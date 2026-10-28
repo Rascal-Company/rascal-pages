@@ -42,6 +42,7 @@ import {
 import type { SiteId, SectionId } from "@/src/lib/types";
 import { useToast } from "@/app/components/ui/ToastContainer";
 import EditorTopBar from "./EditorTopBar";
+import PublishPlanDialog from "@/app/components/billing/PublishPlanDialog";
 import EditorRail, { type PanelTab } from "./EditorRail";
 import StatusMessages from "./StatusMessages";
 import TemplateSelector from "./TemplateSelector";
@@ -131,6 +132,20 @@ export default function Editor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [isPublishing, setIsPublishing] = useState(false);
+  // Julkaisun maksu (RAS-1170): avautuu kun julkaisu vaatii tilauksen.
+  const [planDialogOpen, setPlanDialogOpen] = useState(false);
+
+  // Paluu Stripe Checkoutista: tilaus aktivoituu webhookin kautta hetken päästä.
+  useEffect(() => {
+    const checkout = searchParams.get("checkout");
+    if (checkout === "success") {
+      showToast("Maksu vastaanotettu. Voit nyt julkaista sivun.", "success");
+    } else if (checkout === "cancel") {
+      showToast("Maksu peruttiin. Sivua ei julkaistu.", "error");
+    }
+    // Vain editorin avautuessa.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [insertAfterId, setInsertAfterId] = useState<SectionId | null>(null);
 
   const [fluidSelection, setFluidSelection] = useState<FluidSelection | null>(null);
@@ -199,7 +214,10 @@ export default function Editor({
     try {
       const nextState = { content, published: next };
       const result = await persist(nextState);
-      if (result?.error) {
+      if (result?.code === "PAYMENT_REQUIRED") {
+        setPublished(!next);
+        setPlanDialogOpen(true);
+      } else if (result?.error) {
         setPublished(!next);
         showToast(result.error, "error");
       } else {
@@ -340,6 +358,12 @@ export default function Editor({
     <EditorSiteProvider siteId={siteId}>
       <SitePagesProvider siteId={siteId}>
         <div className="flex h-dvh flex-col bg-background text-foreground">
+          <PublishPlanDialog
+            siteId={siteId}
+            open={planDialogOpen}
+            onOpenChange={setPlanDialogOpen}
+            onActivated={() => handlePublishChange(true)}
+          />
           <EditorTopBar
             siteId={siteId}
             siteLabel={siteUrl.replace(/^https:\/\//, "")}

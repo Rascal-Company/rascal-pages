@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DRAFT_SITE_LIMIT,
+  hasFreeRascalSlot,
   allowedTemplateList,
   defaultTemplateIdFor,
   canCreateDraftSite,
@@ -215,5 +216,17 @@ describe("defaultTemplateIdFor / allowedTemplateList", () => {
   it("lista: null kun kaikki sallittu", () => {
     expect(allowedTemplateList(rascal)).toBeNull();
     expect(allowedTemplateList(basic)).toEqual([...BASIC_TEMPLATE_IDS]);
+  });
+});
+
+describe("hasFreeRascalSlot", () => {
+  it("ei paikkoja ilman Rascalia", () => {
+    expect(hasFreeRascalSlot(null, 0)).toBe(false);
+  });
+
+  it("vapaa paikka kunnes sisältyvät käytetty", () => {
+    expect(hasFreeRascalSlot(RASCAL_880, 2)).toBe(true);
+    expect(hasFreeRascalSlot(RASCAL_880, 3)).toBe(false);
+    expect(hasFreeRascalSlot(RASCAL_480, 1)).toBe(false);
   });
 });
