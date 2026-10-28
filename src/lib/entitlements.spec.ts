@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  DRAFT_SITE_LIMIT,
+  allowedTemplateList,
+  defaultTemplateIdFor,
+  canCreateDraftSite,
+  publishBlockReason,
   BASIC_PAGE_LIMIT,
   BASIC_TEMPLATE_IDS,
   PAST_DUE_GRACE_DAYS,
@@ -162,5 +167,53 @@ describe("canPublishAnotherPage", () => {
 
   it("rajaton sallii aina", () => {
     expect(canPublishAnotherPage(unlimited, 1000)).toBe(true);
+  });
+});
+
+describe("publishBlockReason", () => {
+  const draft = resolveEntitlements({ sitePlan: plan(), rascal: null, now: NOW });
+  const basic = resolveEntitlements({ sitePlan: plan({ tier: "basic", billingStatus: "active" }), rascal: null, now: NOW });
+  const rascal = resolveEntitlements({ sitePlan: plan({ tier: "rascal" }), rascal: RASCAL_480, now: NOW });
+
+  it("luonnos vaatii maksun", () => {
+    expect(publishBlockReason({ entitlements: draft, templateId: "portfolio", publishedCount: 0 })).toBe("PAYMENT_REQUIRED");
+  });
+
+  it("Basic ei julkaise landeria", () => {
+    expect(publishBlockReason({ entitlements: basic, templateId: "lead-magnet", publishedCount: 0 })).toBe("UPGRADE_REQUIRED");
+  });
+
+  it("Basic-sivuraja", () => {
+    expect(publishBlockReason({ entitlements: basic, templateId: "portfolio", publishedCount: BASIC_PAGE_LIMIT })).toBe("PAGE_LIMIT");
+  });
+
+  it("sallii kun kaikki kunnossa, myös ilman templateId:tä", () => {
+    expect(publishBlockReason({ entitlements: basic, templateId: null, publishedCount: 0 })).toBeNull();
+    expect(publishBlockReason({ entitlements: rascal, templateId: "lead-magnet", publishedCount: 10 })).toBeNull();
+  });
+});
+
+describe("canCreateDraftSite", () => {
+  it("sallii rajaan asti", () => {
+    expect(canCreateDraftSite(DRAFT_SITE_LIMIT - 1)).toBe(true);
+    expect(canCreateDraftSite(DRAFT_SITE_LIMIT)).toBe(false);
+  });
+});
+
+describe("defaultTemplateIdFor / allowedTemplateList", () => {
+  const basic = resolveEntitlements({ sitePlan: plan(), rascal: null, now: NOW });
+  const rascal = resolveEntitlements({ sitePlan: plan({ tier: "rascal" }), rascal: RASCAL_480, now: NOW });
+
+  it("Basicin oletuspohja on portfolio", () => {
+    expect(defaultTemplateIdFor(basic, "saas-modern")).toBe("portfolio");
+  });
+
+  it("Rascal pitää toivotun oletuspohjan", () => {
+    expect(defaultTemplateIdFor(rascal, "saas-modern")).toBe("saas-modern");
+  });
+
+  it("lista: null kun kaikki sallittu", () => {
+    expect(allowedTemplateList(rascal)).toBeNull();
+    expect(allowedTemplateList(basic)).toEqual([...BASIC_TEMPLATE_IDS]);
   });
 });

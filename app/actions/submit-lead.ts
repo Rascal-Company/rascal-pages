@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/src/utils/supabase/server";
 import { createAdminClient } from "@/src/utils/supabase/admin";
 import { ipLimiter, ipSiteLimiter } from "@/src/lib/rate-limit";
+import { isSiteLive } from "@/src/lib/site-plan-server";
 import {
   DOWNLOAD_BUCKET,
   GATED_LINK_SECONDS,
@@ -109,9 +110,13 @@ function isValidEmail(email: string): boolean {
   return emailRegex.test(email);
 }
 
+/** Onko sivusto paketin puolesta julkinen; injektoitava testejä varten. */
+export type SiteLiveCheck = (siteId: string, orgId: string) => Promise<boolean>;
+
 async function verifySitePublished(
   supabase: Awaited<ReturnType<typeof createClient>>,
   siteId: string,
+  isLive: SiteLiveCheck,
 ): Promise<{ published: boolean; error?: string }> {
   const { data: page, error } = await supabase
     .from("pages")
@@ -125,6 +130,12 @@ async function verifySitePublished(
   }
 
   if (!page.published) {
+    return { published: false, error: "Sivusto ei ole julkaistu." };
+  }
+
+  // Maksumuurin takana oleva sivusto ei ota liidejä vastaan (RAS-1169).
+  const owner = await siteOwner(supabase, siteId as SiteId);
+  if (owner && !(await isLive(siteId, owner.userId))) {
     return { published: false, error: "Sivusto ei ole julkaistu." };
   }
 
@@ -161,7 +172,7 @@ export async function submitLeadCore(
   crm?: CrmExport,
   downloadPath?: string | null,
   sign: DownloadSigner = signWithAdmin,
-  options: { giftDelivery?: GiftDelivery; sendToCrm?: CrmLeadSender } = {},
+  options: { giftDelivery?: GiftDelivery; sendToCrm?: CrmLeadSender; isLive?: SiteLiveCheck } = {},
 ): Promise<SubmitLeadResult> {
   // 0. Bot protection: honeypot + timing check
   if (isBotSubmission(fields)) {
@@ -177,7 +188,7 @@ export async function submitLeadCore(
   const normalizedEmail = email.trim().toLowerCase();
 
   // 2. Verify site is published
-  const publishCheck = await verifySitePublished(supabase, siteId);
+  const publishCheck = await verifySitePublished(supabase, siteId, options.isLive ?? isSiteLive);
   if (!publishCheck.published) {
     return { error: publishCheck.error };
   }

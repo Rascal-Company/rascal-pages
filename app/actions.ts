@@ -3,6 +3,8 @@
 import { createClient } from '@/src/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import { createBlankContent } from '@/src/lib/templates';
+import { DRAFT_LIMIT_MESSAGE } from '@/src/lib/entitlements';
+import { canOrgCreateSite } from '@/src/lib/site-plan-server';
 
 // Poista sivusto
 interface DeleteSiteResult {
@@ -175,6 +177,10 @@ export async function createSite(formData: FormData) {
 
   // Käytetään org_id:ta (public.users.id) sivuston luomiseen
   const userId = orgMember.org_id;
+
+  if (!(await canOrgCreateSite(userId))) {
+    return { error: DRAFT_LIMIT_MESSAGE };
+  }
 
   // Tarkista onko subdomain jo käytössä Supabase REST API:n kautta
   const { data: existingSites, error: checkError } = await supabase

@@ -6,6 +6,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { slugify } from "@/src/lib/posts";
 import { RESERVED_PAGE_SLUGS } from "@/src/lib/site-nav";
 import { getTemplateById, getDefaultTemplate } from "@/src/lib/templates";
+import {
+  PUBLISH_BLOCK_MESSAGES,
+  defaultTemplateIdFor,
+  isTemplateAllowed,
+  type Entitlements,
+} from "@/src/lib/entitlements";
+import { getSiteEntitlements } from "@/src/lib/site-plan-server";
 
 export type CreatePageInput = {
   title: string;
@@ -82,9 +89,23 @@ export async function createPage(
     return { success: false, error: `Slug "${slug}" on varattu.` };
   }
 
+  // Lukitut pohjat (landerit) vain Rascal-paketissa; Basicin oletus on portfolio (RAS-1169).
+  let entitlements: Entitlements;
+  try {
+    entitlements = await getSiteEntitlements(siteId, org.orgId);
+  } catch (error) {
+    console.error("Pohjaoikeuden tarkistus epäonnistui:", error);
+    return { success: false, error: "Pohjaoikeuden tarkistus epäonnistui. Yritä uudelleen." };
+  }
+
   const template =
-    (input.templateId ? getTemplateById(input.templateId) : undefined) ??
+    (input.templateId
+      ? getTemplateById(input.templateId)
+      : getTemplateById(defaultTemplateIdFor(entitlements, getDefaultTemplate().id))) ??
     getDefaultTemplate();
+  if (!isTemplateAllowed(entitlements, template.id)) {
+    return { success: false, error: PUBLISH_BLOCK_MESSAGES.UPGRADE_REQUIRED };
+  }
   const content = {
     ...template.defaultContent,
     templateId: template.id,

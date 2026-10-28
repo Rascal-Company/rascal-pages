@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/src/utils/supabase/server";
 import { loadBrandContext } from "@/src/lib/brand-context";
 import { RateLimiter } from "@/src/lib/rate-limit";
+import { DRAFT_LIMIT_MESSAGE } from "@/src/lib/entitlements";
+import { canOrgCreateSite } from "@/src/lib/site-plan-server";
 import { generateReferencePage } from "@/src/lib/reference-ai";
 import { fetchReferenceSkeleton } from "@/src/lib/reference-fetch";
 import type { ReferenceMode } from "@/src/lib/reference-page";
@@ -50,6 +52,7 @@ export async function createReferenceSite(input: CreateReferenceSiteInput): Prom
     .maybeSingle();
   if (!orgMember) return { success: false, error: "Käyttäjätiliä ei löydy. Ota yhteyttä tukeen." };
   const orgId = orgMember.org_id as string;
+  if (!(await canOrgCreateSite(orgId))) return { success: false, error: DRAFT_LIMIT_MESSAGE };
 
   const { data: existing } = await supabase.from("sites").select("id").eq("subdomain", subdomain).limit(1);
   if (existing && existing.length > 0) return { success: false, error: "Tämä subdomain on jo käytössä." };

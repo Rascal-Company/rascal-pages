@@ -19,21 +19,25 @@ interface PagesClientProps {
   siteId: string;
   subdomain: string;
   pages: PageListItem[];
+  /** Paketin sallimat pohjat; null = kaikki. Muut näytetään lukittuina. */
+  allowedTemplateIds?: string[] | null;
+  defaultTemplateId?: string;
 }
-
-const DEFAULT_TEMPLATE_ID = "saas-modern";
 
 export default function PagesClient({
   siteId,
   subdomain,
   pages,
+  allowedTemplateIds = null,
+  defaultTemplateId = "saas-modern",
 }: PagesClientProps) {
   const { showToast } = useToast();
   const router = useRouter();
   const [creating, setCreating] = useState(false);
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
-  const [templateId, setTemplateId] = useState(DEFAULT_TEMPLATE_ID);
+  const [templateId, setTemplateId] = useState(defaultTemplateId);
+  const isLocked = (id: string) => allowedTemplateIds !== null && !allowedTemplateIds.includes(id);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingSlug, setDeletingSlug] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<PageListItem | null>(null);
@@ -47,7 +51,7 @@ export default function PagesClient({
     setCreating(false);
     setTitle("");
     setSlug("");
-    setTemplateId(DEFAULT_TEMPLATE_ID);
+    setTemplateId(defaultTemplateId);
   };
 
   const handleCreate = async () => {
@@ -176,11 +180,19 @@ export default function PagesClient({
                   className="mt-1 w-full rounded-md border border-brand-dark/20 bg-card px-3 py-2 text-sm text-brand-dark"
                 >
                   {TEMPLATES.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
+                    <option key={t.id} value={t.id} disabled={isLocked(t.id)}>
+                      {isLocked(t.id) ? `🔒 ${t.name} · Rascal` : t.name}
                     </option>
                   ))}
                 </select>
+                {TEMPLATES.some((t) => isLocked(t.id)) && (
+                  <p className="mt-1 text-xs text-brand-dark/60">
+                    🔒 Landerit sisältyvät Rascal-pakettiin.{" "}
+                    <a href="https://www.rascal.fi" target="_blank" rel="noreferrer" className="font-medium underline underline-offset-2">
+                      Varaa demo
+                    </a>
+                  </p>
+                )}
               </div>
               <div className="flex justify-end gap-3">
                 <button

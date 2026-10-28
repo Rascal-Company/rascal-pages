@@ -121,3 +121,47 @@ export function isTemplateAllowed(entitlements: Entitlements, templateId: string
 export function canPublishAnotherPage(entitlements: Entitlements, publishedCount: number): boolean {
   return entitlements.maxPublishedPages === null || publishedCount < entitlements.maxPublishedPages;
 }
+
+/** Uuden sivun oletuspohja: Basicissa portfolio, koska oletuslanderia ei voisi julkaista. */
+export function defaultTemplateIdFor(entitlements: Entitlements, preferred: string): string {
+  return isTemplateAllowed(entitlements, preferred) ? preferred : "portfolio";
+}
+
+/** Sallitut pohjat clientille serialisoitavassa muodossa; null = kaikki. */
+export function allowedTemplateList(entitlements: Entitlements): string[] | null {
+  return entitlements.allowedTemplateIds === "all" ? null : [...entitlements.allowedTemplateIds];
+}
+
+export type PublishBlock = "PAYMENT_REQUIRED" | "UPGRADE_REQUIRED" | "PAGE_LIMIT";
+
+export const PUBLISH_BLOCK_MESSAGES: Record<PublishBlock, string> = {
+  PAYMENT_REQUIRED: "Sivuston julkaisu vaatii tilauksen.",
+  UPGRADE_REQUIRED: "Tämä pohja sisältyy Rascal-pakettiin. Varaa demo, niin kerromme lisää.",
+  PAGE_LIMIT: "Pakettisi julkaistujen sivujen enimmäismäärä on täynnä.",
+};
+
+/**
+ * Miksi sivun julkaisu estetään; null jos sallittu. Tarkistetaan vain kun
+ * sivu siirtyy julkaistuksi — jo julkaistun sivun muokkaus ei esty.
+ * `publishedCount` = sivuston muut jo julkaistut sivut.
+ */
+export function publishBlockReason(input: {
+  entitlements: Entitlements;
+  templateId: string | null;
+  publishedCount: number;
+}): PublishBlock | null {
+  const { entitlements, templateId, publishedCount } = input;
+  if (!entitlements.canPublish) return "PAYMENT_REQUIRED";
+  if (templateId && !isTemplateAllowed(entitlements, templateId)) return "UPGRADE_REQUIRED";
+  if (!canPublishAnotherPage(entitlements, publishedCount)) return "PAGE_LIMIT";
+  return null;
+}
+
+/** Saako organisaatio luoda uuden luonnossivuston (maksetut eivät laske rajaan). */
+export function canCreateDraftSite(draftSiteCount: number): boolean {
+  return draftSiteCount < DRAFT_SITE_LIMIT;
+}
+
+export const DRAFT_LIMIT_MESSAGE = `Sinulla voi olla enintään ${DRAFT_SITE_LIMIT} julkaisematonta sivustoa. Julkaise tai poista jokin niistä ensin.`;
+
+export const OVERLAY_UPGRADE_MESSAGE = "Personointi sisältyy Rascal-pakettiin. Varaa demo, niin kerromme lisää.";

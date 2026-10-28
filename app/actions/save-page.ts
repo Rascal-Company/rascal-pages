@@ -4,13 +4,15 @@ import { createClient } from '@/src/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { SiteId } from '@/src/lib/types';
 import type { TemplateConfig } from '@/src/lib/templates';
+import { checkPagePublish } from '@/src/lib/site-plan-server';
+import { publishBlockError, templateIdOf, type PublishErrorResult } from './utils/publish-gate';
 
 export async function updatePageContent(
   siteId: SiteId,
   content: TemplateConfig | Record<string, unknown>,
   published: boolean = false,
   pageSlug: string = 'home'
-): Promise<{ error?: string } | void> {
+): Promise<PublishErrorResult | void> {
   const supabase = await createClient();
 
   // 1. Tarkista käyttäjä
@@ -51,7 +53,7 @@ export async function updatePageContent(
   // 4. Hae tai luo sivu pyydetyllä slugilla (oletus 'home')
   const { data: existingPage, error: pageCheckError } = await supabase
     .from('pages')
-    .select('id')
+    .select('id, published')
     .eq('site_id', siteId)
     .eq('slug', pageSlug)
     .maybeSingle();
@@ -61,6 +63,18 @@ export async function updatePageContent(
     return {
       error: 'Sivun tarkistus epäonnistui.',
     };
+  }
+
+  // Maksumuuri vain kun sivu siirtyy julkaistuksi: jo julkaistun sivun
+  // automaattitallennus ei saa kaatua (RAS-1169).
+  if (published && !existingPage?.published) {
+    const check = await checkPagePublish({
+      siteId,
+      orgId: orgMember.org_id,
+      pageSlug,
+      templateId: templateIdOf(content),
+    });
+    if (!check.ok) return publishBlockError(check.code);
   }
 
   if (existingPage) {

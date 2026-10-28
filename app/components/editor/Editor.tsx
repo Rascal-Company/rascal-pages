@@ -74,6 +74,8 @@ type EditorProps = {
   initialContent: TemplateConfig | Record<string, unknown>;
   initialPublished?: boolean;
   crmEnabled: boolean;
+  /** Paketin sallimat pohjat; null = kaikki (RAS-1169). */
+  allowedTemplateIds?: string[] | null;
 };
 
 export default function Editor({
@@ -86,6 +88,7 @@ export default function Editor({
   initialContent,
   initialPublished = false,
   crmEnabled,
+  allowedTemplateIds = null,
 }: EditorProps) {
   const { showToast, showConfirm } = useToast();
   // Vanhat osiot muunnetaan vapaiksi osioiksi kerran, editorin avautuessa.
@@ -443,6 +446,7 @@ export default function Editor({
                       <TemplateSelector
                         currentTemplateId={content.templateId || "saas-modern"}
                         onTemplateChange={handleTemplateChange}
+                        allowedTemplateIds={allowedTemplateIds}
                       />
                     </div>
                   )}
