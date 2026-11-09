@@ -2,6 +2,7 @@ import { createClient } from "@/src/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { getHomeUrl } from "@/app/lib/navigation";
 import PagesClient, { type PageListItem } from "./PagesClient";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 
 /** Sisältö sekä editorin päälle avautuvaan ikkunaan että erilliselle sivulle. */
@@ -15,11 +16,7 @@ export default async function SitePagesView({ siteId: id }: { siteId: string }) 
     redirect(getHomeUrl());
   }
 
-  const { data: orgMember } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
 
   if (!orgMember) {
     return <div>Virhe: Organisaatiota ei löydy.</div>;

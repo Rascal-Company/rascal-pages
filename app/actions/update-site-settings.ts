@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import type { SiteId } from "@/src/lib/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { mergeSettings } from "./utils/settings-utils";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 type UpdateSettingsResult =
   | { success: true }
@@ -81,11 +82,7 @@ export async function updateSiteSettings(
   }
 
   // 2. Hae käyttäjän organisaatio
-  const { data: orgMember } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
 
   if (!orgMember) {
     return { success: false, error: "Käyttäjätiliä ei löydy." };

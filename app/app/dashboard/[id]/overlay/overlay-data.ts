@@ -6,6 +6,7 @@ import { getHomeUrl } from "@/app/lib/navigation";
 import { createOverlayProfileId } from "@/src/lib/overlay-campaign";
 import type { OverlayProfile } from "@/app/actions/overlay";
 import { pagesSiteOrigins } from "@/src/lib/overlay-pages";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 /** Kirjautunut käyttäjä ja organisaatio (CLAUDE.md:n auktorisointikaava). */
 export async function loadOrgContext() {
@@ -16,11 +17,7 @@ export async function loadOrgContext() {
   } = await supabase.auth.getUser();
   if (!user) redirect(getHomeUrl());
 
-  const { data: orgMember } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
   if (!orgMember) redirect("/app/dashboard");
 
   return { supabase, orgId: orgMember.org_id as string };

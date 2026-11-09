@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Editor from "./EditorClient";
 import { createSiteId } from "@/src/lib/types";
 import { getHomeUrl } from "@/app/lib/navigation";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 // Estetään pre-rendering build-aikana, koska sivu vaatii käyttäjäsession
 export const dynamic = "force-dynamic";
@@ -31,13 +32,9 @@ export default async function SiteEditorPage({
   }
 
   // 2. Hae käyttäjän organisaatio
-  const { data: orgMember, error: orgMemberError } = await supabase
-    .from("org_members")
-    .select("org_id, role")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
 
-  if (!orgMember || orgMemberError) {
+  if (!orgMember) {
     return <div>Virhe: Organisaatiota ei löydy.</div>;
   }
 

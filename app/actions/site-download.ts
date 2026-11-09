@@ -11,6 +11,7 @@ import {
   type DownloadKind,
 } from "@/src/lib/site-downloads";
 import type { SiteId } from "@/src/lib/types";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 export type PrepareDownloadResult = { path: string; token: string } | { error: string };
 
@@ -37,11 +38,7 @@ export async function prepareSiteDownloadUpload(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Sinun täytyy olla kirjautunut sisään." };
 
-  const { data: orgMember } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
   if (!orgMember) return { error: "Käyttäjätiliä ei löydy." };
 
   const { data: site } = await supabase

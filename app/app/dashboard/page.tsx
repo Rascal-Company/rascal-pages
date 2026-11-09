@@ -4,6 +4,7 @@ import DashboardClient from "@/app/components/DashboardClient";
 import { getHomeUrl } from "@/app/lib/navigation";
 import { loadSiteKpis } from "./site-kpis";
 import { siteKind } from "@/src/lib/site-kind";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 // Estetään pre-rendering build-aikana, koska sivu vaatii käyttäjäsession
 export const dynamic = "force-dynamic";
@@ -23,13 +24,9 @@ export default async function Dashboard() {
   }
 
   // 3. Hae käyttäjän organisaatio org_members taulusta
-  const { data: orgMember, error: orgMemberError } = await supabase
-    .from("org_members")
-    .select("org_id, role")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
 
-  if (!orgMember || orgMemberError) {
+  if (!orgMember) {
     return <div>Virhe: Organisaatiota ei löydy.</div>;
   }
 

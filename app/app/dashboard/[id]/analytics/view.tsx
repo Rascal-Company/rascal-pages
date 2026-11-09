@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import LeadsTable from "./LeadsTable";
 
 import { getHomeUrl } from "@/app/lib/navigation";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 /** Sisältö sekä editorin päälle avautuvaan ikkunaan että erilliselle sivulle. */
 export default async function AnalyticsView({ siteId }: { siteId: string }) {
@@ -17,11 +18,7 @@ export default async function AnalyticsView({ siteId }: { siteId: string }) {
   }
 
   // 2. Get user's organization
-  const { data: orgMember } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
 
   if (!orgMember) {
     return <div>Virhe: Organisaatiota ei löydy.</div>;

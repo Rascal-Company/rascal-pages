@@ -4,6 +4,7 @@ import { createClient } from "@/src/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateApiKey } from "@/src/lib/api-keys";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 export type ApiKeySummary = {
   id: string;
@@ -35,11 +36,7 @@ async function resolveOrgId(
     return { error: "Sinun täytyy olla kirjautunut sisään." };
   }
 
-  const { data: orgMember } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
 
   if (!orgMember) return { error: "Käyttäjätiliä ei löydy." };
   return { orgId: orgMember.org_id };

@@ -11,6 +11,7 @@ import {
   recommendedDnsRecord,
   type DnsRecommendation,
 } from "@/src/lib/vercel-domains";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 interface UpdateDomainResult {
   success?: boolean;
@@ -72,13 +73,9 @@ export async function updateSiteDomain(
   }
 
   // 2. Hae käyttäjän organisaatio
-  const { data: orgMember, error: orgMemberError } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
 
-  if (!orgMember || orgMemberError) {
+  if (!orgMember) {
     return {
       error: "Käyttäjätiliä ei löydy.",
     };
@@ -247,11 +244,7 @@ export async function getSiteDomainStatus(
     return { error: "Sinun täytyy olla kirjautunut sisään." };
   }
 
-  const { data: orgMember } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
   if (!orgMember) {
     return { error: "Käyttäjätiliä ei löydy." };
   }

@@ -3,6 +3,7 @@
 import { nanoid } from "nanoid";
 import { createClient } from "@/src/utils/supabase/server";
 import type { SiteId } from "@/src/lib/types";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 const BUCKET = "site-assets";
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -47,11 +48,7 @@ export async function uploadSiteAsset(
     return { error: "Sinun täytyy olla kirjautunut sisään." };
   }
 
-  const { data: orgMember } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
   if (!orgMember) {
     return { error: "Käyttäjätiliä ei löydy." };
   }
