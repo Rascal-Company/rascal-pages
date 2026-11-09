@@ -39,10 +39,10 @@ export default function NewOverlaySiteForm() {
             ← Takaisin dashboardiin
           </Link>
           <h1 className="mt-4 text-3xl font-bold text-foreground">
-            Overlay asiakkaan sivulle
+            Overlay olemassa olevalle sivulle
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Anna asiakkaan sivun osoite. Sivu avautuu editoriin, jossa voit
+            Anna sivun osoite – oma tai asiakkaan. Sivu avautuu editoriin, jossa voit
             klikata ja muokata tekstejä, kuvia ja linkkejä. Esikatselulinkin voi
             jakaa heti — asennusta tarvitaan vasta tuotantokäyttöön.
           </p>

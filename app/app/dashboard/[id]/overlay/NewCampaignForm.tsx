@@ -90,7 +90,7 @@ export default function NewCampaignForm({
         </div>
       ) : (
         <div className="space-y-1.5">
-          <Label htmlFor="campaign-url">Asiakkaan sivu</Label>
+          <Label htmlFor="campaign-url">Sivun osoite</Label>
           <Input
             id="campaign-url"
             inputMode="url"

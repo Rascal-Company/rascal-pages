@@ -1362,7 +1362,7 @@ export default function LandingPageEditor({
                   <p className="text-xs text-muted-foreground">
                     {isPagesTarget
                       ? "Laita linkki mainokseen. Toimii heti, kun variaatio on julkaistu ja muutokset tallennettu."
-                      : "Toimii, kun snippet on asennettu asiakkaan sivulle ja variaatio on julkaistu."}
+                      : "Toimii, kun snippet on asennettu sivustolle ja variaatio on julkaistu."}
                   </p>
                 </section>
 

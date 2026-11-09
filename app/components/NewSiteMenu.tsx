@@ -26,7 +26,7 @@ type Option = {
   onSelect: () => void;
 };
 
-/** "Uusi sivusto" -valikko: AI, referensseistä, pohjasta, overlay asiakkaan sivulle tai blankko. */
+/** "Uusi sivusto" -valikko: AI, referensseistä, pohjasta, overlay olemassa olevalle sivulle tai blankko. */
 export default function NewSiteMenu({
   onAiClick,
   className,
@@ -57,8 +57,8 @@ export default function NewSiteMenu({
     },
     {
       icon: MousePointerClick,
-      label: "Overlay asiakkaan sivulle",
-      description: "Personoi olemassa oleva sivusto kampanjakohtaisesti",
+      label: "Overlay olemassa olevalle sivulle",
+      description: "Personoi oma tai asiakkaan nykyinen sivusto kampanjakohtaisesti",
       onSelect: () => router.push("/app/dashboard/new?mode=overlay"),
     },
     {
