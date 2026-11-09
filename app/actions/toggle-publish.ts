@@ -3,6 +3,7 @@
 import { createClient } from '@/src/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { SiteId } from '@/src/lib/types';
+import { getActiveOrgMember } from '@/src/lib/active-org';
 
 export async function togglePagePublish(
   siteId: SiteId,
@@ -20,13 +21,9 @@ export async function togglePagePublish(
   }
 
   // 2. Hae käyttäjän organisaatio
-  const { data: orgMember, error: orgMemberError } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('auth_user_id', user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
 
-  if (!orgMember || orgMemberError) {
+  if (!orgMember) {
     return {
       error: 'Käyttäjätiliä ei löydy.',
     };

@@ -3,6 +3,7 @@
 import { createClient } from '@/src/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import { createBlankContent } from '@/src/lib/templates';
+import { getActiveOrgMember } from '@/src/lib/active-org';
 
 // Poista sivusto
 interface DeleteSiteResult {
@@ -29,24 +30,12 @@ export async function deleteSite(siteId: string): Promise<DeleteSiteResult> {
     const authUserId = user.id;
 
     // Hae käyttäjän organisaatio org_members taulusta
-    const { data: orgMember, error: orgMemberError } = await supabase
-      .from('org_members')
-      .select('org_id, role')
-      .eq('auth_user_id', authUserId)
-      .maybeSingle();
+    const orgMember = await getActiveOrgMember(supabase, authUserId);
 
     // Jos käyttäjää ei löydy org_members taulusta, palautetaan virhe
     if (!orgMember) {
       return {
         error: 'Käyttäjätiliä ei löydy. Ota yhteyttä tukeen.',
-      };
-    }
-
-    // Jos tarkistuksessa tuli virhe, palautetaan virhe
-    if (orgMemberError) {
-      console.error('Virhe organisaation tarkistuksessa:', orgMemberError);
-      return {
-        error: 'Käyttäjätilin tarkistus epäonnistui. Yritä uudelleen.',
       };
     }
 
@@ -152,24 +141,12 @@ export async function createSite(formData: FormData) {
   const authUserId = user.id;
 
   // Hae käyttäjän organisaatio org_members taulusta
-  const { data: orgMember, error: orgMemberError } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('auth_user_id', authUserId)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, authUserId);
 
   // Jos käyttäjää ei löydy org_members taulusta, palautetaan virhe
   if (!orgMember) {
     return {
       error: 'Käyttäjätiliä ei löydy. Ota yhteyttä tukeen.',
-    };
-  }
-
-  // Jos tarkistuksessa tuli virhe, palautetaan virhe
-  if (orgMemberError) {
-    console.error('Virhe organisaation tarkistuksessa:', orgMemberError);
-    return {
-      error: 'Käyttäjätilin tarkistus epäonnistui. Yritä uudelleen.',
     };
   }
 
