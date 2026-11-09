@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/src/utils/supabase/server";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 type CreateAiSiteInput = {
   title: string;
@@ -26,11 +27,7 @@ export async function createAiSite(
     return { success: false, error: "Ei kirjautunut käyttäjä" };
   }
 
-  const { data: orgMember } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
 
   if (!orgMember) {
     return { success: false, error: "Organisaatiota ei löydy" };

@@ -34,6 +34,7 @@ import { generateVariantCopy } from "@/src/lib/overlay-ai";
 import { createPreviewToken, previewSecret } from "@/src/lib/overlay-token";
 import { pagesSiteOrigins } from "@/src/lib/overlay-pages";
 import { describeProfileData } from "@/src/lib/overlay-profile";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 type ActionResult<T = undefined> =
   | ({ success: true } & (T extends undefined ? object : { data: T }))
@@ -80,11 +81,7 @@ async function getOrgId(client: SupabaseClient): Promise<string | null> {
   } = await client.auth.getUser();
   if (!user) return null;
 
-  const { data: orgMember } = await client
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(client, user.id);
 
   return orgMember?.org_id ?? null;
 }

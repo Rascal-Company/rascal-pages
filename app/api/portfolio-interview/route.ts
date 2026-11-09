@@ -5,6 +5,7 @@ import {
   suggestSubdomain,
   type PortfolioInterviewAnswers,
 } from "@/src/lib/portfolio-interview";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 /**
  * Portfolio interview → site builder endpoint for n8n automation.
@@ -83,12 +84,8 @@ export async function POST(request: Request) {
   // Resolve the owning organization (public.users.id).
   let orgId = body.orgId ?? null;
   if (!orgId && body.authUserId) {
-    const { data: orgMember, error } = await supabase
-      .from("org_members")
-      .select("org_id")
-      .eq("auth_user_id", body.authUserId)
-      .maybeSingle();
-    if (error || !orgMember) {
+    const orgMember = await getActiveOrgMember(supabase, body.authUserId);
+    if (!orgMember) {
       return NextResponse.json(
         { error: "Organisaatiota ei löytynyt käyttäjälle." },
         { status: 404 },

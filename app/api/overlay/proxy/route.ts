@@ -3,6 +3,7 @@ import { createClient } from "@/src/utils/supabase/server";
 import { isValidUuid } from "@/src/lib/types";
 import { proxiedPageResponse, proxyErrorPage } from "@/src/lib/overlay-proxy";
 import { findPagesSite, pagesFetchUrl } from "@/src/lib/overlay-pages-server";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 /**
  * Overlay-editorin proxy: /api/overlay/proxy?c=CAMPAIGN_ID&path=/polku
@@ -22,11 +23,7 @@ export async function GET(req: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return proxyErrorPage("Kirjaudu sisään.", 401);
 
-  const { data: orgMember } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
 
   const { data: campaign } = await supabase
     .from("overlay_campaigns")

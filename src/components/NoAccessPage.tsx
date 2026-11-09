@@ -1,11 +1,20 @@
 import { Clock, ShieldX } from "lucide-react";
 import { AccountMenu } from "@/app/components/AccountMenu";
+import type { BrandOption } from "@/app/actions/brand";
+import { BrandSwitchButtons } from "@/src/components/BrandSwitchButtons";
 
 /**
  * Näkymä, kun organisaatiolla ei ole Rascal Pages -tuotetta (tai kokeilu on
  * päättynyt). Tilivalikosta voi vaihtaa tuotetta tai kirjautua ulos.
  */
-export function NoAccessPage({ trialExpired }: { trialExpired: boolean }) {
+export function NoAccessPage({
+  trialExpired,
+  switchableBrands = [],
+}: {
+  trialExpired: boolean;
+  /** Käyttäjän muut brändit, joilla Pages on käytössä (monibrändi). */
+  switchableBrands?: BrandOption[];
+}) {
   return (
     <div className="flex min-h-dvh flex-col bg-background text-foreground">
       <header className="flex justify-end p-4">
@@ -30,6 +39,14 @@ export function NoAccessPage({ trialExpired }: { trialExpired: boolean }) {
               ? "Rascal Pages -kokeilujaksosi on päättynyt. Päivitä tilauksesi jatkaaksesi palvelun käyttöä."
               : "Organisaatiollasi ei ole pääsyä Rascal Pages -tuotteeseen. Ota yhteyttä myyntiin aktivoidaksesi tuotteen."}
           </p>
+          {switchableBrands.length > 0 ? (
+            <div className="mb-6 border-t border-border pt-6">
+              <p className="mb-3 text-sm text-muted-foreground">
+                Rascal Pages on käytössä toisessa brändissäsi:
+              </p>
+              <BrandSwitchButtons brands={switchableBrands} />
+            </div>
+          ) : null}
           <div className="flex flex-col items-center gap-3">
             <a
               href="https://www.rascal.fi/hinnat"

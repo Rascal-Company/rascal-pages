@@ -8,6 +8,7 @@ import { RateLimiter } from "@/src/lib/rate-limit";
 import { generateReferencePage } from "@/src/lib/reference-ai";
 import { fetchReferenceSkeleton } from "@/src/lib/reference-fetch";
 import type { ReferenceMode } from "@/src/lib/reference-page";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 export type CreateReferenceSiteInput = {
   subdomain: string;
@@ -43,11 +44,7 @@ export async function createReferenceSite(input: CreateReferenceSiteInput): Prom
   } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Kirjaudu sisään luodaksesi sivuston." };
 
-  const { data: orgMember } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
   if (!orgMember) return { success: false, error: "Käyttäjätiliä ei löydy. Ota yhteyttä tukeen." };
   const orgId = orgMember.org_id as string;
 

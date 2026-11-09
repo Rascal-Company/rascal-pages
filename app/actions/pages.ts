@@ -6,6 +6,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { slugify } from "@/src/lib/posts";
 import { RESERVED_PAGE_SLUGS } from "@/src/lib/site-nav";
 import { getTemplateById, getDefaultTemplate } from "@/src/lib/templates";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 export type CreatePageInput = {
   title: string;
@@ -30,11 +31,7 @@ async function resolveOrgId(
     return { error: "Sinun täytyy olla kirjautunut sisään." };
   }
 
-  const { data: orgMember } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
 
   if (!orgMember) return { error: "Käyttäjätiliä ei löydy." };
   return { orgId: orgMember.org_id };

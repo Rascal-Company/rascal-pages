@@ -4,6 +4,7 @@ import SettingsClient from "./SettingsClient";
 
 import { createSiteId } from "@/src/lib/types";
 import { getHomeUrl } from "@/app/lib/navigation";
+import { getActiveOrgMember } from "@/src/lib/active-org";
 
 /** Sisältö sekä editorin päälle avautuvaan ikkunaan että erilliselle sivulle. */
 export default async function SettingsView({ siteId: id }: { siteId: string }) {
@@ -18,13 +19,9 @@ export default async function SettingsView({ siteId: id }: { siteId: string }) {
   }
 
   // 2. Hae käyttäjän organisaatio
-  const { data: orgMember, error: orgMemberError } = await supabase
-    .from("org_members")
-    .select("org_id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
 
-  if (!orgMember || orgMemberError) {
+  if (!orgMember) {
     return <div>Virhe: Organisaatiota ei löydy.</div>;
   }
 
