@@ -4,6 +4,8 @@ import Editor from "./EditorClient";
 import { createSiteId } from "@/src/lib/types";
 import { getHomeUrl } from "@/app/lib/navigation";
 import { getActiveOrgMember } from "@/src/lib/active-org";
+import { editableContent, pageHasUnpublishedChanges } from "@/src/lib/draft-publish";
+import type { TemplateConfig } from "@/src/lib/templates";
 
 // Estetään pre-rendering build-aikana, koska sivu vaatii käyttäjäsession
 export const dynamic = "force-dynamic";
@@ -64,7 +66,7 @@ export default async function SiteEditorPage({
   // 4. Hae muokattava sivu (oletus 'home', tai ?page=<slug> alasivulle)
   const { data: page } = await supabase
     .from("pages")
-    .select("*")
+    .select("*, page_drafts(content)")
     .eq("site_id", id)
     .eq("slug", pageSlug)
     .maybeSingle();
@@ -79,8 +81,19 @@ export default async function SiteEditorPage({
   const defaultTemplate = getDefaultTemplate();
   const defaultContent = defaultTemplate.defaultContent;
 
-  // Jos sivulla on sisältö, käytä sitä. Muuten käytä oletustemplatea.
-  const pageContent = page?.content || defaultContent;
+  // Editori muokkaa luonnosta, jos sellainen on; muuten live-sisältöä tai oletusta.
+  const draftRows = page?.page_drafts as { content: unknown } | { content: unknown }[] | null | undefined;
+  const draftContent = (Array.isArray(draftRows) ? draftRows[0] : draftRows)?.content ?? null;
+  const pageContent =
+    (page
+      ? (editableContent({ content: page.content, draft_content: draftContent }) as
+          | TemplateConfig
+          | Record<string, unknown>
+          | null)
+      : null) || defaultContent;
+  const hasUnpublishedChanges = page
+    ? pageHasUnpublishedChanges({ published: page.published, content: page.content, draft_content: draftContent })
+    : false;
   const pageId = page?.id || null;
   const initialPublished = page?.published ?? false;
   const pageTitle = page?.title || "Etusivu";
@@ -95,6 +108,7 @@ export default async function SiteEditorPage({
       siteCustomDomain={site.custom_domain ?? null}
       initialContent={pageContent}
       initialPublished={initialPublished}
+      initialHasUnpublishedChanges={hasUnpublishedChanges}
       crmEnabled={crmEnabled}
     />
   );

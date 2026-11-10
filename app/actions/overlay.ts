@@ -35,6 +35,7 @@ import { createPreviewToken, previewSecret } from "@/src/lib/overlay-token";
 import { pagesSiteOrigins } from "@/src/lib/overlay-pages";
 import { describeProfileData } from "@/src/lib/overlay-profile";
 import { getActiveOrgMember } from "@/src/lib/active-org";
+import { variantHasUnpublishedChanges } from "@/src/lib/draft-publish";
 
 type ActionResult<T = undefined> =
   | ({ success: true } & (T extends undefined ? object : { data: T }))
@@ -45,7 +46,10 @@ export type OverlayVariation = {
   name: string;
   prompt: string;
   values: OverlaySlotValues;
+  /** Live: snippet näyttää variaation kävijöille. */
   active: boolean;
+  /** Julkaistulla variaatiolla on tallennettuja muutoksia, joita ei ole julkaistu. */
+  hasUnpublishedChanges: boolean;
   previewToken: string;
 };
 
@@ -153,7 +157,7 @@ function validPath(input: string): string | null {
 
 // ---- Variaatiot ----------------------------------------------------------------
 
-const VARIANT_COLUMNS = "id, name, prompt, slot_values, active";
+const VARIANT_COLUMNS = "id, name, prompt, slot_values, active, changes, draft_changes";
 
 function toVariation(row: {
   id: string;
@@ -161,6 +165,8 @@ function toVariation(row: {
   prompt: string;
   slot_values: unknown;
   active: boolean;
+  changes: unknown;
+  draft_changes: unknown;
 }): OverlayVariation {
   const id = createOverlayVariantId(row.id);
   return {
@@ -169,6 +175,7 @@ function toVariation(row: {
     prompt: row.prompt,
     values: (row.slot_values ?? {}) as OverlaySlotValues,
     active: row.active,
+    hasUnpublishedChanges: variantHasUnpublishedChanges(row),
     previewToken: createPreviewToken(id, previewSecret()),
   };
 }
@@ -216,10 +223,14 @@ export async function createOverlayVariant(
   return result;
 }
 
+/**
+ * Tallentaa variaation luonnoksena. Kävijät näkevät yhä julkaistun version,
+ * kunnes variaatio julkaistaan (publishOverlayVariant).
+ */
 export async function saveOverlayVariant(
   variantId: OverlayVariantId,
-  input: { name: string; prompt: string; values: unknown; active: boolean },
-): Promise<ActionResult> {
+  input: { name: string; prompt: string; values: unknown },
+): Promise<ActionResult<{ hasUnpublishedChanges: boolean }>> {
   const s = await session();
   if (!s) return { success: false, error: SIGN_IN };
   const landingPage = await getOwnedVariantLandingPage(s.client, variantId, s.orgId);
@@ -232,27 +243,62 @@ export async function saveOverlayVariant(
   const changes = buildChanges(landingPage.slots, values);
   if (!changes.ok) return { success: false, error: changes.error };
 
-  const { error } = await s.client
+  const { data, error } = await s.client
     .from("overlay_variants")
     .update({
       name: name.slice(0, 120),
       prompt: input.prompt.trim().slice(0, 2000),
       slot_values: values,
-      changes: changes.changes,
-      active: input.active === true,
+      draft_changes: changes.changes,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", variantId);
+    .eq("id", variantId)
+    .select("active, changes, draft_changes")
+    .single();
 
-  if (error) {
+  if (error || !data) {
     console.error("Save overlay variant error:", error);
     return { success: false, error: "Tallennus epäonnistui." };
   }
   revalidateOverlay(landingPage.campaign.site_id);
+  return { success: true, data: { hasUnpublishedChanges: variantHasUnpublishedChanges(data) } };
+}
+
+/** Julkaisee variaation: tallennettu luonnos liveksi ja variaatio näkyviin. */
+export async function publishOverlayVariant(variantId: OverlayVariantId): Promise<ActionResult> {
+  const s = await session();
+  if (!s) return { success: false, error: SIGN_IN };
+  const landingPage = await getOwnedVariantLandingPage(s.client, variantId, s.orgId);
+  if (!landingPage) return { success: false, error: NO_ACCESS };
+  return publishVariant(s.client, variantId, landingPage.campaign.site_id);
+}
+
+async function publishVariant(
+  client: SupabaseClient,
+  variantId: OverlayVariantId,
+  siteId: string,
+): Promise<ActionResult> {
+  const { data: row } = await client
+    .from("overlay_variants")
+    .select("draft_changes")
+    .eq("id", variantId)
+    .maybeSingle();
+  if (!row) return { success: false, error: NO_ACCESS };
+
+  const now = new Date().toISOString();
+  const { error } = await client
+    .from("overlay_variants")
+    .update({ changes: row.draft_changes ?? [], active: true, published_at: now, updated_at: now })
+    .eq("id", variantId);
+  if (error) {
+    console.error("Publish overlay variant error:", error);
+    return { success: false, error: "Julkaisu epäonnistui." };
+  }
+  revalidateOverlay(siteId);
   return { success: true };
 }
 
-/** Julkaisukytkin kampanjasivulta. */
+/** Julkaisukytkin kampanjasivulta. Päälle = julkaise tallennettu luonnos. */
 export async function setOverlayVariantActive(
   variantId: OverlayVariantId,
   active: boolean,
@@ -261,6 +307,7 @@ export async function setOverlayVariantActive(
   if (!s) return { success: false, error: SIGN_IN };
   const landingPage = await getOwnedVariantLandingPage(s.client, variantId, s.orgId);
   if (!landingPage) return { success: false, error: NO_ACCESS };
+  if (active) return publishVariant(s.client, variantId, landingPage.campaign.site_id);
 
   const { error } = await s.client
     .from("overlay_variants")
@@ -413,7 +460,8 @@ export async function saveOverlayLandingPage(
   for (const update of updates) {
     const { error: variantError } = await s.client
       .from("overlay_variants")
-      .update({ changes: update.changes, slot_values: update.values, updated_at: now })
+      // Luonnokseen: live-muutokset vaihtuvat vasta julkaisussa.
+      .update({ draft_changes: update.changes, slot_values: update.values, updated_at: now })
       .eq("id", update.id);
     if (variantError) {
       console.error("Sync overlay variant error:", variantError);

@@ -132,7 +132,7 @@ async function previewOverlay(
   const { data } = await createAdminClient()
     .from("overlay_variants")
     .select(
-      "id, changes, overlay_landing_pages!inner(overlay_campaigns!inner(site_id, target_origin, sites!inner(user_id)))",
+      "id, draft_changes, overlay_landing_pages!inner(overlay_campaigns!inner(site_id, target_origin, sites!inner(user_id)))",
     )
     .eq("id", variantId)
     .maybeSingle();
@@ -147,7 +147,8 @@ async function previewOverlay(
   return {
     overlaySiteId: campaign.site_id,
     variantId: data.id,
-    changes: (data.changes ?? []) as OverlayChange[],
+    // Esikatselu näyttää tallennetun luonnoksen, ei live-versiota.
+    changes: (data.draft_changes ?? []) as OverlayChange[],
     preview: true,
     params: {},
     visitorId: "",

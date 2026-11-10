@@ -13,6 +13,7 @@ import { getAppOrigin } from "../../app-origin";
 import { loadOverlayContext, loadProfiles } from "../../overlay-data";
 import LandingPageEditor from "./LandingPageEditor";
 import { findPagesSite, pagesFetchUrl } from "@/src/lib/overlay-pages-server";
+import { variantHasUnpublishedChanges } from "@/src/lib/draft-publish";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,7 @@ export default async function OverlayLandingPagePage({ params }: PageProps) {
 
   const { data: rows } = await supabase
     .from("overlay_variants")
-    .select("id, name, prompt, slot_values, active")
+    .select("id, name, prompt, slot_values, active, changes, draft_changes")
     .eq("landing_page_id", landingPageId)
     .order("created_at", { ascending: true });
 
@@ -59,6 +60,7 @@ export default async function OverlayLandingPagePage({ params }: PageProps) {
       prompt: row.prompt,
       values: (row.slot_values ?? {}) as OverlaySlotValues,
       active: row.active,
+      hasUnpublishedChanges: variantHasUnpublishedChanges(row),
       previewToken: createPreviewToken(variantId, secret),
     };
   });

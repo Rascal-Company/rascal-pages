@@ -75,7 +75,7 @@ function SaveState({ status, lastSavedAt }: { status: AutosaveStatus; lastSavedA
         ? "Tallennus epäonnistui"
         : status === "saved" && lastSavedAt
           ? `Tallennettu ${lastSavedAt.toLocaleTimeString("fi-FI", { hour: "2-digit", minute: "2-digit" })}`
-          : "Muutokset tallentuvat automaattisesti";
+          : "Muutokset tallentuvat luonnokseksi";
   return (
     <span
       aria-live="polite"
@@ -113,6 +113,7 @@ export default function EditorTopBar({
   saveStatus,
   lastSavedAt,
   published,
+  hasUnpublishedChanges,
   publishing,
   onPublishChange,
   panelOpen,
@@ -134,6 +135,7 @@ export default function EditorTopBar({
   saveStatus: AutosaveStatus;
   lastSavedAt: Date | null;
   published: boolean;
+  hasUnpublishedChanges: boolean;
   publishing: boolean;
   onPublishChange: (published: boolean) => void;
   panelOpen: boolean;
@@ -231,6 +233,12 @@ export default function EditorTopBar({
         >
           {fullPreview ? <EyeOff /> : <Eye />}
         </IconButton>
+        {published && hasUnpublishedChanges && (
+          <Button size="sm" onClick={() => onPublishChange(true)} disabled={publishing}>
+            {publishing ? <Loader2 className="animate-spin" aria-hidden /> : <Rocket aria-hidden />}
+            Julkaise muutokset
+          </Button>
+        )}
         {published ? (
           <DropdownMenu>
             <DropdownMenuTrigger
@@ -238,7 +246,7 @@ export default function EditorTopBar({
               className="inline-flex h-8 items-center gap-1.5 rounded-md bg-success/12 px-3 text-xs font-semibold text-success ring-1 ring-inset ring-success/25 hover:bg-success/20"
             >
               <span className="size-1.5 rounded-full bg-success" aria-hidden />
-              Julkaistu
+              <span className="sr-only sm:not-sr-only">Julkaistu</span>
               <ChevronDown className="size-3.5" aria-hidden />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">

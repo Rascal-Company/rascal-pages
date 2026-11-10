@@ -3,6 +3,7 @@
 import { createClient } from '@/src/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import type { SiteId } from '@/src/lib/types';
+import { getActiveOrgMember } from '@/src/lib/active-org';
 
 export async function togglePagePublish(
   siteId: SiteId,
@@ -20,13 +21,9 @@ export async function togglePagePublish(
   }
 
   // 2. Hae käyttäjän organisaatio
-  const { data: orgMember, error: orgMemberError } = await supabase
-    .from('org_members')
-    .select('org_id, role')
-    .eq('auth_user_id', user.id)
-    .maybeSingle();
+  const orgMember = await getActiveOrgMember(supabase, user.id);
 
-  if (!orgMember || orgMemberError) {
+  if (!orgMember) {
     return {
       error: 'Käyttäjätiliä ei löydy.',
     };
@@ -49,7 +46,7 @@ export async function togglePagePublish(
   // 4. Hae sivuston sivu pyydetyllä slugilla (oletus 'home')
   const { data: page, error: pageError } = await supabase
     .from('pages')
-    .select('id')
+    .select('id, page_drafts(content)')
     .eq('site_id', siteId)
     .eq('slug', pageSlug)
     .maybeSingle();
@@ -62,12 +59,16 @@ export async function togglePagePublish(
   }
 
   // 5. Päivitä tai luo sivu julkaisutilalla
+  const drafts = page?.page_drafts as unknown as { content: unknown } | { content: unknown }[] | null;
+  const draft = Array.isArray(drafts) ? drafts[0] : drafts;
   if (page) {
     // Päivitä olemassa oleva sivu
     const { error: updateError } = await supabase
       .from('pages')
       .update({
         published: published,
+        // Julkaisu vie myös tallennetun luonnoksen liveksi.
+        ...(published && draft ? { content: draft.content } : {}),
         updated_at: new Date().toISOString(),
       })
       .eq('id', page.id);
@@ -77,6 +78,9 @@ export async function togglePagePublish(
       return {
         error: 'Julkaisutilan päivitys epäonnistui.',
       };
+    }
+    if (published && draft) {
+      await supabase.from('page_drafts').delete().eq('page_id', page.id);
     }
   } else {
     // Jos sivua ei ole ollenkaan, ei voida julkaista

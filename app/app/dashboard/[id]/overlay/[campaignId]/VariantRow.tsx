@@ -14,6 +14,7 @@ export default function VariantRow({
   variantId,
   name,
   active: initialActive,
+  hasUnpublishedChanges: initialUnpublished,
   personalized,
   aiPrompt,
   editorHref,
@@ -22,6 +23,7 @@ export default function VariantRow({
   variantId: OverlayVariantId;
   name: string;
   active: boolean;
+  hasUnpublishedChanges: boolean;
   personalized: number;
   aiPrompt: boolean;
   editorHref: string;
@@ -29,6 +31,7 @@ export default function VariantRow({
 }) {
   const { showToast } = useToast();
   const [active, setActive] = useState(initialActive);
+  const [unpublished, setUnpublished] = useState(initialUnpublished);
   const [busy, setBusy] = useState(false);
 
   // Kytkin kääntyy heti; palautetaan, jos tallennus epäonnistuu.
@@ -41,6 +44,8 @@ export default function VariantRow({
       setActive(!next);
       showToast(result.error, "error");
     } else {
+      // Päälle kytkeminen julkaisee tallennetun luonnoksen.
+      setUnpublished(false);
       showToast(next ? `${name} julkaistu` : `${name} piilotettu`, "success");
     }
   }
@@ -61,7 +66,8 @@ export default function VariantRow({
           )}
         </span>
         <span className="block text-xs text-muted-foreground">
-          {active ? "Julkaistu" : "Luonnos"} · {personalized} elementtiä personoitu
+          {active ? (unpublished ? "Julkaistu · julkaisemattomia muutoksia" : "Julkaistu") : "Luonnos"} ·{" "}
+          {personalized} elementtiä personoitu
         </span>
       </Link>
       <StatsRow stats={stats} compact />
