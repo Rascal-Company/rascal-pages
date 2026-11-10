@@ -34,14 +34,14 @@ export function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-/** Jakolinkin esikatselu: yksi variaatio tunnisteella, myös luonnoksena. */
+/** Jakolinkin esikatselu: yksi variaatio tunnisteella, tallennettu luonnos. */
 async function previewConfig(token: string) {
   const variantId = verifyPreviewToken(token, previewSecret());
   if (!variantId) return json(EMPTY, "no-store");
 
   const { data } = await createAdminClient()
     .from("overlay_variants")
-    .select("id, landing_page_id, changes")
+    .select("id, landing_page_id, draft_changes")
     .eq("id", variantId)
     .maybeSingle();
   if (!data) return json(EMPTY, "no-store");
@@ -49,7 +49,7 @@ async function previewConfig(token: string) {
   return json(
     {
       landingPage: data.landing_page_id,
-      variants: [{ id: data.id, changes: data.changes ?? [] }],
+      variants: [{ id: data.id, changes: data.draft_changes ?? [] }],
       preview: true,
     },
     "no-store",

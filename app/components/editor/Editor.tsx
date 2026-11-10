@@ -18,7 +18,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { updatePageContent } from "@/app/actions/save-page";
+import { publishPage, savePageDraft, unpublishPage } from "@/app/actions/save-page";
 import type { TemplateConfig, SectionType, Section } from "@/src/lib/templates";
 import { normalizeContent, mergeTemplateContent } from "./utils/contentUtils";
 import { convertPageToFluid } from "@/src/lib/fluid-convert";
@@ -73,6 +73,8 @@ type EditorProps = {
   siteCustomDomain?: string | null;
   initialContent: TemplateConfig | Record<string, unknown>;
   initialPublished?: boolean;
+  /** Julkaistulla sivulla on tallennettu luonnos, jota ei ole julkaistu. */
+  initialHasUnpublishedChanges?: boolean;
   crmEnabled: boolean;
 };
 
@@ -85,6 +87,7 @@ export default function Editor({
   siteCustomDomain = null,
   initialContent,
   initialPublished = false,
+  initialHasUnpublishedChanges = false,
   crmEnabled,
 }: EditorProps) {
   const { showToast, showConfirm } = useToast();
@@ -101,6 +104,7 @@ export default function Editor({
     canRedo,
   } = useHistoryState<TemplateConfig>(initialPage);
   const [published, setPublished] = useState<boolean>(initialPublished);
+  const [hasUnpublishedChanges, setHasUnpublishedChanges] = useState(initialHasUnpublishedChanges);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -146,14 +150,16 @@ export default function Editor({
     }),
   );
 
-  const pageState = useMemo(
-    () => ({ content, published }),
-    [content, published],
-  );
+  // Tallennus (automaattinen ja ⌘S) kirjoittaa luonnokseen; kävijät näkevät
+  // julkaistun version, kunnes käyttäjä julkaisee.
+  const pageState = useMemo(() => ({ content }), [content]);
 
   const persist = useCallback(
-    (data: { content: TemplateConfig; published: boolean }) =>
-      updatePageContent(siteId, data.content, data.published, pageSlug),
+    async (data: { content: TemplateConfig }) => {
+      const result = await savePageDraft(siteId, data.content, pageSlug);
+      if ("error" in result) return { error: result.error };
+      setHasUnpublishedChanges(result.hasUnpublishedChanges);
+    },
     [siteId, pageSlug],
   );
 
@@ -177,7 +183,10 @@ export default function Editor({
       } else {
         setSuccess(true);
         markSaved(pageState);
-        showToast("Muutokset tallennettu onnistuneesti!", "success");
+        showToast(
+          published ? "Tallennettu luonnokseksi – julkaise, kun olet valmis" : "Muutokset tallennettu",
+          "success",
+        );
         setTimeout(() => setSuccess(false), 3000);
       }
     } catch {
@@ -189,22 +198,25 @@ export default function Editor({
     }
   };
 
-  // Julkaisu tallentaa heti, jotta sivu on julkinen eikä odota automaattitallennusta.
+  // Julkaise vie editorin nykyisen sisällön liveksi; piilotus säilyttää sisällön.
   const handlePublishChange = async (next: boolean) => {
     setIsPublishing(true);
-    setPublished(next);
     try {
-      const nextState = { content, published: next };
-      const result = await persist(nextState);
+      const result = next
+        ? await publishPage(siteId, content, pageSlug)
+        : await unpublishPage(siteId, pageSlug);
       if (result?.error) {
-        setPublished(!next);
         showToast(result.error, "error");
-      } else {
-        markSaved(nextState);
-        showToast(next ? "Sivu julkaistu" : "Sivu piilotettu", "success");
+        return;
       }
+      if (next) markSaved({ content });
+      setPublished(next);
+      setHasUnpublishedChanges(false);
+      showToast(
+        next ? (published ? "Muutokset julkaistu" : "Sivu julkaistu") : "Sivu piilotettu",
+        "success",
+      );
     } catch {
-      setPublished(!next);
       showToast("Julkaisu epäonnistui. Yritä uudelleen.", "error");
     } finally {
       setIsPublishing(false);
@@ -352,6 +364,7 @@ export default function Editor({
             saveStatus={saveStatus}
             lastSavedAt={lastSavedAt}
             published={published}
+            hasUnpublishedChanges={hasUnpublishedChanges}
             publishing={isPublishing || isSaving}
             onPublishChange={handlePublishChange}
             panelOpen={isSidebarOpen}
