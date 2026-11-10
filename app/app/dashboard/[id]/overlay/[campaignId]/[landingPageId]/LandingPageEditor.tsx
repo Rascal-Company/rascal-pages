@@ -11,6 +11,7 @@ import {
   Crosshair,
   ExternalLink,
   EyeOff,
+  Rocket,
   Image as ImageIcon,
   Link2,
   Loader2,
@@ -37,8 +38,10 @@ import {
   deleteOverlayLandingPage,
   deleteOverlayVariant,
   personalizeOverlayVariant,
+  publishOverlayVariant,
   saveOverlayLandingPage,
   saveOverlayVariant,
+  setOverlayVariantActive,
   type OverlayProfile,
   type OverlayVariation,
 } from "@/app/actions/overlay";
@@ -140,7 +143,8 @@ function suggestLabel(tag: string, type: OverlayChangeType, slots: OverlaySlot[]
 }
 
 function variantSnapshot(v: OverlayVariation): string {
-  return JSON.stringify([v.name, v.prompt, v.values, v.active]);
+  // Julkaisutila ei ole tallennettavaa sisältöä: se vaihtuu omilla toiminnoillaan.
+  return JSON.stringify([v.name, v.prompt, v.values]);
 }
 
 /** Kasvaa sisällön mukana, ettei pitkää tekstiä tarvitse vierittää pienessä laatikossa. */
@@ -722,28 +726,81 @@ export default function LandingPageEditor({
     return true;
   }
 
+  /** Tallentaa luonnokset. Kävijät näkevät yhä julkaistun version. */
+  async function saveDrafts(): Promise<boolean> {
+    if (!(await savePageIfDirty())) return false;
+    // Slottien tallennus synkkaa kaikkien variaatioiden luonnokset palvelimella.
+    const ids = pageDirty ? variants.map((v) => v.id) : dirtyVariantIds;
+    for (const id of ids) {
+      const v = variants.find((x) => x.id === id);
+      if (!v) continue;
+      const result = await saveOverlayVariant(v.id, v);
+      if (!result.success) {
+        showToast(`${v.name}: ${result.error}`, "error");
+        return false;
+      }
+      setSavedVariants((s) => ({ ...s, [v.id]: variantSnapshot(v) }));
+      setVariants((list) =>
+        list.map((x) =>
+          x.id === v.id ? { ...x, hasUnpublishedChanges: result.data.hasUnpublishedChanges } : x,
+        ),
+      );
+    }
+    return true;
+  }
+
   const handleSave = useCallback(async () => {
     if (!dirty || busy) return;
     setBusy(true);
     try {
-      if (!(await savePageIfDirty())) return;
-      for (const id of dirtyVariantIds) {
-        const v = variants.find((x) => x.id === id);
-        if (!v) continue;
-        const result = await saveOverlayVariant(v.id, v);
-        if (!result.success) {
-          showToast(`${v.name}: ${result.error}`, "error");
-          return;
-        }
-        setSavedVariants((s) => ({ ...s, [v.id]: variantSnapshot(v) }));
+      if (await saveDrafts()) {
+        const live = variants.some((v) => v.active);
+        showToast(live ? "Tallennettu luonnokseksi – julkaise, kun olet valmis" : "Tallennettu", "success");
       }
-      showToast("Tallennettu", "success");
     } finally {
       setBusy(false);
     }
-    // savePageIfDirty lukee samaa tilaa kuin riippuvuudet alla.
+    // saveDrafts lukee samaa tilaa kuin riippuvuudet alla.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dirty, busy, page, variants, dirtyVariantIds, pageDirty]);
+
+  /** Tallentaa ja vie valitun variaation tallennetun version kävijöille. */
+  async function handlePublish() {
+    if (!variant || busy) return;
+    setBusy(true);
+    try {
+      if (dirty && !(await saveDrafts())) return;
+      const result = await publishOverlayVariant(variant.id);
+      if (!result.success) {
+        showToast(result.error, "error");
+        return;
+      }
+      setVariants((list) =>
+        list.map((x) => (x.id === variant.id ? { ...x, active: true, hasUnpublishedChanges: false } : x)),
+      );
+      showToast(`${variant.name} julkaistu`, "success");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleUnpublish() {
+    if (!variant || busy) return;
+    setBusy(true);
+    try {
+      const result = await setOverlayVariantActive(variant.id, false);
+      if (!result.success) {
+        showToast(result.error, "error");
+        return;
+      }
+      setVariants((list) =>
+        list.map((x) => (x.id === variant.id ? { ...x, active: false, hasUnpublishedChanges: false } : x)),
+      );
+      showToast(`${variant.name} poistettu julkaisusta`, "success");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   // ⌘S / Ctrl+S tallentaa, Esc poistaa valinnan.
   useEffect(() => {
@@ -885,17 +942,37 @@ export default function LandingPageEditor({
           aria-live="polite"
         >
           <span
-            className={cn("size-1.5 rounded-full", dirty ? "bg-warning" : "bg-success")}
+            className={cn(
+              "size-1.5 rounded-full",
+              dirty || variant?.hasUnpublishedChanges ? "bg-warning" : "bg-success",
+            )}
             aria-hidden
           />
-          {busy ? "Tallennetaan…" : dirty ? "Tallentamattomia muutoksia" : "Tallennettu"}
+          {busy
+            ? "Tallennetaan…"
+            : dirty
+              ? "Tallentamattomia muutoksia"
+              : variant?.hasUnpublishedChanges
+                ? "Julkaisemattomia muutoksia"
+                : variant?.active
+                  ? "Julkaistu"
+                  : "Tallennettu luonnokseksi"}
         </span>
-        <Button size="sm" onClick={handleSave} disabled={busy || generating || !dirty}>
-          {busy ? <Loader2 className="animate-spin" aria-hidden /> : null}
+        <Button size="sm" variant="outline" onClick={handleSave} disabled={busy || generating || !dirty}>
           Tallenna
-          <kbd className="ml-1 hidden rounded bg-primary-foreground/20 px-1 font-sans text-[10px] font-medium lg:inline">
+          <kbd className="ml-1 hidden rounded bg-muted px-1 font-sans text-[10px] font-medium lg:inline">
             ⌘S
           </kbd>
+        </Button>
+        <Button
+          size="sm"
+          onClick={() => void handlePublish()}
+          disabled={
+            busy || generating || !variant || (variant.active && !dirty && !variant.hasUnpublishedChanges)
+          }
+        >
+          {busy ? <Loader2 className="animate-spin" aria-hidden /> : <Rocket aria-hidden />}
+          {variant?.active ? "Julkaise muutokset" : "Julkaise"}
         </Button>
       </header>
 
@@ -958,16 +1035,18 @@ export default function LandingPageEditor({
                   aria-label="Variaation nimi"
                   className="min-w-0 flex-1 rounded-md bg-transparent px-1.5 py-1 text-sm font-medium outline-none hover:bg-muted focus:bg-muted focus:ring-2 focus:ring-ring"
                 />
-                <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Switch
-                    checked={variant.active}
-                    onCheckedChange={(active) => updateVariant({ active })}
-                    aria-label="Julkaistu"
-                  />
-                  <StatusPill tone={variant.active ? "live" : "draft"}>
-                    {variant.active ? "Julkaistu" : "Luonnos"}
-                  </StatusPill>
-                </label>
+                <StatusPill tone={variant.active ? "live" : "draft"}>
+                  {variant.active ? "Julkaistu" : "Luonnos"}
+                </StatusPill>
+                {variant.active && (
+                  <IconButton
+                    label="Poista julkaisusta"
+                    onClick={() => void handleUnpublish()}
+                    disabled={busy}
+                  >
+                    <EyeOff />
+                  </IconButton>
+                )}
                 <IconButton
                   label="Poista variaatio"
                   onClick={handleDeleteVariant}
@@ -1361,7 +1440,7 @@ export default function LandingPageEditor({
                   )}
                   <p className="text-xs text-muted-foreground">
                     {isPagesTarget
-                      ? "Laita linkki mainokseen. Toimii heti, kun variaatio on julkaistu ja muutokset tallennettu."
+                      ? "Laita linkki mainokseen. Kävijät näkevät variaation, kun se on julkaistu."
                       : "Toimii, kun snippet on asennettu asiakkaan sivulle ja variaatio on julkaistu."}
                   </p>
                 </section>

@@ -19,6 +19,7 @@ import StatusPill from "../components/StatusPill";
 import CampaignHeader from "./CampaignHeader";
 import NewLandingPageForm from "./NewLandingPageForm";
 import VariantRow from "./VariantRow";
+import { variantHasUnpublishedChanges } from "@/src/lib/draft-publish";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,8 @@ type VariantRowData = {
   prompt: string;
   active: boolean;
   slot_values: unknown;
+  changes: unknown;
+  draft_changes: unknown;
 };
 
 type LandingPageRowData = {
@@ -70,7 +73,7 @@ export default async function OverlayCampaignPage({ params }: PageProps) {
   const { data: landingRows } = await supabase
     .from("overlay_landing_pages")
     .select(
-      "id, name, path_pattern, match, profile_id, slots, overlay_variants(id, created_at, name, prompt, active, slot_values)",
+      "id, name, path_pattern, match, profile_id, slots, overlay_variants(id, created_at, name, prompt, active, slot_values, changes, draft_changes)",
     )
     .eq("campaign_id", campaignId)
     .order("created_at", { ascending: true });
@@ -201,6 +204,7 @@ export default async function OverlayCampaignPage({ params }: PageProps) {
                           variantId={createOverlayVariantId(v.id)}
                           name={v.name}
                           active={v.active}
+                          hasUnpublishedChanges={variantHasUnpublishedChanges(v)}
                           personalized={personalized}
                           aiPrompt={Boolean(v.prompt.trim())}
                           editorHref={editorHref}

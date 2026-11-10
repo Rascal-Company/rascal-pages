@@ -92,7 +92,7 @@ describe("resolvePagesOverlay", () => {
     state.result = {
       data: {
         id: variantId,
-        changes: [{ id: "c" }],
+        draft_changes: [{ id: "luonnos" }],
         overlay_landing_pages: {
           overlay_campaigns: { site_id: "overlay-site", target_origin: ORIGIN, sites: { user_id: ORG } },
         },
@@ -102,6 +102,7 @@ describe("resolvePagesOverlay", () => {
     expect(await resolvePagesOverlay(SITE, request({ t: token }))).toMatchObject({
       variantId,
       preview: true,
+      changes: [{ id: "luonnos" }],
     });
     expect(await resolvePagesOverlay({ ...SITE, user_id: "toinen" }, request({ t: token }))).toBeNull();
     expect(await resolvePagesOverlay(SITE, request({ t: "väärä" }))).toBeNull();
