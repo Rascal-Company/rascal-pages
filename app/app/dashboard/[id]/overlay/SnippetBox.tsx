@@ -22,7 +22,7 @@ export default function SnippetBox({ snippet }: { snippet: string }) {
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-semibold">Asenna tuotantoon</span>
           <span className="block text-xs text-muted-foreground">
-            Yksi rivi asiakkaan sivulle, kun variaatiot on hyväksytty.
+            Yksi rivi sivustolle, kun variaatiot on hyväksytty.
           </span>
         </span>
         <ChevronRight
@@ -32,7 +32,7 @@ export default function SnippetBox({ snippet }: { snippet: string }) {
       </summary>
       <div className="space-y-2 border-t border-border p-4">
         <p className="text-sm text-muted-foreground">
-          Lisää rivi asiakkaan sivuston &lt;head&gt;-osioon mahdollisimman ylös. Sama rivi
+          Lisää rivi sivuston &lt;head&gt;-osioon mahdollisimman ylös. Sama rivi
           toimii kaikille tämän sivuston kampanjoille.
         </p>
         <div className="flex items-start gap-2 rounded-lg bg-muted p-3">

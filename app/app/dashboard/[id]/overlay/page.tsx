@@ -52,7 +52,7 @@ export default async function OverlayPage({ params }: PageProps) {
     <CreateDialog
       trigger="Uusi kampanja"
       title="Uusi kampanja"
-      description="Kampanja on oma Pages-sivu tai asiakkaan sivusto. Ensimmäinen laskeutumissivu ja variaatio luodaan valmiiksi."
+      description="Kampanja on Pages-sivu tai mikä tahansa olemassa oleva sivusto. Ensimmäinen laskeutumissivu ja variaatio luodaan valmiiksi."
     >
       <NewCampaignForm siteId={createSiteId(site.id)} pagesTargets={pagesTargets} />
     </CreateDialog>
@@ -89,7 +89,7 @@ export default async function OverlayPage({ params }: PageProps) {
             </span>
             <h2 className="mt-4 text-lg font-semibold">Ensimmäinen kampanja</h2>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              Anna asiakkaan sivun osoite, klikkaa muutettavat elementit ja anna AI:n kirjoittaa
+              Anna sivun osoite, klikkaa muutettavat elementit ja anna AI:n kirjoittaa
               tekstit kohderyhmälle.
             </p>
             <div className="mt-6">{newCampaign}</div>

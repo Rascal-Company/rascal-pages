@@ -144,7 +144,7 @@ const AUDIENCES: Item[] = [
   },
   {
     title: "Markkinointitoimistot",
-    body: "Personoi asiakkaan nykyinen sivusto kampanjoille ilman uudelleenrakennusta. Jaa esikatselu hyväksyttäväksi ja raportoi konversiot.",
+    body: "Personoi olemassa oleva sivusto – omasi tai asiakkaasi – kampanjoille ilman uudelleenrakennusta. Jaa esikatselu hyväksyttäväksi ja raportoi konversiot.",
   },
 ];
 
